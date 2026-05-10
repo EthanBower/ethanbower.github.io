@@ -22,13 +22,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build production
-        run: | 
-          mkdir -p ./site &&
-          cd ./site &&
-          npm run build && 
-          cd ..
+        run: npm run build
       - name: Dir
-        run: ls ./site
+        run: ls
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
