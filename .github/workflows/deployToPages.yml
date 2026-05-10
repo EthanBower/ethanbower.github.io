@@ -23,11 +23,11 @@ jobs:
         run: npm ci
       - name: Build production
         run: | 
-          mkdir -p ./site
-          cd ./site
-          npm run build
-          cd ..
-          ls
+          mkdir -p ./site &&
+          cd ./site &&
+          npm run build && 
+          cd .. &&
+          ls &&
           ls ./site
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
