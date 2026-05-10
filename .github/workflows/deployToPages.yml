@@ -28,9 +28,7 @@ jobs:
           npm run build && 
           cd ..
       - name: Dir
-        run: |
-          ls &&
-          ls ./site
+        run: ls ./site
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
