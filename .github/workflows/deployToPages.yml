@@ -1,4 +1,4 @@
-name: Deploy Next.js to Pages
+name: Deploy Next.js to Pages - Production
 on:
   push:
     branches: ["main"]
@@ -9,15 +9,24 @@ permissions: # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHu
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      BASE_PATH: '/production'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: 'npm'
-      - run: npm ci
-      - run: npm run build
-      - name: Upload artifact
+      - name: Install dependencies
+        run: npm ci
+      - name: Build production
+        run: |
+          npm run build
+          mkdir -p out
+          cp -r dist/* out/production
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
@@ -27,4 +36,5 @@ jobs:
     environment:
       name: github-pages
     steps:
-      - uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
