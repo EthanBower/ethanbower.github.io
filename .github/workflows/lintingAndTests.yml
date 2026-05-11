@@ -1,4 +1,4 @@
-name: "🚀 Code Quality Pipeline"
+name: "🫧 Code Quality Pipeline"
 on: [push, pull_request]
 jobs:
   # 🧹 Code linting

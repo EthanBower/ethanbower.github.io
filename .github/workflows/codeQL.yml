@@ -1,4 +1,4 @@
-name: "� Code Analysis & Security Pipeline"
+name: "🔐 Code Analysis & Security Pipeline"
 on:
   pull_request:
   schedule:
