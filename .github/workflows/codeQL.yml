@@ -1,5 +1,7 @@
 name: "🔐 Code Analysis & Security Pipeline"
 on:
+  push:
+    branches: ["main"]
   pull_request:
   schedule:
     - cron: '0 0 * * 1'  # Weekly security scan on Mondays
