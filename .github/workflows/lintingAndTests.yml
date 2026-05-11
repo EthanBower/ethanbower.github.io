@@ -1,5 +1,5 @@
 name: "🫧 Code Quality Pipeline"
-on: [push, pull_request]
+on: [pull_request]
 jobs:
   # 🧹 Code linting
   lint:
