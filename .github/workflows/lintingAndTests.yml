@@ -5,7 +5,6 @@ jobs:
   lint:
     name: "🧹 Lint Code"
     runs-on: ubuntu-latest
-    if: github.event_name != 'schedule'
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -18,11 +17,10 @@ jobs:
         run: npm ci
       - name: 🧹 Run ESLint
         run: npm run lint
-  # 🧪 Run tests (if you add a test script later)
+  # 🧪 Run tests
   test:
     name: "🧪 Run Tests"
     runs-on: ubuntu-latest
-    if: github.event_name != 'schedule'
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
