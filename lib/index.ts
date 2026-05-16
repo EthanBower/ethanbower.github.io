@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import * as SimplexNoise from "simplex-noise";
+import { Material, MaterialEventMap } from "three";
 
 //#region Canvas Logic
 export class FrontPageAnimation {
@@ -155,7 +156,7 @@ class PointerObject {
         this.vector.unproject(this.frontPage.camera);
         this.vector.sub(this.frontPage.camera.position).normalize();
 
-        let distance = (this.zPlane - this.frontPage.camera.position.z) / this.vector.z;
+        const distance = (this.zPlane - this.frontPage.camera.position.z) / this.vector.z;
         this.pos.copy(this.frontPage.camera.position).add(this.vector.multiplyScalar(distance));
         this.pointerPosition = this.pos;
     }
@@ -212,15 +213,15 @@ class DotsScene {
 
         this.mouseDot = new Dot(0, 0, -20);
         this.mouseDot.connectableRadius = 35;
-        this.mouseDot.dotMesh.material.opacity = 0;
-        this.mouseDot.dotMesh.material.transparent = true;
+        (this.mouseDot.dotMesh.material as THREE.Material).opacity = 0;
+        (this.mouseDot.dotMesh.material as THREE.Material).transparent = true;
         this.scene.add(this.mouseDot.dotMesh);
     }
 
     private clearLinesAndDots(): void {
         for (let i = 0; i < this.dotLines!.length; i++) {
-            let dotLine = this.dotLines![i];
-            Utils.disposeObject(dotLine, this.frontPage.renderer);
+            const dotLine = this.dotLines![i];
+            Utils.disposeObject(dotLine);
             this.scene.remove(dotLine);
         }
 
@@ -234,7 +235,7 @@ class DotsScene {
     }
 
     private connectDotsWithLines(dot: Dot): void {
-        for (var i = 0; i < this.dots.length; i++) {
+        for (let i = 0; i < this.dots.length; i++) {
             const dotToMaybeConnect = this.dots[i]!;
 
             if (dot.id == dotToMaybeConnect.id) {
@@ -266,7 +267,7 @@ class Dot {
     public connectableRadius: number;
     public connectedDots: Array<Dot>;
     public id: string;
-    public dotMesh: THREE.Mesh | any;
+    public dotMesh: THREE.Mesh;
     public velocity: THREE.Vector3;
     private material: THREE.MeshBasicMaterial;
 
@@ -458,7 +459,7 @@ class WavesScene {
     }
 
     private updatePlaneOnWindowResize(): void {
-        Utils.disposeObject(this.planeMesh, this.frontPage.renderer);
+        Utils.disposeObject(this.planeMesh);
         this.scene.remove(this.planeMesh);
         this.initPlane();
     }
@@ -507,46 +508,57 @@ class Utils {
         return val;
     }
 
-    public static disposeObject(obj: any, renderer: any): void {
-        if(obj.material){
-            obj.material.dispose();
-            renderer.dispose(obj.material);
-            if(obj.material.map){
-                obj.material.map.dispose();
-            }
-            if(obj.material.lightMap){
-                obj.material.lightMap.dispose();
-            }
-            if(obj.material.aoMap){
-                obj.material.aoMap.dispose();
-            }
-            if(obj.material.emissiveMap){
-                obj.material.emissiveMap.dispose();
-            }
-            if(obj.material.bumpMap){
-                obj.material.bumpMap.dispose();
-            }
-            if(obj.material.normalMap){
-                obj.material.normalMap.dispose();
-            }
-            if(obj.material.displacementMap){
-                obj.material.displacementMap.dispose();
-            }
-            if(obj.material.roughnessMap){
-                obj.material.roughnessMap.dispose();
-            }
-            if(obj.material.metalnessMap){
-                obj.material.metalnessMap.dispose();
-            }
-            if(obj.material.alphaMap){
-                obj.material.alphaMap.dispose();
-            }
-        }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public static disposeObject(obj: any): void {
+        if (!obj) return;
 
-        if(obj.geometry){
-            obj.geometry.dispose();
-            renderer.dispose(obj.geometry);
-        }
+        const disposeMaterial = (mat: any) => {
+            if (!mat) return;
+            const maps = [
+                'map','lightMap','aoMap','emissiveMap','bumpMap','normalMap',
+                'displacementMap','roughnessMap','metalnessMap','alphaMap'
+            ];
+            maps.forEach((k) => {
+                if (mat[k] && typeof mat[k].dispose === 'function') {
+                    mat[k].dispose();
+                }
+            });
+            for (const key in mat) {
+                const v = mat[key];
+                if (v && typeof v.dispose === 'function' && !maps.includes(key)) {
+                    v.dispose();
+                }
+            }
+            if (typeof mat.dispose === 'function') mat.dispose();
+        };
+
+        const disposeSingle = (o: any) => {
+            if (!o) return;
+            try {
+                if (o.parent && typeof o.parent.remove === 'function') o.parent.remove(o);
+            } catch (e) {}
+
+            const visit = (child: any) => {
+                if (!child) return;
+                if (child.geometry && typeof child.geometry.dispose === 'function') {
+                    child.geometry.dispose();
+                }
+                if (child.material) {
+                    if (Array.isArray(child.material)) child.material.forEach(disposeMaterial);
+                    else disposeMaterial(child.material);
+                }
+                if (child.texture && typeof child.texture.dispose === 'function') child.texture.dispose();
+            };
+
+            if (typeof o.traverse === 'function') {
+                o.traverse((c: any) => visit(c));
+            } else {
+                visit(o);
+            }
+        };
+
+        if (Array.isArray(obj)) obj.forEach(disposeSingle);
+        else disposeSingle(obj);
     }
 }
 //#endregion
