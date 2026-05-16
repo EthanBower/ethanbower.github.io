@@ -251,7 +251,7 @@ class DotsScene {
                 continue;
             }
 
-            let line = dot.getLineBetweenDots(dotToMaybeConnect, distanceBetweenDots);
+            const line = dot.getLineBetweenDots(dotToMaybeConnect, distanceBetweenDots);
             dot.connectedDots.push(dotToMaybeConnect);
             dotToMaybeConnect.connectedDots.push(dot);
             this.dotLines!.push(line);
@@ -548,7 +548,9 @@ class Utils {
                 if (o.parent && typeof o.parent.remove === 'function') {
                     o.parent.remove(o);
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.warn('Error removing object from parent, possibly already removed:', e);
+            }
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const visit = (child: any) => {
