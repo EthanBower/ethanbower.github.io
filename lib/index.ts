@@ -129,9 +129,9 @@ class PointerObject {
         this.frontPage = frontPage;
         this.vector = new THREE.Vector3(); 
         this.pos = new THREE.Vector3();
-        var pointerObj = this;
+        let pointerObj = this;
 
-        frontPage.renderer.domElement.addEventListener('mousemove', function (this: any, e: any) {
+        frontPage.renderer.domElement.addEventListener('mousemove', function (e: MouseEvent) {
             pointerObj.calcPointerPosition(e);
         }, false);
 
@@ -156,7 +156,7 @@ class PointerObject {
         this.vector.unproject(this.frontPage.camera);
         this.vector.sub(this.frontPage.camera.position).normalize();
 
-        var distance = (this.zPlane - this.frontPage.camera.position.z) / this.vector.z;
+        let distance = (this.zPlane - this.frontPage.camera.position.z) / this.vector.z;
         this.pos.copy(this.frontPage.camera.position).add(this.vector.multiplyScalar(distance));
         this.pointerPosition = this.pos;
     }
@@ -166,7 +166,7 @@ class DotsScene {
     private frontPage: FrontPageAnimation;
     private scene: THREE.Scene;
     private dotCount: number;
-    private dotLines!: Array<THREE.Line> | any;
+    private dotLines!: Array<THREE.Line>;
     private dots!: Array<Dot>;
     private mouseDot!: Dot;
 
@@ -219,14 +219,13 @@ class DotsScene {
     }
 
     private clearLinesAndDots(): void {
-        for (let i = 0; i < this.dotLines.length; i++) {
-            var dotLine = this.dotLines[i];
+        for (let i = 0; i < this.dotLines!.length; i++) {
+            let dotLine = this.dotLines![i];
             Utils.disposeObject(dotLine, this.frontPage.renderer);
             this.scene.remove(dotLine);
-            dotLine = undefined;
         }
 
-        this.dotLines.length = 0;
+        this.dotLines!.length = 0;
 
         for (let i = 0; i < this.dots.length; i++) {
             const dot = this.dots[i]!;
@@ -256,7 +255,7 @@ class DotsScene {
             var line = dot.getLineBetweenDots(dotToMaybeConnect, distanceBetweenDots);
             dot.connectedDots.push(dotToMaybeConnect);
             dotToMaybeConnect.connectedDots.push(dot);
-            this.dotLines.push(line);
+            this.dotLines!.push(line);
             this.scene.add(line);
         }
     }
@@ -466,7 +465,7 @@ class WavesScene {
     }
 
     private animatePlane(): void {
-        var gArray: any = this.planeMesh.geometry.attributes.position.array;
+        let gArray: THREE.TypedArray = this.planeMesh.geometry.attributes.position.array;
         const time: number = Date.now() * 0.00017;
 
         for (let i = 0; i < gArray.length; i += 3) {
