@@ -129,14 +129,13 @@ class PointerObject {
         this.frontPage = frontPage;
         this.vector = new THREE.Vector3(); 
         this.pos = new THREE.Vector3();
-        const pointerObj = this;
 
-        frontPage.renderer.domElement.addEventListener('mousemove', function (e: MouseEvent) {
-            pointerObj.calcPointerPosition(e);
+        frontPage.renderer.domElement.addEventListener('mousemove', (e: MouseEvent) => {
+            this.calcPointerPosition(e);
         }, false);
 
-        frontPage.renderer.domElement.addEventListener('mouseleave', function () {
-            pointerObj.pointerPosition = null;
+        frontPage.renderer.domElement.addEventListener('mouseleave', () => {
+            this.pointerPosition = null;
         }, false);
     }
 
