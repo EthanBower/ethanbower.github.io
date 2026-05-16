@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import * as SimplexNoise from "simplex-noise";
-import { Material, MaterialEventMap } from "three";
 
 //#region Canvas Logic
 export class FrontPageAnimation {
@@ -252,7 +251,7 @@ class DotsScene {
                 continue;
             }
 
-            var line = dot.getLineBetweenDots(dotToMaybeConnect, distanceBetweenDots);
+            let line = dot.getLineBetweenDots(dotToMaybeConnect, distanceBetweenDots);
             dot.connectedDots.push(dotToMaybeConnect);
             dotToMaybeConnect.connectedDots.push(dot);
             this.dotLines!.push(line);
@@ -292,7 +291,7 @@ class Dot {
         this.runDotDistanceGradient(frontPage);
     }
 
-    public getLineBetweenDots(dotToConnect: Dot, distanceBetweenDots: number): any {
+    public getLineBetweenDots(dotToConnect: Dot, distanceBetweenDots: number): THREE.Line {
         const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 - (distanceBetweenDots / this.connectableRadius) });
         const points = [
             new THREE.Vector3(this.dotMesh.position.x, this.dotMesh.position.y, this.dotMesh.position.z), 
@@ -465,7 +464,7 @@ class WavesScene {
     }
 
     private animatePlane(): void {
-        let gArray: THREE.TypedArray = this.planeMesh.geometry.attributes.position.array;
+        const gArray: THREE.TypedArray = this.planeMesh.geometry.attributes.position.array;
         const time: number = Date.now() * 0.00017;
 
         for (let i = 0; i < gArray.length; i += 3) {
@@ -512,8 +511,12 @@ class Utils {
     public static disposeObject(obj: any): void {
         if (!obj) return;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const disposeMaterial = (mat: any) => {
-            if (!mat) return;
+            if (!mat) {
+                return;
+            }
+
             const maps = [
                 'map','lightMap','aoMap','emissiveMap','bumpMap','normalMap',
                 'displacementMap','roughnessMap','metalnessMap','alphaMap'
@@ -529,9 +532,13 @@ class Utils {
                     v.dispose();
                 }
             }
-            if (typeof mat.dispose === 'function') mat.dispose();
+
+            if (typeof mat.dispose === 'function') {
+                mat.dispose();
+            }
         };
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const disposeSingle = (o: any) => {
             if (!o) {
                 return;
@@ -543,6 +550,7 @@ class Utils {
                 }
             } catch (e) {}
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const visit = (child: any) => {
                 if (!child) {
                     return;
@@ -563,6 +571,7 @@ class Utils {
             };
 
             if (typeof o.traverse === 'function') {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 o.traverse((c: any) => visit(c));
             } else {
                 visit(o);
