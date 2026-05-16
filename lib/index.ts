@@ -129,7 +129,7 @@ class PointerObject {
         this.frontPage = frontPage;
         this.vector = new THREE.Vector3(); 
         this.pos = new THREE.Vector3();
-        let pointerObj = this;
+        const pointerObj = this;
 
         frontPage.renderer.domElement.addEventListener('mousemove', function (e: MouseEvent) {
             pointerObj.calcPointerPosition(e);
