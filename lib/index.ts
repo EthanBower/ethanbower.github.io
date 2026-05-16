@@ -533,21 +533,33 @@ class Utils {
         };
 
         const disposeSingle = (o: any) => {
-            if (!o) return;
+            if (!o) {
+                return;
+            }
+
             try {
-                if (o.parent && typeof o.parent.remove === 'function') o.parent.remove(o);
+                if (o.parent && typeof o.parent.remove === 'function') {
+                    o.parent.remove(o);
+                }
             } catch (e) {}
 
             const visit = (child: any) => {
-                if (!child) return;
+                if (!child) {
+                    return;
+                }
+
                 if (child.geometry && typeof child.geometry.dispose === 'function') {
                     child.geometry.dispose();
                 }
+
                 if (child.material) {
                     if (Array.isArray(child.material)) child.material.forEach(disposeMaterial);
                     else disposeMaterial(child.material);
                 }
-                if (child.texture && typeof child.texture.dispose === 'function') child.texture.dispose();
+
+                if (child.texture && typeof child.texture.dispose === 'function') {
+                    child.texture.dispose();
+                }
             };
 
             if (typeof o.traverse === 'function') {
@@ -557,8 +569,12 @@ class Utils {
             }
         };
 
-        if (Array.isArray(obj)) obj.forEach(disposeSingle);
-        else disposeSingle(obj);
+        if (Array.isArray(obj)) {
+            obj.forEach(disposeSingle);
+        }
+        else {
+            disposeSingle(obj);
+        }
     }
 }
 //#endregion
