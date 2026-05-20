@@ -32,6 +32,13 @@ export class FrontPageAnimation {
             this.isLookingUp = true;
             this.cameraAnimationStartTime = Date.now();
         });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'w' || event.key === 'W') {
+                this.camera.position.z -= 2;
+            }
+        });
+
         this.animatePage();
     }
 
@@ -166,7 +173,7 @@ class DotsScene {
     private scene: THREE.Scene;
     private dotCount: number;
     private dotLines!: Array<THREE.Line>;
-    private dots!: Array<Dot>;
+    public dots!: Array<Dot>;
     private mouseDot!: Dot;
 
     constructor(frontPage: FrontPageAnimation) {
@@ -179,11 +186,10 @@ class DotsScene {
 
     public animateScene(): void {
         this.clearLinesAndDots();
-        for (let i = 0; i < this.dots.length; i++) {
-            const dot = this.dots[i]!;
+        this.dots.forEach(dot => {
             dot.animateDot(this.frontPage);
             this.connectDotsWithLines(dot);
-        }
+        });
         
         if (this.frontPage.pointer.hasPointerData()) {
             this.mouseDot.dotMesh.position.x = this.frontPage.pointer.pointerPosition!.x;
@@ -195,11 +201,12 @@ class DotsScene {
     }
 
     private initDots(): void {
+        const cameraZ = this.frontPage.camera.position.z;
         this.dotLines = [];
         this.dots = [];
 
         for (let i = 0; i < this.dotCount; i++) {
-            const z = Utils.getRandomBetween(-45, 5);
+            const z = Utils.getRandomBetween(cameraZ - Dot.dotCameraDistanceSettings.minZCameraDistance, cameraZ - Dot.dotCameraDistanceSettings.maxZCameraDistance);
             const dims = this.frontPage.getVisibleDimensionsAtDepth(z);
             const dot = new Dot(
                 Utils.getRandomBetween(-dims.halfWidth, dims.halfWidth),
@@ -210,53 +217,44 @@ class DotsScene {
             this.scene.add(dot.dotMesh);
         }
 
-        this.mouseDot = new Dot(0, 0, -20);
-        this.mouseDot.connectableRadius = 35;
-        (this.mouseDot.dotMesh.material as THREE.Material).opacity = 0;
-        (this.mouseDot.dotMesh.material as THREE.Material).transparent = true;
+        this.mouseDot = new MouseDot(0, 0, -20);
         this.scene.add(this.mouseDot.dotMesh);
     }
 
     private clearLinesAndDots(): void {
-        for (let i = 0; i < this.dotLines!.length; i++) {
-            const dotLine = this.dotLines![i];
-            Utils.disposeObject(dotLine);
-            this.scene.remove(dotLine);
-        }
-
+        this.dotLines.forEach(line => {
+            Utils.disposeObject(line);
+            this.scene.remove(line);
+        });
         this.dotLines!.length = 0;
-
-        for (let i = 0; i < this.dots.length; i++) {
-            const dot = this.dots[i]!;
+        this.dots.forEach(dot => {
             dot.connectedDots.length = 0;
-        }
+        });
         this.mouseDot.connectedDots.length = 0;
     }
 
     private connectDotsWithLines(dot: Dot): void {
-        for (let i = 0; i < this.dots.length; i++) {
-            const dotToMaybeConnect = this.dots[i]!;
-
+        this.dots.forEach(dotToMaybeConnect => {
             if (dot.id == dotToMaybeConnect.id) {
-                continue;
+                return;
             }
 
             if (dot.dotIsConnected(dotToMaybeConnect)) {
-                continue;
+                return;
             }
 
             const distanceBetweenDots = dot.dotMesh.position.distanceTo(dotToMaybeConnect.dotMesh.position);
 
             if (distanceBetweenDots > dot.connectableRadius) {
-                continue;
+                return;
             }
 
             const line = dot.getLineBetweenDots(dotToMaybeConnect, distanceBetweenDots);
             dot.connectedDots.push(dotToMaybeConnect);
             dotToMaybeConnect.connectedDots.push(dot);
             this.dotLines!.push(line);
-            this.scene.add(line);
-        }
+            this.scene.add(line);     
+        });
     }
 }
 
@@ -268,31 +266,38 @@ class Dot {
     public id: string;
     public dotMesh: THREE.Mesh;
     public velocity: THREE.Vector3;
-    private material: THREE.MeshBasicMaterial;
+    public material: THREE.MeshBasicMaterial;
+    public spawnOpacityAlpha = 0;
+    public static dotCameraDistanceSettings: { maxZCameraDistance: number; minZCameraDistance: number } = {
+        maxZCameraDistance : 130,
+        minZCameraDistance : 30
+    };
 
     constructor(x: number, y: number, z: number) {
         this.dotRadius = 0.35;
-        this.connectableRadius = 27;
+        this.connectableRadius = 25;
         this.connectedDots = [];
         this.id = crypto.randomUUID();
 
-        const geometry = new THREE.CircleGeometry(this.dotRadius, 5);
-        this.material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, fog: true });
-        this.dotMesh = new THREE.Mesh(geometry, this.material);
+        this.material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, fog: true });
+        this.dotMesh = new THREE.Mesh(new THREE.CircleGeometry(this.dotRadius, 5), this.material);
         this.dotMesh.position.set(x, y, z);
         this.velocity = new THREE.Vector3(
-            Utils.getRandomBetween(-0.06, 0.06, .007),
-            Utils.getRandomBetween(-0.06, 0.06, .007),
+            Utils.getRandomBetween(-0.05, 0.05, .007),
+            Utils.getRandomBetween(-0.05, 0.05, .007),
             Utils.getRandomBetween(-0.03, 0.03, .004));
     }
 
     public animateDot(frontPage: FrontPageAnimation): void {
         this.runCollisionOpenSpace(frontPage);
         this.runDotDistanceGradient(frontPage);
+        this.updateSpawnFadeIn();
     }
 
     public getLineBetweenDots(dotToConnect: Dot, distanceBetweenDots: number): THREE.Line {
-        const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 - (distanceBetweenDots / this.connectableRadius) });
+        const distanceAlpha = 1 - (distanceBetweenDots / this.connectableRadius);
+        const dotOpacityAlpha = Math.min(this.material.opacity, dotToConnect.material.opacity);
+        const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: distanceAlpha * dotOpacityAlpha });
         const points = [
             new THREE.Vector3(this.dotMesh.position.x, this.dotMesh.position.y, this.dotMesh.position.z), 
             new THREE.Vector3(dotToConnect.dotMesh.position.x, dotToConnect.dotMesh.position.y, dotToConnect.dotMesh.position.z)
@@ -313,32 +318,97 @@ class Dot {
     }
 
     private runCollisionOpenSpace(frontPage: FrontPageAnimation): void {
-        const cam = frontPage.camera;
         this.dotMesh.position.add(this.velocity);
+        
+        const cam = frontPage.camera;
+        const local = this.dotMesh.position // Take dot position into camera space to check bounds and collisions
+            .clone()
+            .applyMatrix4(cam.matrixWorldInverse);
+        const dims = frontPage.getVisibleDimensionsAtDepth(cam.position.z + local.z);
+        const OUTSIDE_BUFFER = 5;
+        const outsideX = (local.x > dims.halfWidth + OUTSIDE_BUFFER) || (local.x < -dims.halfWidth - OUTSIDE_BUFFER);
+        const outsideY = (local.y > dims.halfHeight + OUTSIDE_BUFFER) || (local.y < -dims.halfHeight - OUTSIDE_BUFFER);
 
-        // convert to camera space
-        const local = this.dotMesh.position.clone().applyMatrix4(cam.matrixWorldInverse);
-        const dims = frontPage.getVisibleDimensionsAtDepth(local.z);
-        const halfW = dims.halfWidth;
-        const halfH = dims.halfHeight;
+        // Outside screen
+        if (outsideX || outsideY) {
+            this.recycle(frontPage, local, -Dot.dotCameraDistanceSettings.minZCameraDistance, -Dot.dotCameraDistanceSettings.maxZCameraDistance);
+        }
 
-        // wrap in CAMERA SPACE logic
-        if (local.x > halfW) local.x = -halfW;
-        if (local.x < -halfW) local.x = halfW;
+        // Behind camera
+        if (local.z > -Dot.dotCameraDistanceSettings.minZCameraDistance) {
+            this.recycle(frontPage, local, -Dot.dotCameraDistanceSettings.minZCameraDistance, -Dot.dotCameraDistanceSettings.maxZCameraDistance);
+        }
 
-        if (local.y > halfH) local.y = -halfH;
-        if (local.y < -halfH) local.y = halfH;
+        // Too far away
+        if (local.z < -Dot.dotCameraDistanceSettings.maxZCameraDistance) {
+            this.recycle(frontPage, local, -Dot.dotCameraDistanceSettings.minZCameraDistance, -Dot.dotCameraDistanceSettings.maxZCameraDistance);
+        }
 
-        // Z recycling (in camera space)
-        const MIN_Z = -20;
-        const MAX_Z = -120;
+        // Apply collision response in world space
+        this.dotMesh.position
+            .copy(local)
+            .applyMatrix4(cam.matrixWorld);
 
-        if (local.z > MIN_Z) local.z = MAX_Z;
-        if (local.z < MAX_Z) local.z = MIN_Z;
-
-        // convert back to world space
-        this.dotMesh.position.copy(local).applyMatrix4(cam.matrixWorld);    
         frontPage.wavesScene.resolveDotCollision(this);
+    }
+
+    private recycle(frontPage: FrontPageAnimation, local: THREE.Vector3, minZ: number, maxZ: number): void {
+        local.z = Utils.getRandomBetween(maxZ, minZ);
+
+        const dims = frontPage.getVisibleDimensionsAtDepth(frontPage.camera.position.z + local.z);
+        const spawn = this.getValidSpawnPosition(frontPage, new THREE.Vector3(dims.halfWidth, dims.halfHeight, local.z));
+        local.copy(spawn);
+
+        // Fresh motion
+        this.velocity.set(
+            Utils.getRandomBetween(-0.05, 0.05, 0.007),
+            Utils.getRandomBetween(-0.05, 0.05, 0.007),
+            Utils.getRandomBetween(-0.03, 0.03, 0.004)
+        );
+
+        this.material.opacity = 0;
+        this.spawnOpacityAlpha = 0;
+    }
+
+    private getValidSpawnPosition(frontPage: FrontPageAnimation, local: THREE.Vector3, maxAttempts = 5): THREE.Vector3 {
+        const dots = frontPage.dotScene.dots;
+        const cam = frontPage.camera;
+
+        for (let i = 0; i < maxAttempts; i++) {
+            const test = new THREE.Vector3(
+                Utils.getRandomBetween(-local.x, local.x),
+                Utils.getRandomBetween(-local.y, local.y),
+                local.z);
+
+            let valid = true;
+
+            for (let j = 0; j < dots.length; j++) {
+                const other = dots[j];
+
+                if (other.id === this.id) { 
+                    continue;
+                }
+
+                const otherLocal = other.dotMesh.position
+                    .clone()
+                    .applyMatrix4(cam.matrixWorldInverse);
+
+                if (test.distanceTo(otherLocal) < 8) {
+                    valid = false;
+                    break;
+                }
+            }
+
+            if (valid) {
+                return test;
+            }
+        }
+
+        return new THREE.Vector3(
+            Utils.getRandomBetween(-local.x, local.x),
+            Utils.getRandomBetween(-local.y, local.y),
+            local.z
+        );
     }
 
     private runDotDistanceGradient(frontPage: FrontPageAnimation): void {
@@ -349,6 +419,13 @@ class Dot {
         const farColor = new THREE.Color(0x084eff);
 
         this.material.color.lerpColors(nearColor, farColor, t);
+    }
+
+    private updateSpawnFadeIn(): void {
+        const speed = 0.03;
+        const spawnTarget = 1;
+        this.spawnOpacityAlpha += (spawnTarget - this.spawnOpacityAlpha) * speed;
+        this.material.opacity = this.spawnOpacityAlpha;
     }
 }
 
@@ -382,18 +459,13 @@ class WavesScene {
         const time = Date.now() * 0.00017;
         const pos = dot.dotMesh.position.clone();
         const nextPos = pos.clone().add(dot.velocity);
-        // Convert world position into plane local space
-        const localPos = this.planeMesh.worldToLocal(nextPos.clone());
-        // Sample wave height in LOCAL plane coordinates
-        const waveZ = this.getWaveHeight(localPos.x, localPos.y, time);
-        // Distance from particle to wave surface
-        const distToSurface = localPos.z - waveZ;
-        // radius padding
-        const radius = dot.dotRadius;
+        const localPos = this.planeMesh.worldToLocal(nextPos.clone()); // Convert world position into plane local space
+        const waveZ = this.getWaveHeight(localPos.x, localPos.y, time); // Sample wave height in LOCAL plane coordinates
+        const distToSurface = localPos.z - waveZ; // Distance from particle to wave surface
+        const radius = dot.dotRadius; // Radius padding
 
-        // collision
+        // If collision occurs (dot is within radius of surface), push dot out and reflect velocity
         if (distToSurface <= radius) {
-            // normal stays the same
             const eps = 0.1;
             const hL = this.getWaveHeight(localPos.x - eps, localPos.y, time);
             const hR = this.getWaveHeight(localPos.x + eps, localPos.y, time);
@@ -401,7 +473,6 @@ class WavesScene {
             const hU = this.getWaveHeight(localPos.x, localPos.y + eps, time);
             const dx = (hR - hL) / (2 * eps);
             const dy = (hU - hD) / (2 * eps);
-
             const normal = new THREE.Vector3(-dx, -dy, 1).normalize();
             normal.transformDirection(this.planeMesh.matrixWorld);
 
@@ -491,6 +562,26 @@ class WavesScene {
         this.light3.position.z = Math.sin(time * 0.6) * d;
         this.light4.position.x = Math.sin(time * 0.7) * d;
         this.light4.position.z = Math.cos(time * 0.8) * d;
+    }
+}
+
+class MouseDot extends Dot {
+    constructor(x: number, y: number, z: number) {
+        super(x, y, z);
+        this.connectableRadius = 35;
+        (this.dotMesh.material as THREE.Material).opacity = 0;
+        (this.dotMesh.material as THREE.Material).transparent = true;
+    }
+
+    public getLineBetweenDots(dotToConnect: Dot, distanceBetweenDots: number): THREE.Line {
+        const distanceAlpha = 1 - (distanceBetweenDots / this.connectableRadius);
+        const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: distanceAlpha });
+        const points = [
+            new THREE.Vector3(this.dotMesh.position.x, this.dotMesh.position.y, this.dotMesh.position.z), 
+            new THREE.Vector3(dotToConnect.dotMesh.position.x, dotToConnect.dotMesh.position.y, dotToConnect.dotMesh.position.z)
+        ];
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        return new THREE.Line(geometry, material);
     }
 }
 
