@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react'
-import Home from '../app/page' // Adjust path if using src/app/page
+import { render } from '@testing-library/react'
+import Home from '../app/home/page'
 import '@testing-library/jest-dom'
 
 jest.mock('three', () => {
@@ -15,7 +15,7 @@ jest.mock('three', () => {
       autoClear: false,          
       shadowMap: { enabled: false },
       domElement: typeof document !== 'undefined' ? document.createElement('canvas') : {},
-    })),
+    }))
   };
 });
 
