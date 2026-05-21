@@ -25,7 +25,7 @@ describe('Home Page', () => {
     const { container } = render(<Home />);
 
     // ACT: Look for the specific element
-    const canvasByTag = container.querySelector('canvas');
-    expect(canvasByTag).not.toBeNull();
+    const canvas = container.querySelector('canvas');
+    expect(canvas).toBeInTheDocument();
   })
 })
