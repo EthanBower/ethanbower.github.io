@@ -10,6 +10,7 @@ jest.mock('three', () => {
       setSize: jest.fn(),
       render: jest.fn(),
       dispose: jest.fn(),
+      setPixelRatio: jest.fn(),
       clear: jest.fn(),
       setClearColor: jest.fn(),
       autoClear: false,          
