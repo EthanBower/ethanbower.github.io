@@ -1,50 +1,102 @@
 import * as THREE from "three";
 import * as SimplexNoise from "simplex-noise";
+import { GLTFLoader } from "three/examples/jsm/Addons.js";
+import { Animatable } from "./Animatable";
+import { rejects } from "assert";
 
 //#region Canvas Logic
 export class FrontPageAnimation {
-    public backgroundColor: number = 0x1a1a1a;
-    public renderer: THREE.WebGLRenderer;
+    public frontPageRenderer: FrontPageRenderer;
     public mainCamera: MainCamera;
     public canvas: Canvas;
-    public frontPageScene: FrontPageScene;
+    public frontPageScene: FrontPageSceneManager;
+    public astroidScene: AstroidScene;
     public wavesScene: WavesScene;
-    public pointer: PointerObject;
     public dotScene: DotsScene;
 
-    public constructor(canvasElm: React.RefObject<HTMLDivElement | null>) {
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false});
-        this.renderer.setClearColor(this.backgroundColor, 1);
+    public constructor(canvasElm: React.RefObject<HTMLDivElement | null>) {   
+        this.frontPageRenderer = new FrontPageRenderer(this);
         this.mainCamera = new MainCamera();
         this.canvas = new Canvas(canvasElm, this);
-        this.frontPageScene = new FrontPageScene(this);
+        this.frontPageScene = new FrontPageSceneManager();
+        this.astroidScene = new AstroidScene(this);
         this.wavesScene = new WavesScene(this);
-        this.pointer = new PointerObject(this);
         this.dotScene = new DotsScene(this);
-        canvasElm.current?.appendChild(this.renderer.domElement);
-
-        this.animatePage();
     }
 
-    private animatePage(): void {
+    public loadAssets(): Promise<void> {
+        return this.astroidScene.loadObjects();
+    }
+
+    public animatePage(): void {
         requestAnimationFrame(() => this.animatePage());
-        this.dotScene.animateScene();
-        this.wavesScene.animateScene();
-        this.renderer.render(this.frontPageScene.scene, this.mainCamera.camera);
+        Animatable.animateAll();
+        this.frontPageRenderer.render();
     }
 }
 
-class FrontPageScene {
+class AstroidScene extends Animatable {
+    public asteroidModel?: THREE.Group<THREE.Object3DEventMap>;
+    private gltLoader: GLTFLoader;
+    private frontPage: FrontPageAnimation;
+
+    constructor(frontPage: FrontPageAnimation) {
+        super();
+        this.gltLoader = new GLTFLoader();
+        this.frontPage = frontPage;
+    }
+
+    public loadObjects(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.gltLoader.load(
+                "/asteroid.glb",
+                (gltf) => {
+                    this.asteroidModel = gltf.scene;
+                    this.asteroidModel.position.set(0, 0, -20);
+                    this.asteroidModel.scale.set(1, 1, 1);
+                    this.frontPage.frontPageScene.astroidGroup.add(this.asteroidModel);
+                    resolve();
+                },
+                undefined,
+                (error) => {
+                    console.error("GLB load error:", error);
+                    reject(error);
+                }
+            );
+        });
+    }
+
+    public animateScene() {
+        const time = Date.now() * 0.001;
+
+        // ✨ slow rotation (space drift feel)
+        this.asteroidModel!.rotation.y += 0.002;
+        this.asteroidModel!.rotation.x += 0.001;
+
+        // 🌊 floating motion
+        this.asteroidModel!.position.y += Math.sin(time) * 0.002;
+        this.asteroidModel!.position.x += Math.cos(time * 0.7) * 0.001;
+
+        // optional: gentle depth wobble
+        this.asteroidModel!.position.z += Math.sin(time * 0.5) * 0.0005;
+    }
+}
+
+class FrontPageSceneManager {
+    public static backgroundColor: number = 0x1a1a1a;
     public scene: THREE.Scene;
+    public astroidGroup: THREE.Group;
     public wavesGroup: THREE.Group;
     public dotsGroup: THREE.Group;
 
-    constructor(frontPage: FrontPageAnimation) {
+    constructor() {
         this.scene = new THREE.Scene();
+        this.astroidGroup = new THREE.Group();
         this.wavesGroup = new THREE.Group();
         this.dotsGroup = new THREE.Group();
 
-        this.scene.fog = new THREE.FogExp2(frontPage.backgroundColor, 0.009);
+        this.scene.fog = new THREE.FogExp2(FrontPageSceneManager.backgroundColor, 0.009);
+        this.scene.add(this.astroidGroup);
         this.scene.add(this.wavesGroup);
         this.scene.add(this.dotsGroup);
     }
@@ -82,6 +134,7 @@ class Canvas {
     public constructor(canvasElm: React.RefObject<HTMLDivElement | null>, frontPage: FrontPageAnimation) {
         this.frontPage = frontPage;
         this.canvasElm = canvasElm;
+        this.canvasElm.current!.appendChild(this.frontPage.frontPageRenderer.renderer.domElement);
         this.updateCanvasSize(frontPage);
         window.addEventListener('resize', () => this.updateCanvasSize(frontPage), false);
     }
@@ -90,7 +143,7 @@ class Canvas {
         this.width = this.canvasElm!.current!.clientWidth; 
         this.height = this.canvasElm!.current!.clientHeight; 
 
-        frontPage.renderer.setSize(this.width, this.height);
+        frontPage.frontPageRenderer.renderer.setSize(this.width, this.height);
         frontPage.mainCamera.camera.aspect = this.width / this.height;
         frontPage.mainCamera.camera.updateProjectionMatrix();
     }
@@ -103,58 +156,30 @@ class Canvas {
     }
 }
 
-class PointerObject {
-    public pointerPosition?: THREE.Vector3 | null;
+class FrontPageRenderer {
+    public renderer: THREE.WebGLRenderer;
     private frontPage: FrontPageAnimation;
-    private zPlane: number;
-    private vector: THREE.Vector3;
-    private pos: THREE.Vector3;
 
-    constructor(frontPage: FrontPageAnimation, zPlane = -20) {
-        this.zPlane = zPlane;
+    constructor(frontPage: FrontPageAnimation,) {
         this.frontPage = frontPage;
-        this.vector = new THREE.Vector3(); 
-        this.pos = new THREE.Vector3();
-
-        frontPage.renderer.domElement.addEventListener('mousemove', (e: MouseEvent) => {
-            this.calcPointerPosition(e);
-        }, false);
-
-        frontPage.renderer.domElement.addEventListener('mouseleave', () => {
-            this.pointerPosition = null;
-        }, false);
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false});
+        this.renderer.setClearColor(FrontPageSceneManager.backgroundColor, 1);
     }
 
-    public hasPointerData(): boolean {
-        if (this.pointerPosition?.x) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private calcPointerPosition(e: MouseEvent) {
-        this.vector.set(
-            (e.clientX / this.frontPage.renderer.domElement.clientWidth) * 2 - 1,
-            -(e.clientY / this.frontPage.renderer.domElement.clientHeight) * 2 + 1,
-            0);
-        this.vector.unproject(this.frontPage.mainCamera.camera);
-        this.vector.sub(this.frontPage.mainCamera.camera.position).normalize();
-
-        const distance = (this.zPlane - this.frontPage.mainCamera.camera.position.z) / this.vector.z;
-        this.pos.copy(this.frontPage.mainCamera.camera.position).add(this.vector.multiplyScalar(distance));
-        this.pointerPosition = this.pos;
+    public render() {
+        this.renderer.render(this.frontPage.frontPageScene.scene, this.frontPage.mainCamera.camera);
     }
 }
 
-class DotsScene {
+class DotsScene extends Animatable {
     private frontPage: FrontPageAnimation;
     private dotCount: number;
     private dotLines!: Array<THREE.Line>;
     public dots!: Array<Dot>;
-    private mouseDot!: Dot;
+    private mouseDot!: MouseDot;
 
     constructor(frontPage: FrontPageAnimation) {
+        super();
         this.frontPage = frontPage;
         this.dotCount = 55;
         this.initDots();
@@ -166,12 +191,7 @@ class DotsScene {
             dot.animateDot(this.frontPage);
             this.connectDotsWithLines(dot);
         });
-        
-        if (this.frontPage.pointer.hasPointerData()) {
-            this.mouseDot.dotMesh.position.x = this.frontPage.pointer.pointerPosition!.x;
-            this.mouseDot.dotMesh.position.y = this.frontPage.pointer.pointerPosition!.y;
-            this.connectDotsWithLines(this.mouseDot);
-        }
+        this.mouseDot.animateDot(this.frontPage);
     }
 
     private initDots(): void {
@@ -191,7 +211,7 @@ class DotsScene {
             this.frontPage.frontPageScene.dotsGroup.add(dot.dotMesh);
         }
 
-        this.mouseDot = new MouseDot(0, 0, -20);
+        this.mouseDot = new MouseDot(this.frontPage);
         this.frontPage.frontPageScene.dotsGroup.add(this.mouseDot.dotMesh);
     }
 
@@ -207,7 +227,7 @@ class DotsScene {
         this.mouseDot.connectedDots.length = 0;
     }
 
-    private connectDotsWithLines(dot: Dot): void {
+    public connectDotsWithLines(dot: Dot): void {
         this.dots.forEach(dotToMaybeConnect => {
             if (dot.id == dotToMaybeConnect.id) {
                 return;
@@ -246,7 +266,7 @@ class Dot {
         maxZCameraDistance : 130,
         minZCameraDistance : 30
     };
-    private tempVecs: { collisionVec: THREE.Vector3, collisionVec2: THREE.Vector3, testVec: TfHREE.Vector3, waveCollisionVec: THREE.Vector3 } = { 
+    private tempVecs: { collisionVec: THREE.Vector3, collisionVec2: THREE.Vector3, testVec: THREE.Vector3, waveCollisionVec: THREE.Vector3 } = { 
         collisionVec: new THREE.Vector3(),
         collisionVec2: new THREE.Vector3(),
         testVec: new THREE.Vector3(),
@@ -413,7 +433,7 @@ class Dot {
     }
 }
 
-class WavesScene {
+class WavesScene extends Animatable {
     private frontPage: FrontPageAnimation;
     private simplexNoise: SimplexNoise.NoiseFunction4D;
     private planeMesh!: THREE.Mesh;
@@ -431,6 +451,7 @@ class WavesScene {
     };
 
     public constructor(frontPage: FrontPageAnimation) {
+        super();
         this.frontPage = frontPage;
         this.simplexNoise = SimplexNoise.createNoise4D();
         this.initLighting();
@@ -559,11 +580,27 @@ class WavesScene {
 }
 
 class MouseDot extends Dot {
-    constructor(x: number, y: number, z: number) {
-        super(x, y, z);
+    public pointerPosition?: THREE.Vector3 | null;
+    private frontPage: FrontPageAnimation;
+    private cameraVector: THREE.Vector3;
+    private mousePos: THREE.Vector3;
+
+    constructor(frontPage: FrontPageAnimation, zPlane = -20) {
+        super(0, 0, zPlane);
         this.connectableRadius = 35;
         (this.dotMesh.material as THREE.Material).opacity = 0;
         (this.dotMesh.material as THREE.Material).transparent = true;
+
+        this.frontPage = frontPage;
+        this.cameraVector = new THREE.Vector3(); 
+        this.mousePos = new THREE.Vector3();
+        frontPage.frontPageRenderer.renderer.domElement.addEventListener('mousemove', (e: MouseEvent) => {
+            this.calcPointerPosition(e);
+        }, false);
+
+        frontPage.frontPageRenderer.renderer.domElement.addEventListener('mouseleave', () => {
+            this.pointerPosition = null;
+        }, false);
     }
 
     public override getLineBetweenDots(dotToConnect: Dot, distanceBetweenDots: number): THREE.Line {
@@ -575,6 +612,37 @@ class MouseDot extends Dot {
         ];
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
         return new THREE.Line(geometry, material);
+    }
+
+    public override animateDot(frontPage: FrontPageAnimation): void {
+        if (this.hasPointerData()) {
+            this.dotMesh.position.x = this.mousePos.x;
+            this.dotMesh.position.y = this.mousePos.y;
+            this.frontPage.dotScene.connectDotsWithLines(this);
+        }
+
+        super.animateDot(frontPage);
+    }
+
+    public hasPointerData(): boolean {
+        if (this.pointerPosition?.x) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private calcPointerPosition(e: MouseEvent) {
+        this.cameraVector.set(
+            (e.clientX / this.frontPage.frontPageRenderer.renderer.domElement.clientWidth) * 2 - 1,
+            -(e.clientY / this.frontPage.frontPageRenderer.renderer.domElement.clientHeight) * 2 + 1,
+            0);
+        this.cameraVector.unproject(this.frontPage.mainCamera.camera);
+        this.cameraVector.sub(this.frontPage.mainCamera.camera.position).normalize();
+
+        const distance = (this.dotMesh.position.z - this.frontPage.mainCamera.camera.position.z) / this.cameraVector.z;
+        this.mousePos.copy(this.frontPage.mainCamera.camera.position).add(this.cameraVector.multiplyScalar(distance));
+        this.pointerPosition = this.mousePos;
     }
 }
 

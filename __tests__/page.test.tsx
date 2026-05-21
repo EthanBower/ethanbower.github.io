@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import Home from '../app/page' // Adjust path if using src/app/page
+import Home from '../app/home/page' // Adjust path if using src/app/page
 import '@testing-library/jest-dom'
 
 jest.mock('three', () => {

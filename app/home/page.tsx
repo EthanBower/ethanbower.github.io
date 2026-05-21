@@ -10,11 +10,12 @@ export default function Home() {
       return;
     }
     
-    new FrontPageAnimation(mountRef);
+    const pageAnimation = new FrontPageAnimation(mountRef);
+    pageAnimation.loadAssets().then(() => {
+      pageAnimation.animatePage();
+    });
 
-    return () => {
-      //page.dispose();
-    }
+    return () => { };
   }, []);
 
   return (
