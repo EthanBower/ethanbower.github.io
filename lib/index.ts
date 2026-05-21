@@ -15,7 +15,7 @@ export class FrontPageAnimation {
 
     public constructor(canvasElm: React.RefObject<HTMLDivElement | null>) {   
         this.frontPageRenderer = new FrontPageRenderer(this);
-        this.mainCamera = new MainCamera();
+        this.mainCamera = new MainCamera(this);
         this.canvas = new Canvas(canvasElm, this);
         this.frontPageScene = new FrontPageSceneManager();
         this.astroidScene = new AstroidScene(this);
