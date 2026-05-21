@@ -69,15 +69,15 @@ class AstroidScene extends Animatable {
     public animateScene() {
         const time = Date.now() * 0.001;
 
-        // ✨ slow rotation (space drift feel)
+        // Slow rotation (space drift feel)
         this.asteroidModel!.rotation.y += 0.002;
         this.asteroidModel!.rotation.x += 0.001;
 
-        // 🌊 floating motion
+        // Floating motion
         this.asteroidModel!.position.y += Math.sin(time) * 0.002;
         this.asteroidModel!.position.x += Math.cos(time * 0.7) * 0.001;
 
-        // optional: gentle depth wobble
+        // Gentle depth wobble
         this.asteroidModel!.position.z += Math.sin(time * 0.5) * 0.0005;
     }
 }
