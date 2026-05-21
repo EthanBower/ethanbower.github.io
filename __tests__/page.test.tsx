@@ -1,10 +1,6 @@
 import { render } from '@testing-library/react'
-import Home from '../app/home/page' // Adjust path if using src/app/page
+import Home from '../app/home/page'
 import '@testing-library/jest-dom'
-
-export const Scene = jest.fn();
-export const WebGLRenderer = jest.fn();
-export const PerspectiveCamera = jest.fn();
 
 jest.mock('three', () => {
   const originalThree = jest.requireActual('three');
