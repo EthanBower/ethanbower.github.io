@@ -19,6 +19,8 @@ export default function Home() {
   }, []);
 
   return (
-    <div ref={mountRef} className="w-screen h-screen" />
+    <main className="relative w-screen h-dvh overflow-hidden">
+      <div ref={mountRef} className="absolute inset-0" />
+    </main>
   );
 }

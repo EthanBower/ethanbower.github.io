@@ -10,6 +10,7 @@ jest.mock('three', () => {
       setSize: jest.fn(),
       render: jest.fn(),
       dispose: jest.fn(),
+      setPixelRatio: jest.fn(),
       clear: jest.fn(),
       setClearColor: jest.fn(),
       autoClear: false,          
@@ -25,7 +26,7 @@ describe('Home Page', () => {
     const { container } = render(<Home />);
 
     // ACT: Look for the specific element
-    const canvasByTag = container.querySelector('canvas');
-    expect(canvasByTag).not.toBeNull();
+    const canvas = container.querySelector('canvas');
+    expect(canvas).toBeInTheDocument();
   })
 })

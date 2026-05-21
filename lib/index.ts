@@ -15,7 +15,7 @@ export class FrontPageAnimation {
 
     public constructor(canvasElm: React.RefObject<HTMLDivElement | null>) {   
         this.frontPageRenderer = new FrontPageRenderer(this);
-        this.mainCamera = new MainCamera();
+        this.mainCamera = new MainCamera(this);
         this.canvas = new Canvas(canvasElm, this);
         this.frontPageScene = new FrontPageSceneManager();
         this.astroidScene = new AstroidScene(this);
@@ -103,9 +103,11 @@ class FrontPageSceneManager {
 
 class MainCamera {
     public camera: THREE.PerspectiveCamera;
+    private frontPage: FrontPageAnimation;
 
-    constructor() {
+    constructor(frontPage: FrontPageAnimation) {
         this.camera = new THREE.PerspectiveCamera(75);
+        this.frontPage = frontPage;
         this.camera.position.z = 58;
     }
 
@@ -121,6 +123,11 @@ class MainCamera {
             halfWidth: width / 2,
             halfHeight: height / 2
         };
+    }
+
+    public resetCameraAspectRatio(width: number, height: number) {
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
     }
 }
 
@@ -142,9 +149,8 @@ class Canvas {
         this.width = this.canvasElm!.current!.clientWidth; 
         this.height = this.canvasElm!.current!.clientHeight; 
 
-        frontPage.frontPageRenderer.renderer.setSize(this.width, this.height);
-        frontPage.mainCamera.camera.aspect = this.width / this.height;
-        frontPage.mainCamera.camera.updateProjectionMatrix();
+        frontPage.frontPageRenderer.resetRendererWindowSize(this.width, this.height);
+        frontPage.mainCamera.resetCameraAspectRatio(this.width, this.height);
     }
 
     public getViewableRectangle(distanceFromCamera: number): Array<number> {
@@ -163,6 +169,11 @@ class FrontPageRenderer {
         this.frontPage = frontPage;
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false});
         this.renderer.setClearColor(FrontPageSceneManager.backgroundColor, 1);
+    }
+
+    public resetRendererWindowSize(width: number, height: number) {
+        this.frontPage.frontPageRenderer.renderer.setSize(width, height);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     }
 
     public render() {
@@ -530,8 +541,9 @@ class WavesScene extends Animatable {
     }
 
     private initPlane(): void {
+        const oversizeMult = 1.8;
         const viewableDims = this.frontPage.canvas.getViewableRectangle(78);
-        const vWidth = viewableDims[0]!, vHeight = viewableDims[1]!;
+        const vWidth = viewableDims[0]! * oversizeMult, vHeight = viewableDims[1]! * oversizeMult;
 
         this.planeMesh = new THREE.Mesh(
             new THREE.PlaneGeometry(vWidth, vHeight, vWidth / 2, vHeight / 2),
@@ -619,8 +631,6 @@ class MouseDot extends Dot {
             this.dotMesh.position.y = this.mousePos.y;
             this.frontPage.dotScene.connectDotsWithLines(this);
         }
-
-        super.animateDot(frontPage);
     }
 
     public hasPointerData(): boolean {
