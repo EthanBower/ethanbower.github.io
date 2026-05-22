@@ -4,6 +4,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { AsteroidAnimation } from "./cameraAnimations/asteroidAnimation";
 import { IntroAnimation } from "./cameraAnimations/introAnimation";
 import { Animatable } from "./animatable";
+import Stats from "three/examples/jsm/libs/stats.module.js";
 
 //#region Canvas Logic
 export class FrontPageAnimation {
@@ -14,6 +15,7 @@ export class FrontPageAnimation {
     public astroidScene: AstroidScene;
     public wavesScene: WavesScene;
     public dotScene: DotsScene;
+    private stats: Stats;
 
     public constructor(canvasElm: React.RefObject<HTMLDivElement | null>) {   
         this.frontPageRenderer = new FrontPageRenderer(this);
@@ -23,6 +25,9 @@ export class FrontPageAnimation {
         this.astroidScene = new AstroidScene(this);
         this.wavesScene = new WavesScene(this);
         this.dotScene = new DotsScene(this);
+        this.stats = new Stats();
+        this.stats.showPanel(0);
+        document.body.appendChild(this.stats.dom);
 
         window.addEventListener("click", () => {
             this.wavesScene.isAnimating = false;
@@ -37,8 +42,13 @@ export class FrontPageAnimation {
 
     public animatePage(): void {
         requestAnimationFrame(() => this.animatePage());
+
+        this.stats.begin();
+
         Animatable.animateAll();
         this.frontPageRenderer.render();
+        
+        this.stats.end();
     }
 }
 
@@ -208,7 +218,10 @@ class FrontPageRenderer {
 class DotsScene extends Animatable {
     private frontPage: FrontPageAnimation;
     private dotCount: number;
-    private dotLines!: Array<THREE.Line>;
+    private linePool: THREE.Line[] = [];
+    private activeLineCount = 0;  
+    private lastConnectionUpdate = 0;
+    private readonly connectionUpdateInterval = 20;
     public dots!: Array<Dot>;
     private mouseDot!: MouseDot;
 
@@ -217,20 +230,48 @@ class DotsScene extends Animatable {
         this.frontPage = frontPage;
         this.dotCount = 55;
         this.initDots();
+        this.initLinePool(200);
     }
 
     override animateScene(): void {
-        this.clearLinesAndDots();
         this.dots.forEach(dot => {
             dot.animateDot(this.frontPage);
-            this.connectDotsWithLines(dot);
         });
         this.mouseDot.animateDot(this.frontPage);
+
+        // ONLY update line connections occasionally
+        const now = performance.now();
+
+        if (now - this.lastConnectionUpdate >= this.connectionUpdateInterval) {
+            this.lastConnectionUpdate = now;
+            this.resetLines();
+
+            this.dots.forEach(dot => {
+                this.connectDotsWithLines(dot);
+            });
+
+            this.connectDotsWithLines(this.mouseDot);
+        }
+    }
+
+    private initLinePool(maxLines: number): void {
+        for (let i = 0; i < maxLines; i++) {
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(6);
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, depthTest: false });
+            const line = new THREE.Line(geometry, material);
+
+            line.visible = false;
+            this.linePool.push(line);
+            this.frontPage.frontPageScene.dotsGroup.add(line);
+        }
     }
 
     private initDots(): void {
         const cameraZ = this.frontPage.mainCamera.camera.position.z;
-        this.dotLines = [];
         this.dots = [];
 
         for (let i = 0; i < this.dotCount; i++) {
@@ -249,15 +290,17 @@ class DotsScene extends Animatable {
         this.frontPage.frontPageScene.dotsGroup.add(this.mouseDot.dotMesh);
     }
 
-    private clearLinesAndDots(): void {
-        this.dotLines.forEach(line => {
-            Utils.disposeObject(line);
-            this.frontPage.frontPageScene.dotsGroup.remove(line);
+    private resetLines(): void {
+        this.activeLineCount = 0;
+
+        this.linePool.forEach(line => {
+            line.visible = false;
         });
-        this.dotLines!.length = 0;
+
         this.dots.forEach(dot => {
             dot.connectedDots.length = 0;
         });
+
         this.mouseDot.connectedDots.length = 0;
     }
 
@@ -273,15 +316,38 @@ class DotsScene extends Animatable {
 
             const distanceSq = dot.dotMesh.position.distanceToSquared(dotToMaybeConnect.dotMesh.position);
             const maxDistanceSq = dot.connectableRadius * dot.connectableRadius;
+
             if (distanceSq > maxDistanceSq) {
                 return;
             }
 
-            const line = dot.getLineBetweenDots(dotToMaybeConnect, Math.sqrt(distanceSq));
+            const line = this.linePool[this.activeLineCount];
+
+            if (!line) {
+                return;
+            }
+
+            this.activeLineCount++;
+            line.visible = true;
+
+            // UPDATE LINE POSITIONS
+            const positions = line.geometry.attributes.position.array as Float32Array;
+            positions[0] = dot.dotMesh.position.x;
+            positions[1] = dot.dotMesh.position.y;
+            positions[2] = dot.dotMesh.position.z;
+            positions[3] = dotToMaybeConnect.dotMesh.position.x;
+            positions[4] = dotToMaybeConnect.dotMesh.position.y;
+            positions[5] = dotToMaybeConnect.dotMesh.position.z;
+            line.geometry.attributes.position.needsUpdate = true;
+            line.geometry.computeBoundingSphere();
+
+            // UPDATE OPACITY
+            const distanceAlpha = 1 - (Math.sqrt(distanceSq) / dot.connectableRadius);
+            const dotOpacityAlpha = Math.min(dot.material.opacity, dotToMaybeConnect.material.opacity);
+
+            (line.material as THREE.LineBasicMaterial).opacity = distanceAlpha * dotOpacityAlpha;
             dot.connectedDots.push(dotToMaybeConnect);
             dotToMaybeConnect.connectedDots.push(dot);
-            this.dotLines!.push(line);
-            this.frontPage.frontPageScene.dotsGroup.add(line);     
         });
     }
 }
@@ -330,18 +396,6 @@ class Dot {
         this.runCollisionOpenSpace(frontPage);
         this.runDotDistanceGradient(frontPage);
         this.updateSpawnFadeIn();
-    }
-
-    public getLineBetweenDots(dotToConnect: Dot, distanceBetweenDots: number): THREE.Line {
-        const distanceAlpha = 1 - (distanceBetweenDots / this.connectableRadius);
-        const dotOpacityAlpha = Math.min(this.material.opacity, dotToConnect.material.opacity);
-        const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: distanceAlpha * dotOpacityAlpha });
-        const points = [
-            new THREE.Vector3(this.dotMesh.position.x, this.dotMesh.position.y, this.dotMesh.position.z), 
-            new THREE.Vector3(dotToConnect.dotMesh.position.x, dotToConnect.dotMesh.position.y, dotToConnect.dotMesh.position.z)
-        ];
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        return new THREE.Line(geometry, material);
     }
 
     public dotIsConnected(dot: Dot): boolean {
@@ -625,8 +679,9 @@ class MouseDot extends Dot {
         super(0, 0, zBuffer);
         this.zBuffer = zBuffer;
         this.connectableRadius = 35;
-        (this.dotMesh.material as THREE.Material).opacity = 0;
+        (this.dotMesh.material as THREE.Material).opacity = 1;
         (this.dotMesh.material as THREE.Material).transparent = true;
+        this.dotMesh.visible = false;
 
         this.frontPage = frontPage;
         this.cameraVector = new THREE.Vector3(); 
@@ -641,23 +696,11 @@ class MouseDot extends Dot {
         }, false);
     }
 
-    public override getLineBetweenDots(dotToConnect: Dot, distanceBetweenDots: number): THREE.Line {
-        const distanceAlpha = 1 - (distanceBetweenDots / this.connectableRadius);
-        const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: distanceAlpha });
-        const points = [
-            new THREE.Vector3(this.dotMesh.position.x, this.dotMesh.position.y, this.dotMesh.position.z), 
-            new THREE.Vector3(dotToConnect.dotMesh.position.x, dotToConnect.dotMesh.position.y, dotToConnect.dotMesh.position.z)
-        ];
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        return new THREE.Line(geometry, material);
-    }
-
     public override animateDot(frontPage: FrontPageAnimation): void {
         if (this.animateMouseDot) {
             this.dotMesh.position.x = this.mousePos!.x;
             this.dotMesh.position.y = this.mousePos!.y;
             this.dotMesh.position.z = frontPage.mainCamera.camera.position.z + this.zBuffer;
-            this.frontPage.dotScene.connectDotsWithLines(this);
         }
     }
 
