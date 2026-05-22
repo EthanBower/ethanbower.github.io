@@ -4,6 +4,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { AsteroidAnimation } from "./cameraAnimations/asteroidAnimation";
 import { IntroAnimation } from "./cameraAnimations/introAnimation";
 import { Animatable } from "./animatable";
+import Stats from 'stats.js';
 
 //#region Canvas Logic
 export class FrontPageAnimation {
@@ -14,6 +15,7 @@ export class FrontPageAnimation {
     public astroidScene: AstroidScene;
     public wavesScene: WavesScene;
     public dotScene: DotsScene;
+    private stats: Stats;
 
     public constructor(canvasElm: React.RefObject<HTMLDivElement | null>) {   
         this.frontPageRenderer = new FrontPageRenderer(this);
@@ -23,8 +25,12 @@ export class FrontPageAnimation {
         this.astroidScene = new AstroidScene(this);
         this.wavesScene = new WavesScene(this);
         this.dotScene = new DotsScene(this);
+        
+        this.stats = new Stats();
+        this.stats.showPanel(0);
+        document.body.appendChild(this.stats.dom);
 
-        window.addEventListener("click", () => {
+        this.frontPageRenderer.renderer.domElement.addEventListener("click", () => {
             this.wavesScene.isAnimating = false;
             this.astroidScene.isAnimating = true;
             this.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
@@ -37,8 +43,13 @@ export class FrontPageAnimation {
 
     public animatePage(): void {
         requestAnimationFrame(() => this.animatePage());
+
+        this.stats.begin();
+
         Animatable.animateAll();
         this.frontPageRenderer.render();
+
+        this.stats.end();
     }
 }
 
