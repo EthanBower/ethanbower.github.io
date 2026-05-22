@@ -20,6 +20,20 @@ jest.mock('three', () => {
   };
 });
 
+jest.mock("stats.js", () => {
+  return {
+    __esModule: true,
+    default: jest.fn().mockImplementation(() => {
+      return {
+        dom: document.createElement("div"),
+        showPanel: jest.fn(),
+        begin: jest.fn(),
+        end: jest.fn(),
+      };
+    }),
+  };
+});
+
 describe('Home Page', () => {
   it('renders the hello world heading', () => {
     // ARRANGE: Render the component
