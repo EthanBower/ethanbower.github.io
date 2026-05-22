@@ -7,7 +7,7 @@ export abstract class Animatable {
     }
 
     public static animateAll(): void {
-        for(let animateable of this.animationsRegistry) {
+        for(const animateable of this.animationsRegistry) {
             if (animateable.isAnimating) {
                 animateable.animateScene();
             }
