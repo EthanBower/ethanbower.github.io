@@ -1,7 +1,9 @@
 import * as THREE from "three";
 import * as SimplexNoise from "simplex-noise";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { Animatable } from "./Animatable";
+import { AsteroidAnimation } from "./cameraAnimations/asteroidAnimation";
+import { IntroAnimation } from "./cameraAnimations/introAnimation";
+import { Animatable } from "./animatable";
 
 //#region Canvas Logic
 export class FrontPageAnimation {
@@ -15,12 +17,18 @@ export class FrontPageAnimation {
 
     public constructor(canvasElm: React.RefObject<HTMLDivElement | null>) {   
         this.frontPageRenderer = new FrontPageRenderer(this);
-        this.mainCamera = new MainCamera(this);
+        this.mainCamera = new MainCamera(canvasElm, this);
         this.canvas = new Canvas(canvasElm, this);
         this.frontPageScene = new FrontPageSceneManager();
         this.astroidScene = new AstroidScene(this);
         this.wavesScene = new WavesScene(this);
         this.dotScene = new DotsScene(this);
+
+        window.addEventListener("click", () => {
+            this.wavesScene.isAnimating = false;
+            this.astroidScene.isAnimating = true;
+            this.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
+        });
     }
 
     public loadAssets(): Promise<void> {
@@ -41,6 +49,7 @@ class AstroidScene extends Animatable {
 
     constructor(frontPage: FrontPageAnimation) {
         super();
+        this.isAnimating = false;
         this.gltLoader = new GLTFLoader();
         this.frontPage = frontPage;
     }
@@ -51,7 +60,7 @@ class AstroidScene extends Animatable {
                 "/asteroid.glb",
                 (gltf) => {
                     this.asteroidModel = gltf.scene;
-                    this.asteroidModel.position.set(0, 0, -20);
+                    this.asteroidModel.position.set(0, 0, -180);
                     this.asteroidModel.scale.set(1, 1, 1);
                     this.frontPage.frontPageScene.astroidGroup.add(this.asteroidModel);
                     resolve();
@@ -65,7 +74,7 @@ class AstroidScene extends Animatable {
         });
     }
 
-    public animateScene() {
+    override animateScene(): void {
         const time = Date.now() * 0.001;
 
         // Slow rotation (space drift feel)
@@ -103,12 +112,18 @@ class FrontPageSceneManager {
 
 class MainCamera {
     public camera: THREE.PerspectiveCamera;
-    private frontPage: FrontPageAnimation;
+    public asteroidAnimation: AsteroidAnimation;
+    public introAnimation: IntroAnimation;
+    private readonly renderDistanceMin: number = 0.1;
+    private readonly renderDistanceMax: number = 135;
 
-    constructor(frontPage: FrontPageAnimation) {
-        this.camera = new THREE.PerspectiveCamera(75);
-        this.frontPage = frontPage;
-        this.camera.position.z = 58;
+    constructor(canvasElm: React.RefObject<HTMLDivElement | null>, frontPage: FrontPageAnimation) {
+        this.camera = new THREE.PerspectiveCamera(75, canvasElm!.current!.clientWidth/canvasElm!.current!.clientHeight, this.renderDistanceMin, this.renderDistanceMax);
+        this.asteroidAnimation = new AsteroidAnimation(frontPage);
+        this.introAnimation = new IntroAnimation(frontPage);
+
+        // Initial camera position
+        this.camera.position.set(0, 30, 58);
     }
 
     public getVisibleDimensionsAtDepth(z: number) {
@@ -169,6 +184,15 @@ class FrontPageRenderer {
         this.frontPage = frontPage;
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false});
         this.renderer.setClearColor(FrontPageSceneManager.backgroundColor, 1);
+
+        //Prevent the canvas from 'rubber banding' on scroll
+        this.renderer.domElement.addEventListener("wheel", (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        this.renderer.domElement.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+        }, { passive: false });
     }
 
     public resetRendererWindowSize(width: number, height: number) {
@@ -195,7 +219,7 @@ class DotsScene extends Animatable {
         this.initDots();
     }
 
-    public animateScene(): void {
+    override animateScene(): void {
         this.clearLinesAndDots();
         this.dots.forEach(dot => {
             dot.animateDot(this.frontPage);
@@ -469,7 +493,7 @@ class WavesScene extends Animatable {
         window.addEventListener('resize', () => this.updatePlaneOnWindowResize(), false);
     }
 
-    public animateScene(): void {
+    override animateScene(): void {
         this.animatePlane();
         this.animateLights(this.lights.light1!, this.lights.light2!, this.lights.light3!, this.lights.light4!);
     }
@@ -591,13 +615,15 @@ class WavesScene extends Animatable {
 }
 
 class MouseDot extends Dot {
-    public pointerPosition?: THREE.Vector3 | null;
     private frontPage: FrontPageAnimation;
     private cameraVector: THREE.Vector3;
     private mousePos: THREE.Vector3;
+    private animateMouseDot: boolean = false;
+    private zBuffer: number;
 
-    constructor(frontPage: FrontPageAnimation, zPlane = -20) {
-        super(0, 0, zPlane);
+    constructor(frontPage: FrontPageAnimation, zBuffer = -70) {
+        super(0, 0, zBuffer);
+        this.zBuffer = zBuffer;
         this.connectableRadius = 35;
         (this.dotMesh.material as THREE.Material).opacity = 0;
         (this.dotMesh.material as THREE.Material).transparent = true;
@@ -606,11 +632,12 @@ class MouseDot extends Dot {
         this.cameraVector = new THREE.Vector3(); 
         this.mousePos = new THREE.Vector3();
         frontPage.frontPageRenderer.renderer.domElement.addEventListener('mousemove', (e: MouseEvent) => {
+            this.animateMouseDot = true;
             this.calcPointerPosition(e);
         }, false);
 
         frontPage.frontPageRenderer.renderer.domElement.addEventListener('mouseleave', () => {
-            this.pointerPosition = null;
+            this.animateMouseDot = false;
         }, false);
     }
 
@@ -626,19 +653,12 @@ class MouseDot extends Dot {
     }
 
     public override animateDot(frontPage: FrontPageAnimation): void {
-        if (this.hasPointerData()) {
-            this.dotMesh.position.x = this.mousePos.x;
-            this.dotMesh.position.y = this.mousePos.y;
+        if (this.animateMouseDot) {
+            this.dotMesh.position.x = this.mousePos!.x;
+            this.dotMesh.position.y = this.mousePos!.y;
+            this.dotMesh.position.z = frontPage.mainCamera.camera.position.z + this.zBuffer;
             this.frontPage.dotScene.connectDotsWithLines(this);
         }
-    }
-
-    public hasPointerData(): boolean {
-        if (this.pointerPosition?.x) {
-            return true;
-        }
-
-        return false;
     }
 
     private calcPointerPosition(e: MouseEvent) {
@@ -650,12 +670,11 @@ class MouseDot extends Dot {
         this.cameraVector.sub(this.frontPage.mainCamera.camera.position).normalize();
 
         const distance = (this.dotMesh.position.z - this.frontPage.mainCamera.camera.position.z) / this.cameraVector.z;
-        this.mousePos.copy(this.frontPage.mainCamera.camera.position).add(this.cameraVector.multiplyScalar(distance));
-        this.pointerPosition = this.mousePos;
+        this.mousePos!.copy(this.frontPage.mainCamera.camera.position).add(this.cameraVector.multiplyScalar(distance));
     }
 }
 
-class Utils {
+export class Utils {
     public static getRandomBetween(min: number, max: number, buffer = 0): number {
         let val = Math.random() * (max - min) + min;
 
@@ -666,6 +685,16 @@ class Utils {
         }
 
         return val;
+    }
+
+    public static differentialBelow(diff1: number, diff2: number, diffFactor: number): boolean {
+        const diff = diff1 - diff2;
+
+        if (Math.abs(diff) <= diffFactor) {
+            return true;
+        }
+
+        return false;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
