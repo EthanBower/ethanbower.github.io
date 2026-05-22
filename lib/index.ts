@@ -1,9 +1,9 @@
 import * as THREE from "three";
 import * as SimplexNoise from "simplex-noise";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { Animatable } from "./animatable";
 import { AsteroidAnimation } from "./cameraAnimations/asteroidAnimation";
 import { IntroAnimation } from "./cameraAnimations/introAnimation";
+import { Animatable } from "./animatable";
 
 //#region Canvas Logic
 export class FrontPageAnimation {
