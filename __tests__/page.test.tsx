@@ -20,7 +20,7 @@ jest.mock('three', () => {
   };
 });
 
-jest.mock("stats.js", () => {
+jest.mock("three/examples/jsm/libs/stats.module.js", () => {
   return {
     __esModule: true,
     default: jest.fn().mockImplementation(() => {
