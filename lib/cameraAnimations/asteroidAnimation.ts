@@ -14,7 +14,7 @@ export class AsteroidAnimation extends Animatable {
         this.frontPage = frontPage;
     }
 
-    override animateScene(): void {
+    override update(): void {
         const asteroid = this.frontPage.astroidScene.asteroidModel!;
         const camera = this.frontPage.mainCamera.camera;
 
@@ -25,7 +25,7 @@ export class AsteroidAnimation extends Animatable {
         }
 
         // Smooth zoom
-        camera.position.z += (this.cameraTargetZ - camera.position.z) * 0.015;
+        camera.position.z += (this.cameraTargetZ - camera.position.z) * 0.04;
         // Look slightly above asteroid center
         this.lootTargetVec.set(
             asteroid.position.x,

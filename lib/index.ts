@@ -6,8 +6,31 @@ import { IntroAnimation } from "./cameraAnimations/introAnimation";
 import { Animatable } from "./animatable";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 
+class TimeTracker {
+    public time!: number;
+    public elapsedTime! :number;
+    public deltaTime!: number;
+    public lastFrameTime: number;
+
+    constructor () {
+        this.lastFrameTime = performance.now();
+        this.updateTime();
+    }
+
+    public updateTime() {
+        const perfNow = performance.now();
+
+        // The 0.001 converts to seconds
+        this.time = Date.now() * 0.001;
+        this.elapsedTime = perfNow * 0.001;
+        this.deltaTime = (perfNow - this.lastFrameTime) * 0.001;
+        this.lastFrameTime = perfNow;
+    }
+}
+
 //#region Canvas Logic
 export class FrontPageAnimation {
+    public static timeTracker: TimeTracker = new TimeTracker();
     public frontPageRenderer: FrontPageRenderer;
     public mainCamera: MainCamera;
     public canvas: Canvas;
@@ -26,10 +49,11 @@ export class FrontPageAnimation {
         this.wavesScene = new WavesScene(this);
         this.dotScene = new DotsScene(this);
         this.stats = new Stats();
+
         this.stats.showPanel(0);
         document.body.appendChild(this.stats.dom);
 
-        window.addEventListener("click", () => {
+        this.frontPageRenderer.renderer.domElement.addEventListener("click", () => {
             this.wavesScene.isAnimating = false;
             this.astroidScene.isAnimating = true;
             this.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
@@ -43,11 +67,11 @@ export class FrontPageAnimation {
     public animatePage(): void {
         requestAnimationFrame(() => this.animatePage());
 
-        this.stats.begin();
+        FrontPageAnimation.timeTracker.updateTime();
 
-        Animatable.animateAll();
+        this.stats.begin();
+        Animatable.updateAll();
         this.frontPageRenderer.render();
-        
         this.stats.end();
     }
 }
@@ -56,6 +80,8 @@ class AstroidScene extends Animatable {
     public asteroidModel?: THREE.Group<THREE.Object3DEventMap>;
     private gltLoader: GLTFLoader;
     private frontPage: FrontPageAnimation;
+    private rimLight!: THREE.PointLight;
+    private fillLight!: THREE.PointLight;
 
     constructor(frontPage: FrontPageAnimation) {
         super();
@@ -73,30 +99,45 @@ class AstroidScene extends Animatable {
                     this.asteroidModel.position.set(0, 0, -180);
                     this.asteroidModel.scale.set(1, 1, 1);
                     this.frontPage.frontPageScene.astroidGroup.add(this.asteroidModel);
+                    this.initLighting();
                     resolve();
                 },
                 undefined,
                 (error) => {
-                    console.error("GLB load error:", error);
                     reject(error);
                 }
             );
         });
     }
 
-    override animateScene(): void {
-        const time = Date.now() * 0.001;
+    override update(): void {
+        const time = FrontPageAnimation.timeTracker.time; 
 
         // Slow rotation (space drift feel)
         this.asteroidModel!.rotation.y += 0.002;
         this.asteroidModel!.rotation.x += 0.001;
 
         // Floating motion
-        this.asteroidModel!.position.y += Math.sin(time) * 0.002;
+        this.asteroidModel!.position.y += Math.sin(time) * 0.003;
         this.asteroidModel!.position.x += Math.cos(time * 0.7) * 0.001;
-
         // Gentle depth wobble
         this.asteroidModel!.position.z += Math.sin(time * 0.5) * 0.0005;
+
+        this.rimLight.intensity = Utils.calcFadeInFadeOut(100, 450, time);
+        this.fillLight.intensity += Utils.calcFadeInFadeOut(.5, 1.2, time);
+    }
+
+    private initLighting(): void {
+        // Blue rim light
+        this.rimLight = new THREE.PointLight(0x66aaff, 450, 45, 1);
+        this.rimLight.position.set(11, 13, -180);
+
+        // Warm fill light
+        this.fillLight = new THREE.PointLight(0xff8844, 5, 45, 2);
+        this.fillLight.position.set(0, 0, -150);
+
+        this.frontPage.frontPageScene.astroidGroup.add(this.rimLight);
+        this.frontPage.frontPageScene.astroidGroup.add(this.fillLight);
     }
 }
 
@@ -218,52 +259,44 @@ class FrontPageRenderer {
 class DotsScene extends Animatable {
     private frontPage: FrontPageAnimation;
     private dotCount: number;
-    private linePool: THREE.Line[] = [];
+    private maxLineCount: number;
     private activeLineCount = 0;  
-    private lastConnectionUpdate = 0;
-    private readonly connectionUpdateInterval = 20;
+    private linePool: THREE.Line[] = [];
     public dots!: Array<Dot>;
     private mouseDot!: MouseDot;
 
     constructor(frontPage: FrontPageAnimation) {
         super();
         this.frontPage = frontPage;
+        this.maxLineCount = 200;
         this.dotCount = 55;
         this.initDots();
-        this.initLinePool(200);
-    }
-
-    override animateScene(): void {
-        this.dots.forEach(dot => {
-            dot.animateDot(this.frontPage);
-        });
-        this.mouseDot.animateDot(this.frontPage);
-
-        // ONLY update line connections occasionally
-        const now = performance.now();
-
-        if (now - this.lastConnectionUpdate >= this.connectionUpdateInterval) {
-            this.lastConnectionUpdate = now;
+        this.initLinePool();
+        this.registerTick(20, () => { 
             this.resetLines();
-
-            this.dots.forEach(dot => {
+            for(const dot of this.dots) {
                 this.connectDotsWithLines(dot);
-            });
-
+            }
             this.connectDotsWithLines(this.mouseDot);
-        }
+        });
     }
 
-    private initLinePool(maxLines: number): void {
-        for (let i = 0; i < maxLines; i++) {
-            const geometry = new THREE.BufferGeometry();
+    override update(): void {
+        for(const dot of this.dots) {
+            dot.updateDot(this.frontPage);
+        }
+        //Animate mouse dot if coords are provided
+        this.mouseDot.updateDot(this.frontPage);
+    }
+
+    private initLinePool(): void {
+        for (let i = 0; i < this.maxLineCount; i++) {
             const positions = new Float32Array(6);
-
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-            const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, depthTest: false });
+            const geometry = new THREE.BufferGeometry();
+            const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, depthTest: true });
             const line = new THREE.Line(geometry, material);
 
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
             line.visible = false;
             this.linePool.push(line);
             this.frontPage.frontPageScene.dotsGroup.add(line);
@@ -292,45 +325,35 @@ class DotsScene extends Animatable {
 
     private resetLines(): void {
         this.activeLineCount = 0;
-
-        this.linePool.forEach(line => {
+        for(const line of this.linePool) {
             line.visible = false;
-        });
-
-        this.dots.forEach(dot => {
-            dot.connectedDots.length = 0;
-        });
-
-        this.mouseDot.connectedDots.length = 0;
+        }
     }
 
     public connectDotsWithLines(dot: Dot): void {
-        this.dots.forEach(dotToMaybeConnect => {
+        for(const dotToMaybeConnect of this.dots) {
             if (dot.id == dotToMaybeConnect.id) {
-                return;
-            }
-
-            if (dot.dotIsConnected(dotToMaybeConnect)) {
-                return;
+                continue;
             }
 
             const distanceSq = dot.dotMesh.position.distanceToSquared(dotToMaybeConnect.dotMesh.position);
             const maxDistanceSq = dot.connectableRadius * dot.connectableRadius;
 
             if (distanceSq > maxDistanceSq) {
-                return;
+                continue;
             }
 
             const line = this.linePool[this.activeLineCount];
 
+            //If there is no line available in pool.
             if (!line) {
-                return;
+                continue;
             }
 
             this.activeLineCount++;
             line.visible = true;
 
-            // UPDATE LINE POSITIONS
+            // Update line positions
             const positions = line.geometry.attributes.position.array as Float32Array;
             positions[0] = dot.dotMesh.position.x;
             positions[1] = dot.dotMesh.position.y;
@@ -341,14 +364,12 @@ class DotsScene extends Animatable {
             line.geometry.attributes.position.needsUpdate = true;
             line.geometry.computeBoundingSphere();
 
-            // UPDATE OPACITY
+            // Update opacity
             const distanceAlpha = 1 - (Math.sqrt(distanceSq) / dot.connectableRadius);
             const dotOpacityAlpha = Math.min(dot.material.opacity, dotToMaybeConnect.material.opacity);
 
             (line.material as THREE.LineBasicMaterial).opacity = distanceAlpha * dotOpacityAlpha;
-            dot.connectedDots.push(dotToMaybeConnect);
-            dotToMaybeConnect.connectedDots.push(dot);
-        });
+        };
     }
 }
 
@@ -356,7 +377,6 @@ class Dot {
     public static boundingBoxMode = true;
     public dotRadius: number;
     public connectableRadius: number;
-    public connectedDots: Array<Dot>;
     public id: string;
     public dotMesh: THREE.Mesh;
     public velocity: THREE.Vector3;
@@ -373,17 +393,16 @@ class Dot {
         waveCollisionVec: new THREE.Vector3()
     };
     private static dotColorGradient: { near: THREE.Color, far: THREE.Color } = {
-        near: new THREE.Color(0xffffff),
+        near: new THREE.Color(0xbdbdbd),
         far: new THREE.Color(0x084eff)
     }
 
     constructor(x: number, y: number, z: number) {
         this.dotRadius = 0.35;
         this.connectableRadius = 25;
-        this.connectedDots = [];
         this.id = crypto.randomUUID();
 
-        this.material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, fog: true });
+        this.material = new THREE.MeshBasicMaterial({ color: Dot.dotColorGradient.near, transparent: true, opacity: 0, fog: true });
         this.dotMesh = new THREE.Mesh(new THREE.CircleGeometry(this.dotRadius, 5), this.material);
         this.dotMesh.position.set(x, y, z);
         this.velocity = new THREE.Vector3(
@@ -392,21 +411,10 @@ class Dot {
             Utils.getRandomBetween(-0.03, 0.03, .004));
     }
 
-    public animateDot(frontPage: FrontPageAnimation): void {
+    public updateDot(frontPage: FrontPageAnimation): void {
         this.runCollisionOpenSpace(frontPage);
         this.runDotDistanceGradient(frontPage);
         this.updateSpawnFadeIn();
-    }
-
-    public dotIsConnected(dot: Dot): boolean {
-        for (let i = 0; i < this.connectedDots.length; i++) {
-            const connectedDot = this.connectedDots[i]!;
-            if (dot.id == connectedDot.id) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private runCollisionOpenSpace(frontPage: FrontPageAnimation): void {
@@ -547,13 +555,13 @@ class WavesScene extends Animatable {
         window.addEventListener('resize', () => this.updatePlaneOnWindowResize(), false);
     }
 
-    override animateScene(): void {
-        this.animatePlane();
-        this.animateLights(this.lights.light1!, this.lights.light2!, this.lights.light3!, this.lights.light4!);
+    override update(): void {
+        this.updatePlane();
+        this.updateLights(this.lights.light1!, this.lights.light2!, this.lights.light3!, this.lights.light4!);
     }
 
     public resolveDotCollision(dot: Dot) {
-        const time = Date.now() * 0.00017;
+        const time = FrontPageAnimation.timeTracker.time * 0.17;
         const nextPos = this.tempVecs.tempVec1
             .copy(dot.dotMesh.position)
             .add(dot.velocity);
@@ -639,9 +647,9 @@ class WavesScene extends Animatable {
         this.initPlane();
     }
 
-    private animatePlane(): void {
+    private updatePlane(): void {
         const gArray: THREE.TypedArray = this.planeMesh.geometry.attributes.position.array;
-        const time: number = Date.now() * 0.00017;
+        const time: number = FrontPageAnimation.timeTracker.time * 0.17;
 
         for (let i = 0; i < gArray.length; i += 3) {
           gArray[i + 2] = this.getWaveHeight(gArray[i], gArray[i + 1], time);
@@ -656,8 +664,8 @@ class WavesScene extends Animatable {
         return this.simplexNoise(x / xyCoef, y / xyCoef, time, 0) * zCoef;
     }
 
-    private animateLights(... lights: THREE.PointLight[]): void {
-        const time = Date.now() * 0.001;
+    private updateLights(... lights: THREE.PointLight[]): void {
+        const time = FrontPageAnimation.timeTracker.time;
         const d = 50;
         let i = 0;
         for (const light of lights) {
@@ -682,10 +690,10 @@ class MouseDot extends Dot {
         (this.dotMesh.material as THREE.Material).opacity = 1;
         (this.dotMesh.material as THREE.Material).transparent = true;
         this.dotMesh.visible = false;
-
         this.frontPage = frontPage;
         this.cameraVector = new THREE.Vector3(); 
         this.mousePos = new THREE.Vector3();
+
         frontPage.frontPageRenderer.renderer.domElement.addEventListener('mousemove', (e: MouseEvent) => {
             this.animateMouseDot = true;
             this.calcPointerPosition(e);
@@ -696,7 +704,7 @@ class MouseDot extends Dot {
         }, false);
     }
 
-    public override animateDot(frontPage: FrontPageAnimation): void {
+    public override updateDot(frontPage: FrontPageAnimation): void {
         if (this.animateMouseDot) {
             this.dotMesh.position.x = this.mousePos!.x;
             this.dotMesh.position.y = this.mousePos!.y;
@@ -738,6 +746,10 @@ export class Utils {
         }
 
         return false;
+    }
+
+    public static calcFadeInFadeOut(min: number, max: number, time: number) {
+        return min + (Math.sin(time * 0.5) * 0.5 + 0.5) * (max - min);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
