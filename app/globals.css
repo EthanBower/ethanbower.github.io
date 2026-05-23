@@ -40,8 +40,9 @@ body {
   bottom: 0;
   width: 100vw;
   height: 100vh;
-  height: 100dvh;
+  height: 100vh;
   z-index: 0;
+  inset: 0;
 }
 
 .main-ui {

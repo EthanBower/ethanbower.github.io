@@ -212,8 +212,8 @@ class Canvas {
     }
 
     public updateCanvasSize(frontPage: FrontPageAnimation): void {
-        this.width = window.innerWidth; 
-        this.height = window.innerHeight; 
+        this.width = this.canvasElm!.current!.clientWidth; 
+        this.height = this.canvasElm!.current!.clientHeight; 
 
         frontPage.frontPageRenderer.resetRendererWindowSize(this.width, this.height);
         frontPage.mainCamera.resetCameraAspectRatio(this.width, this.height);
