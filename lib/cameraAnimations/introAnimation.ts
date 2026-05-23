@@ -12,7 +12,7 @@ export class IntroAnimation extends Animatable {
         this.frontPage = frontPage;
     }
 
-    override animateScene(): void {
+    override update(): void {
         const camera = this.frontPage.mainCamera.camera;
 
         if (Utils.differentialBelow(this.cameraTargetY, camera.position.y, 0.1)) {
@@ -21,6 +21,6 @@ export class IntroAnimation extends Animatable {
             return;
         }
 
-        camera.position.y += (this.cameraTargetY - camera.position.y) * 0.015;
+        camera.position.y += (this.cameraTargetY - camera.position.y) * 0.04;
     }
 }

@@ -20,7 +20,10 @@ export default function Home() {
 
   return (
     <main className="relative w-screen h-dvh overflow-hidden">
-      <div ref={mountRef} className="absolute inset-0" />
+      <div ref={mountRef} id="three-root" className="inset-0" />
+      <div className="main-ui items-center justify-center flex">
+        <p className="text-center text-white">This is a test.</p>
+      </div>
     </main>
   );
 }
