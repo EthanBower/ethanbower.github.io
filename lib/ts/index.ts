@@ -5,6 +5,7 @@ import { AsteroidAnimation } from "./cameraAnimations/asteroidAnimation";
 import { IntroAnimation } from "./cameraAnimations/introAnimation";
 import { Animatable } from "./animatable";
 import Stats from "three/examples/jsm/libs/stats.module.js";
+import { AppPermissions } from "./appPermissions";
 
 class TimeTracker {
     public time!: number;
@@ -40,7 +41,7 @@ export class FrontPageAnimation {
     public dotScene: DotsScene;
     private stats: Stats;
 
-    public constructor(canvasElm: React.RefObject<HTMLDivElement | null>) {   
+    public constructor(canvasElm: HTMLDivElement) {   
         this.frontPageScene = new FrontPageSceneManager();
         this.frontPageRenderer = new FrontPageRenderer(this);
         this.mainCamera = new MainCamera(canvasElm, this);
@@ -182,9 +183,9 @@ class MainCamera extends Animatable {
     private mouse: THREE.Vector2 = new THREE.Vector2();
     private frontPage: FrontPageAnimation;
 
-    constructor(canvasElm: React.RefObject<HTMLDivElement | null>, frontPage: FrontPageAnimation) {
+    constructor(canvasElm: HTMLDivElement, frontPage: FrontPageAnimation) {
         super();
-        this.camera = new THREE.PerspectiveCamera(75, canvasElm!.current!.clientWidth/canvasElm!.current!.clientHeight, this.renderSettings.renderDistanceMin, this.renderSettings.renderDistanceMax);
+        this.camera = new THREE.PerspectiveCamera(75, canvasElm.clientWidth/canvasElm!.clientHeight, this.renderSettings.renderDistanceMin, this.renderSettings.renderDistanceMax);
         this.asteroidAnimation = new AsteroidAnimation(frontPage);
         this.introAnimation = new IntroAnimation(frontPage);
         this.frontPage = frontPage;
@@ -194,7 +195,9 @@ class MainCamera extends Animatable {
 
         frontPage.frontPageRenderer.renderer.domElement.addEventListener("mousemove", this.setTargetRotation);
         frontPage.frontPageRenderer.renderer.domElement.addEventListener("mouseleave", this.resetTargetRotation);
-
+        if (AppPermissions.gyroPermissions.gyroscopeEnabled) {
+            window.addEventListener("deviceorientation", this.handleDeviceOrientation);
+        }
     }
 
     public override update(): void {
@@ -234,8 +237,7 @@ class MainCamera extends Animatable {
 
         // Apply subtle rotation
         this.cameraRotation.targetRotation.y = normalizedGamma * 0.12;
-
-        this.cameraRotation.targetRotation.x = normalizedBeta * 0.08;
+        this.cameraRotation.targetRotation.x = normalizedBeta * 0.12;
     };
 
     private setTargetRotation = (e: MouseEvent) => {
@@ -260,22 +262,22 @@ class MainCamera extends Animatable {
 }
 
 class Canvas {
-    public canvasElm: React.RefObject<HTMLDivElement | null>;
+    public canvasElm: HTMLDivElement;
     public width!: number;
     public height!: number;
     private frontPage: FrontPageAnimation;
 
-    public constructor(canvasElm: React.RefObject<HTMLDivElement | null>, frontPage: FrontPageAnimation) {
+    public constructor(canvasElm: HTMLDivElement, frontPage: FrontPageAnimation) {
         this.frontPage = frontPage;
         this.canvasElm = canvasElm;
-        this.canvasElm.current!.appendChild(this.frontPage.frontPageRenderer.renderer.domElement);
+        this.canvasElm.appendChild(this.frontPage.frontPageRenderer.renderer.domElement);
         this.updateCanvasSize(frontPage);
         window.addEventListener('resize', () => this.updateCanvasSize(frontPage), false);
     }
 
     public updateCanvasSize(frontPage: FrontPageAnimation): void {
-        this.width = this.canvasElm!.current!.clientWidth; 
-        this.height = this.canvasElm!.current!.clientHeight; 
+        this.width = this.canvasElm!.clientWidth; 
+        this.height = this.canvasElm!.clientHeight; 
 
         frontPage.frontPageRenderer.resetRendererWindowSize(this.width, this.height);
         frontPage.mainCamera.resetCameraAspectRatio(this.width, this.height);

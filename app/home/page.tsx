@@ -1,31 +1,34 @@
 "use client";
 
-import { FrontPageAnimation } from "@/lib";
-import { useEffect, useRef } from "react";
+import { FrontPageAnimation } from "@/lib/ts";
+import { useEffect, useRef, useState } from "react";
+import Permissions from "../../lib/components/permissions";
 
 export default function Home() {
-  console.log("RUNNING");
+  const threeJsRef = useRef<HTMLDivElement | null>(null);
+  const [permissionsPageEnabled, setEnabled] = useState(true);
 
-  const mountRef = useRef<HTMLDivElement | null>(null);
+  const handleEnable = async () => {
+    if (!threeJsRef.current) return;
+
+    const pageAnimation = new FrontPageAnimation(threeJsRef.current);
+    await pageAnimation.loadAssets();
+
+    setEnabled(false);
+
+    pageAnimation.animatePage();
+  };
+
   useEffect(() => {
-    if (!mountRef.current) {
-      return;
-    }
-    
-    const pageAnimation = new FrontPageAnimation(mountRef);
-    pageAnimation.loadAssets().then(() => {
-      pageAnimation.animatePage();
-    });
-
-    return () => { };
+    return () => { 
+      // Dispose of THREE JS OBJS, Dispose of listeners
+    };
   }, []);
 
   return (
-    <main className="relative">
-      <div ref={mountRef} id="three-root" />
-      <div className="main-ui items-center justify-center flex">
-        <p className="text-center text-white">This is a test.</p>
-      </div>
+    <main className="relative w-full h-screen">
+      {permissionsPageEnabled && <Permissions onComplete={handleEnable} />}
+      <div ref={threeJsRef} id="three-root" />
     </main>
   );
 }

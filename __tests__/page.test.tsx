@@ -40,7 +40,7 @@ describe('Home Page', () => {
     const { container } = render(<Home />);
 
     // ACT: Look for the specific element
-    const canvas = container.querySelector('canvas');
+    const canvas = container.querySelector('canvas')?.innerHTML;
     expect(canvas).toBeInTheDocument();
   })
 })

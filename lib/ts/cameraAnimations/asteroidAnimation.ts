@@ -1,3 +1,5 @@
+"use client";
+
 import { FrontPageAnimation, Utils } from "..";
 import { Animatable } from "../animatable";
 
