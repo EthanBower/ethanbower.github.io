@@ -1,4 +1,3 @@
-import * as THREE from "three";
 import { FrontPageAnimation, Utils } from "..";
 import { Animatable } from "../animatable";
 

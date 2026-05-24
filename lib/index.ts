@@ -180,35 +180,21 @@ class MainCamera extends Animatable {
         renderDistanceMax: 135
     };
     private mouse: THREE.Vector2 = new THREE.Vector2();
+    private frontPage: FrontPageAnimation;
 
     constructor(canvasElm: React.RefObject<HTMLDivElement | null>, frontPage: FrontPageAnimation) {
         super();
         this.camera = new THREE.PerspectiveCamera(75, canvasElm!.current!.clientWidth/canvasElm!.current!.clientHeight, this.renderSettings.renderDistanceMin, this.renderSettings.renderDistanceMax);
         this.asteroidAnimation = new AsteroidAnimation(frontPage);
         this.introAnimation = new IntroAnimation(frontPage);
+        this.frontPage = frontPage;
 
         // Initial camera position
         this.camera.position.set(0, 30, 58);
 
-        frontPage.frontPageRenderer.renderer.domElement.addEventListener("mousemove", (e: MouseEvent) => {
-            const rect = frontPage.frontPageRenderer.renderer.domElement.getBoundingClientRect();
+        frontPage.frontPageRenderer.renderer.domElement.addEventListener("mousemove", this.setTargetRotation);
+        frontPage.frontPageRenderer.renderer.domElement.addEventListener("mouseleave", this.resetTargetRotation);
 
-            // Normalized mouse coords (-1 to 1)
-            this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-            this.mouse.y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-
-            // Subtle target rotation
-            this.cameraRotation.targetRotation.y = -this.mouse.x * 0.09;
-            this.cameraRotation.targetRotation.x = this.mouse.y * 0.05;
-        });
-
-        frontPage.frontPageRenderer.renderer.domElement.addEventListener("mouseleave", () => {
-            this.mouse.x = 0;
-            this.mouse.y = 0;
-
-            this.cameraRotation.targetRotation.y = 0;
-            this.cameraRotation.targetRotation.x = 0;
-        });
     }
 
     public override update(): void {
@@ -238,8 +224,38 @@ class MainCamera extends Animatable {
         this.camera.updateProjectionMatrix();
     }
 
-    private setTargetRotation() {
+    private handleDeviceOrientation = (event: DeviceOrientationEvent) => {
+        const gamma = event.gamma ?? 0; // left/right tilt
+        const beta = event.beta ?? 0;   // front/back tilt
 
+        // Normalize values
+        const normalizedGamma = THREE.MathUtils.clamp(gamma / 45, -1, 1);
+        const normalizedBeta = THREE.MathUtils.clamp(beta / 45, -1, 1);
+
+        // Apply subtle rotation
+        this.cameraRotation.targetRotation.y = normalizedGamma * 0.12;
+
+        this.cameraRotation.targetRotation.x = normalizedBeta * 0.08;
+    };
+
+    private setTargetRotation = (e: MouseEvent) => {
+        const rect = this.frontPage.frontPageRenderer.renderer.domElement.getBoundingClientRect();
+
+        // Normalized mouse coords (-1 to 1)
+        this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+
+        // Subtle target rotation
+        this.cameraRotation.targetRotation.y = -this.mouse.x * 0.09;
+        this.cameraRotation.targetRotation.x = this.mouse.y * 0.05;
+    }
+
+    private resetTargetRotation = () => {
+        this.mouse.x = 0;
+        this.mouse.y = 0;
+
+        this.cameraRotation.targetRotation.y = 0;
+        this.cameraRotation.targetRotation.x = 0;
     }
 }
 

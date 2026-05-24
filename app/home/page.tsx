@@ -4,6 +4,8 @@ import { FrontPageAnimation } from "@/lib";
 import { useEffect, useRef } from "react";
 
 export default function Home() {
+  console.log("RUNNING");
+
   const mountRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!mountRef.current) {
