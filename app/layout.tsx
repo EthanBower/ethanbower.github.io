@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode;}>) {
-  const versionNumber = process.env.NEXT_PUBLIC_APP_VERSION || "dev-local";
+  const versionNumber = process.env.SITE_APP_VERSION || "dev-local";
 
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
