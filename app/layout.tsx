@@ -22,10 +22,15 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode;}>) {
+  const versionNumber = process.env.NEXT_PUBLIC_APP_VERSION || "dev-local";
+
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body>
         {children}
+        <div className="absolute bottom-0 left-0 w-full m-0 p-0 pb-0.5 text-center text-white/50 text-[10px] font-mono select-none z-50 pointer-events-none">
+          {versionNumber}
+        </div>
       </body>
     </html>
   );
