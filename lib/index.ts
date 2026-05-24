@@ -41,10 +41,10 @@ export class FrontPageAnimation {
     private stats: Stats;
 
     public constructor(canvasElm: React.RefObject<HTMLDivElement | null>) {   
+        this.frontPageScene = new FrontPageSceneManager();
         this.frontPageRenderer = new FrontPageRenderer(this);
         this.mainCamera = new MainCamera(canvasElm, this);
         this.canvas = new Canvas(canvasElm, this);
-        this.frontPageScene = new FrontPageSceneManager();
         this.astroidScene = new AstroidScene(this);
         this.wavesScene = new WavesScene(this);
         this.dotScene = new DotsScene(this);
@@ -54,9 +54,15 @@ export class FrontPageAnimation {
         document.body.appendChild(this.stats.dom);
 
         this.frontPageRenderer.renderer.domElement.addEventListener("click", () => {
-            this.wavesScene.isAnimating = false;
-            this.astroidScene.isAnimating = true;
-            this.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
+            if (this.mainCamera.asteroidAnimation.cameraTargetZ == -150) {
+                this.wavesScene.isAnimating = true;
+                this.astroidScene.isAnimating = false;
+                this.mainCamera.asteroidAnimation.startZoomOutAsteroid();
+            } else {
+                this.wavesScene.isAnimating = false;
+                this.astroidScene.isAnimating = true;
+                this.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
+            }
         });
     }
 
@@ -161,20 +167,56 @@ class FrontPageSceneManager {
     }
 }
 
-class MainCamera {
+class MainCamera extends Animatable {
     public camera: THREE.PerspectiveCamera;
     public asteroidAnimation: AsteroidAnimation;
     public introAnimation: IntroAnimation;
-    private readonly renderDistanceMin: number = 0.1;
-    private readonly renderDistanceMax: number = 135;
+    public cameraRotation = {
+        targetRotation: new THREE.Vector2(),
+        currentRotation: new THREE.Vector2()
+    };
+    private renderSettings: { renderDistanceMin: number, renderDistanceMax: number } = {
+        renderDistanceMin: 0.1,
+        renderDistanceMax: 135
+    };
+    private mouse: THREE.Vector2 = new THREE.Vector2();
 
     constructor(canvasElm: React.RefObject<HTMLDivElement | null>, frontPage: FrontPageAnimation) {
-        this.camera = new THREE.PerspectiveCamera(75, canvasElm!.current!.clientWidth/canvasElm!.current!.clientHeight, this.renderDistanceMin, this.renderDistanceMax);
+        super();
+        this.camera = new THREE.PerspectiveCamera(75, canvasElm!.current!.clientWidth/canvasElm!.current!.clientHeight, this.renderSettings.renderDistanceMin, this.renderSettings.renderDistanceMax);
         this.asteroidAnimation = new AsteroidAnimation(frontPage);
         this.introAnimation = new IntroAnimation(frontPage);
 
         // Initial camera position
         this.camera.position.set(0, 30, 58);
+
+        frontPage.frontPageRenderer.renderer.domElement.addEventListener("mousemove", (e: MouseEvent) => {
+            const rect = frontPage.frontPageRenderer.renderer.domElement.getBoundingClientRect();
+
+            // Normalized mouse coords (-1 to 1)
+            this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            this.mouse.y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+
+            // Subtle target rotation
+            this.cameraRotation.targetRotation.y = -this.mouse.x * 0.09;
+            this.cameraRotation.targetRotation.x = this.mouse.y * 0.05;
+        });
+
+        frontPage.frontPageRenderer.renderer.domElement.addEventListener("mouseleave", () => {
+            this.mouse.x = 0;
+            this.mouse.y = 0;
+
+            this.cameraRotation.targetRotation.y = 0;
+            this.cameraRotation.targetRotation.x = 0;
+        });
+    }
+
+    public override update(): void {
+        this.cameraRotation.currentRotation.x += (this.cameraRotation.targetRotation.x - this.cameraRotation.currentRotation.x) * 0.05;
+        this.cameraRotation.currentRotation.y += (this.cameraRotation.targetRotation.y - this.cameraRotation.currentRotation.y) * 0.05;
+
+        this.camera.rotation.x = this.cameraRotation.currentRotation.x;
+        this.camera.rotation.y = this.cameraRotation.currentRotation.y;
     }
 
     public getVisibleDimensionsAtDepth(z: number) {
@@ -194,6 +236,10 @@ class MainCamera {
     public resetCameraAspectRatio(width: number, height: number) {
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
+    }
+
+    private setTargetRotation() {
+
     }
 }
 

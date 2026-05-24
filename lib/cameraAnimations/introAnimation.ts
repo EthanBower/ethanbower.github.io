@@ -3,7 +3,6 @@ import { Animatable } from "../animatable";
 
 export class IntroAnimation extends Animatable {
     public cameraTargetY: number = 0;
-    public currentVelocity: number = 0;
     private frontPage: FrontPageAnimation;
 
     constructor(frontPage: FrontPageAnimation) {
