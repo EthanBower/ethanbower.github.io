@@ -21,10 +21,10 @@ export abstract class Animatable {
     }
 
     public static updateAll(): void {
-        for(const animateable of this.animationsRegistry) {
-            if (animateable.isAnimating) {
-                animateable.update();
-                animateable.runTicks();
+        for(const animatable of this.animationsRegistry) {
+            if (animatable.isAnimating) {
+                animatable.update();
+                animatable.runTicks();
             }
         }
     }

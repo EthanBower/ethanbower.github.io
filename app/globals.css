@@ -42,3 +42,24 @@ body {
   z-index: 0;
   inset: 0;
 }
+
+.popup-window {
+  @apply p-[10px] m-[5px] pointer-events-auto border rounded-[24px] text-white select-none transform-gpu transition-all duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] backdrop-blur-[3px];
+  border-color: rgba(255, 255, 255, 0.12);
+  background: 
+    radial-gradient(120% 120% at 50% 0, #ff00000d, #ff00000f), 
+    linear-gradient(140deg, #0f00b166, #0f00b11a 20.59%, #3138a700 49.16%, #3903804a 82.77%, #4b007ed6);
+}
+
+.popup-button-red,
+.popup-button-blue {
+  @apply w-full mt-[5px] mb-[5px] px-[4px] py-[6px] rounded-xl border transition-all duration-300;
+}
+
+.popup-button-red {
+  @apply bg-red-800/40 text-red-200 border-red-500/40 hover:bg-red-700/50 hover:border-red-400/60 shadow-[0_0_20px_rgba(255,0,0,0.25)];
+}
+
+.popup-button-blue {
+  @apply shadow-[0_0_12px_rgba(0,180,255,0.25)] bg-cyan-400/10 border-cyan-500/40 text-cyan-200 hover:bg-cyan-700/50 hover:border-cyan-400/60;
+}

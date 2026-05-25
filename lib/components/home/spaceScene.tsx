@@ -10,9 +10,13 @@ export default function SpaceScene() {
     if (!threeJsRef.current) return;
 
     const pageScene = SceneController.getInstance();
-    pageScene.init(threeJsRef.current);
-    pageScene.frontPage!.loadAssets();
-    pageScene.frontPage!.animatePage(); // Make this wait for loading
+    const init = async () => {
+      pageScene.init(threeJsRef.current!);
+      await pageScene.frontPage!.loadAssets();
+      pageScene.frontPage!.animatePage();
+    }
+
+    init();
 
     return () => { 
       // Dispose of THREE JS OBJS, Dispose of listeners

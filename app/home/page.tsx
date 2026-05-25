@@ -1,24 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import Permissions from "../../lib/components/permissions";
-import SpaceScene from "@/lib/components/spaceScene";
-import DraggableWindow from "@/lib/components/draggableWindow";
+import { useEffect, useState } from "react";
+import Permissions from "../../lib/components/home/permissions";
+import SpaceScene from "@/lib/components/home/spaceScene";
+import PopupWindow from "@/lib/components/global/popupWindow";
 import { AppPermissions } from "@/lib/ts/appPermissions";
 
 export default function Home() {
-  const [permissionsPageEnabled, setEnabled] = useState(AppPermissions.gyroPermissions.gyroCompatible);
+  const [permissionsPageEnabled, setEnabled] = useState(false);
   const disablePermissionsWindow = async () => {
     setEnabled(false);
   };
   
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEnabled(AppPermissions.gyroPermissions.gyroCompatible);
+  }, []);
+
   return (
     <main className="relative w-full h-screen">
       {
         permissionsPageEnabled && 
-        <DraggableWindow windowTitle="PERMISSIONS" onClose={disablePermissionsWindow}>
+        <PopupWindow windowTitle="PERMISSIONS" onClose={disablePermissionsWindow}>
           <Permissions />
-        </DraggableWindow>
+        </PopupWindow>
       }
       <SpaceScene />
     </main>
