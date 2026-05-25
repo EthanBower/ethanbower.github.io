@@ -13,7 +13,8 @@ export default function Home() {
   };
   
   useEffect(() => {
-    setEnabled(!AppPermissions.gyroPermissions.gyroCompatible);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEnabled(AppPermissions.gyroPermissions.gyroCompatible);
   }, []);
 
   return (

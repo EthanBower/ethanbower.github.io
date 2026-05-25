@@ -115,12 +115,12 @@ export default function PopupWindow({ windowTitle, onClose, children }: PopupWin
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
             {/* Window positioning layer for directly managing DOM strings enabling smooth rendering */}
             <div ref={windowRef} className="z-10" style={{ transform: "translate3d(0px, 0px, 0)" }}>
-                {/* Animation Layer - NOTE: popup-window contains animation times */}
+                {/* Animation Layer - NOTE: popup-window contains animati*/}
                 <div className={`popup-window ${visible ? "scale-100 opacity-100" : "scale-[0.82] opacity-0 pointer-events-none"}`}>             
                     <div onPointerDown={onPointerDown} className="cursor-grab active:cursor-grabbing select-none flex items-center gap-4 p-4 pb-2">
                         {/* Left Side SVG Icon */}
                         <div className="flex-shrink-0 text-indigo-400">
-                            <svg xmlns="http://w3.org" viewBox="0 0 24 20" fill="currentColor" className="w-8 h-8" >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 20" fill="currentColor" className="w-8 h-8" >
                                 <path fillRule="evenodd" d="M14.47 2.47a.75.75 0 011.06 0l6 6a.75.75 0 010 1.06l-6 6a.75.75 0 11-1.06-1.06L19.94 9l-5.47-5.47a.75.75 0 010-1.06zm-4.94 0a.75.75 0 00-1.06 0l-6 6a.75.75 0 000 1.06l6 6a.75.75 0 101.06-1.06L4.06 9l5.47-5.47a.75.75 0 000-1.06z" clipRule="evenodd" />
                             </svg>
                         </div>
