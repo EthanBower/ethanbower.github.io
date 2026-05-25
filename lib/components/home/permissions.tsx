@@ -1,7 +1,7 @@
 "use client";
 
 import { AppPermissions } from "@/lib/ts/appPermissions";
-import { SceneController } from "../ts/threeScene";
+import { SceneController } from "../../ts/threeScene";
 
 export default function Permissions() {
   async function enableGyro() {
@@ -17,8 +17,8 @@ export default function Permissions() {
 
   return (
     <div>
-      <button onClick={async () => { await enableGyro(); }} className="w-full mb-2">
-        Enable Motion
+      <button onClick={async () => { await enableGyro(); }} className="popup-button-blue">
+        Activate Motion
       </button>
     </div>
   );
