@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Permissions from "../../lib/components/permissions";
 import SpaceScene from "@/lib/components/spaceScene";
 import DraggableWindow from "@/lib/components/draggableWindow";

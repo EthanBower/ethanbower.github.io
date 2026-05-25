@@ -9,6 +9,7 @@ export class AppPermissions {
     public static initialize () {
         AppPermissions.gyroPermissions.gyroCompatible = 
             (typeof DeviceOrientationEvent !== "undefined") && 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (typeof (DeviceOrientationEvent as any).requestPermission === "function");
     }
 
@@ -18,6 +19,7 @@ export class AppPermissions {
                 return;
             }
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const permission = await (DeviceOrientationEvent as any).requestPermission();
             if (permission !== "granted") {
                 AppPermissions.gyroPermissions.gyroscopeEnabled = false;
