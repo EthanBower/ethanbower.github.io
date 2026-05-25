@@ -1,7 +1,7 @@
 "use client";
 
 export class AppPermissions {
-    public static gyroPermissions = {
+    public static gyroPermissions: { gyroCompatible: boolean, gyroscopeEnabled: boolean } = {
         gyroCompatible: false,
         gyroscopeEnabled: false
     };

@@ -7,14 +7,10 @@ import DraggableWindow from "@/lib/components/draggableWindow";
 import { AppPermissions } from "@/lib/ts/appPermissions";
 
 export default function Home() {
-  const [permissionsPageEnabled, setEnabled] = useState(true);
+  const [permissionsPageEnabled, setEnabled] = useState(AppPermissions.gyroPermissions.gyroCompatible);
   const disablePermissionsWindow = async () => {
     setEnabled(false);
   };
-
-  useEffect(() => {
-    setEnabled(AppPermissions.gyroPermissions.gyroCompatible);
-  }, []);
   
   return (
     <main className="relative w-full h-screen">
