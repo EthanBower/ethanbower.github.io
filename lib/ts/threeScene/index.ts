@@ -6,6 +6,24 @@ import { IntroAnimation } from "./cameraAnimations/introAnimation";
 import { Animatable } from "./animatable";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 
+export class SceneController {
+  private static instance: SceneController;
+  public frontPage?: FrontPageAnimation;
+  public ready: boolean = false;
+  
+  static getInstance() {
+    if (!SceneController.instance) {
+      SceneController.instance = new SceneController();
+    }
+    return SceneController.instance;
+  }
+
+  init(canvasElm: HTMLDivElement) {
+    this.frontPage = new FrontPageAnimation(canvasElm);
+    this.ready = true;
+  }
+}
+
 class TimeTracker {
     public time!: number;
     public elapsedTime! :number;
@@ -28,7 +46,6 @@ class TimeTracker {
     }
 }
 
-//#region Canvas Logic
 export class FrontPageAnimation {
     public static timeTracker: TimeTracker = new TimeTracker();
     public frontPageRenderer: FrontPageRenderer;
@@ -40,11 +57,11 @@ export class FrontPageAnimation {
     public dotScene: DotsScene;
     private stats: Stats;
 
-    public constructor(canvasElm: React.RefObject<HTMLDivElement | null>) {   
+    public constructor(canvasElm: HTMLDivElement) {   
+        this.frontPageScene = new FrontPageSceneManager();
         this.frontPageRenderer = new FrontPageRenderer(this);
         this.mainCamera = new MainCamera(canvasElm, this);
         this.canvas = new Canvas(canvasElm, this);
-        this.frontPageScene = new FrontPageSceneManager();
         this.astroidScene = new AstroidScene(this);
         this.wavesScene = new WavesScene(this);
         this.dotScene = new DotsScene(this);
@@ -54,9 +71,15 @@ export class FrontPageAnimation {
         document.body.appendChild(this.stats.dom);
 
         this.frontPageRenderer.renderer.domElement.addEventListener("click", () => {
-            this.wavesScene.isAnimating = false;
-            this.astroidScene.isAnimating = true;
-            this.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
+            if (this.mainCamera.asteroidAnimation.cameraTargetZ == -150) {
+                this.wavesScene.isAnimating = true;
+                this.astroidScene.isAnimating = false;
+                this.mainCamera.asteroidAnimation.startZoomOutAsteroid();
+            } else {
+                this.wavesScene.isAnimating = false;
+                this.astroidScene.isAnimating = true;
+                this.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
+            }
         });
     }
 
@@ -161,20 +184,45 @@ class FrontPageSceneManager {
     }
 }
 
-class MainCamera {
+class MainCamera extends Animatable {
     public camera: THREE.PerspectiveCamera;
     public asteroidAnimation: AsteroidAnimation;
     public introAnimation: IntroAnimation;
-    private readonly renderDistanceMin: number = 0.1;
-    private readonly renderDistanceMax: number = 135;
+    public cameraRotation = {
+        targetRotation: new THREE.Vector2(),
+        currentRotation: new THREE.Vector2()
+    };
+    private renderSettings: { renderDistanceMin: number, renderDistanceMax: number } = {
+        renderDistanceMin: 0.1,
+        renderDistanceMax: 135
+    };
+    private mouse: THREE.Vector2 = new THREE.Vector2();
+    private frontPage: FrontPageAnimation;
 
-    constructor(canvasElm: React.RefObject<HTMLDivElement | null>, frontPage: FrontPageAnimation) {
-        this.camera = new THREE.PerspectiveCamera(75, canvasElm!.current!.clientWidth/canvasElm!.current!.clientHeight, this.renderDistanceMin, this.renderDistanceMax);
+    constructor(canvasElm: HTMLDivElement, frontPage: FrontPageAnimation) {
+        super();
+        this.camera = new THREE.PerspectiveCamera(75, canvasElm.clientWidth/canvasElm!.clientHeight, this.renderSettings.renderDistanceMin, this.renderSettings.renderDistanceMax);
         this.asteroidAnimation = new AsteroidAnimation(frontPage);
         this.introAnimation = new IntroAnimation(frontPage);
+        this.frontPage = frontPage;
 
         // Initial camera position
         this.camera.position.set(0, 30, 58);
+
+        frontPage.frontPageRenderer.renderer.domElement.addEventListener("mousemove", this.setTargetRotation);
+        frontPage.frontPageRenderer.renderer.domElement.addEventListener("mouseleave", this.resetTargetRotation);
+    }
+
+    public override update(): void {
+        this.cameraRotation.currentRotation.x += (this.cameraRotation.targetRotation.x - this.cameraRotation.currentRotation.x) * 0.05;
+        this.cameraRotation.currentRotation.y += (this.cameraRotation.targetRotation.y - this.cameraRotation.currentRotation.y) * 0.05;
+
+        this.camera.rotation.x = this.cameraRotation.currentRotation.x;
+        this.camera.rotation.y = this.cameraRotation.currentRotation.y;
+    }
+
+    public enableGyroEventListener() {
+        window.addEventListener("deviceorientation", this.handleDeviceOrientation);
     }
 
     public getVisibleDimensionsAtDepth(z: number) {
@@ -195,25 +243,58 @@ class MainCamera {
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
     }
+
+    private handleDeviceOrientation = (event: DeviceOrientationEvent) => {
+        const gamma = event.gamma ?? 0; // left/right tilt
+        const beta = event.beta ?? 0;   // front/back tilt
+
+        // Normalize values
+        const normalizedGamma = THREE.MathUtils.clamp(gamma / 45, -1, 1);
+        const normalizedBeta = THREE.MathUtils.clamp(beta / 45, -1, 1);
+
+        // Apply subtle rotation
+        this.cameraRotation.targetRotation.y = normalizedGamma * 0.12;
+        this.cameraRotation.targetRotation.x = normalizedBeta * 0.12;
+    };
+
+    private setTargetRotation = (e: MouseEvent) => {
+        const rect = this.frontPage.frontPageRenderer.renderer.domElement.getBoundingClientRect();
+
+        // Normalized mouse coords (-1 to 1)
+        this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+
+        // Subtle target rotation
+        this.cameraRotation.targetRotation.y = -this.mouse.x * 0.09;
+        this.cameraRotation.targetRotation.x = this.mouse.y * 0.05;
+    }
+
+    private resetTargetRotation = () => {
+        this.mouse.x = 0;
+        this.mouse.y = 0;
+
+        this.cameraRotation.targetRotation.y = 0;
+        this.cameraRotation.targetRotation.x = 0;
+    }
 }
 
 class Canvas {
-    public canvasElm: React.RefObject<HTMLDivElement | null>;
+    public canvasElm: HTMLDivElement;
     public width!: number;
     public height!: number;
     private frontPage: FrontPageAnimation;
 
-    public constructor(canvasElm: React.RefObject<HTMLDivElement | null>, frontPage: FrontPageAnimation) {
+    public constructor(canvasElm: HTMLDivElement, frontPage: FrontPageAnimation) {
         this.frontPage = frontPage;
         this.canvasElm = canvasElm;
-        this.canvasElm.current!.appendChild(this.frontPage.frontPageRenderer.renderer.domElement);
+        this.canvasElm.appendChild(this.frontPage.frontPageRenderer.renderer.domElement);
         this.updateCanvasSize(frontPage);
         window.addEventListener('resize', () => this.updateCanvasSize(frontPage), false);
     }
 
     public updateCanvasSize(frontPage: FrontPageAnimation): void {
-        this.width = this.canvasElm!.current!.clientWidth; 
-        this.height = this.canvasElm!.current!.clientHeight; 
+        this.width = this.canvasElm!.clientWidth; 
+        this.height = this.canvasElm!.clientHeight; 
 
         frontPage.frontPageRenderer.resetRendererWindowSize(this.width, this.height);
         frontPage.mainCamera.resetCameraAspectRatio(this.width, this.height);
@@ -833,4 +914,3 @@ export class Utils {
         }
     }
 }
-//#endregion

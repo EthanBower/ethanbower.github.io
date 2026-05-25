@@ -1,4 +1,7 @@
+"use client";
+
 import { FrontPageAnimation } from ".";
+
 
 type TickTask = {
     interval: number;
