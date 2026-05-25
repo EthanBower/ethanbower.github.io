@@ -2,19 +2,19 @@
 
 export class AppPermissions {
     public static gyroPermissions = {
-        permissionsNeeded: false,
+        gyroCompatible: false,
         gyroscopeEnabled: false
     };
 
     public static initialize () {
-        AppPermissions.gyroPermissions.permissionsNeeded = 
+        AppPermissions.gyroPermissions.gyroCompatible = 
             (typeof DeviceOrientationEvent !== "undefined") && 
             (typeof (DeviceOrientationEvent as any).requestPermission === "function");
     }
 
     public static async enableGyroscopeAsync(): Promise<void> {
         try {
-            if (!this.gyroPermissions.permissionsNeeded) {
+            if (!this.gyroPermissions.gyroCompatible) {
                 return;
             }
 
@@ -29,3 +29,5 @@ export class AppPermissions {
         }
     }
 }
+
+AppPermissions.initialize();

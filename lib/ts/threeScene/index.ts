@@ -5,7 +5,24 @@ import { AsteroidAnimation } from "./cameraAnimations/asteroidAnimation";
 import { IntroAnimation } from "./cameraAnimations/introAnimation";
 import { Animatable } from "./animatable";
 import Stats from "three/examples/jsm/libs/stats.module.js";
-import { AppPermissions } from "./appPermissions";
+
+export class SceneController {
+  private static instance: SceneController;
+  public frontPage?: FrontPageAnimation;
+  public ready: boolean = false;
+  
+  static getInstance() {
+    if (!SceneController.instance) {
+      SceneController.instance = new SceneController();
+    }
+    return SceneController.instance;
+  }
+
+  init(canvasElm: HTMLDivElement) {
+    this.frontPage = new FrontPageAnimation(canvasElm);
+    this.ready = true;
+  }
+}
 
 class TimeTracker {
     public time!: number;
@@ -29,7 +46,6 @@ class TimeTracker {
     }
 }
 
-//#region Canvas Logic
 export class FrontPageAnimation {
     public static timeTracker: TimeTracker = new TimeTracker();
     public frontPageRenderer: FrontPageRenderer;
@@ -195,9 +211,6 @@ class MainCamera extends Animatable {
 
         frontPage.frontPageRenderer.renderer.domElement.addEventListener("mousemove", this.setTargetRotation);
         frontPage.frontPageRenderer.renderer.domElement.addEventListener("mouseleave", this.resetTargetRotation);
-        if (AppPermissions.gyroPermissions.gyroscopeEnabled) {
-            window.addEventListener("deviceorientation", this.handleDeviceOrientation);
-        }
     }
 
     public override update(): void {
@@ -206,6 +219,10 @@ class MainCamera extends Animatable {
 
         this.camera.rotation.x = this.cameraRotation.currentRotation.x;
         this.camera.rotation.y = this.cameraRotation.currentRotation.y;
+    }
+
+    public enableGyroEventListener() {
+        window.addEventListener("deviceorientation", this.handleDeviceOrientation);
     }
 
     public getVisibleDimensionsAtDepth(z: number) {
@@ -897,4 +914,3 @@ export class Utils {
         }
     }
 }
-//#endregion

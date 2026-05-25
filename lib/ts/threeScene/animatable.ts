@@ -2,6 +2,7 @@
 
 import { FrontPageAnimation } from ".";
 
+
 type TickTask = {
     interval: number;
     lastRun: number;

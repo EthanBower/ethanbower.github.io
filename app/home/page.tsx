@@ -1,34 +1,30 @@
 "use client";
 
-import { FrontPageAnimation } from "@/lib/ts";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Permissions from "../../lib/components/permissions";
+import SpaceScene from "@/lib/components/spaceScene";
+import DraggableWindow from "@/lib/components/draggableWindow";
+import { AppPermissions } from "@/lib/ts/appPermissions";
 
 export default function Home() {
-  const threeJsRef = useRef<HTMLDivElement | null>(null);
   const [permissionsPageEnabled, setEnabled] = useState(true);
-
-  const handleEnable = async () => {
-    if (!threeJsRef.current) return;
-
-    const pageAnimation = new FrontPageAnimation(threeJsRef.current);
-    await pageAnimation.loadAssets();
-
+  const disablePermissionsWindow = async () => {
     setEnabled(false);
-
-    pageAnimation.animatePage();
   };
 
   useEffect(() => {
-    return () => { 
-      // Dispose of THREE JS OBJS, Dispose of listeners
-    };
+    setEnabled(AppPermissions.gyroPermissions.gyroCompatible);
   }, []);
-
+  
   return (
     <main className="relative w-full h-screen">
-      {permissionsPageEnabled && <Permissions onComplete={handleEnable} />}
-      <div ref={threeJsRef} id="three-root" />
+      {
+        permissionsPageEnabled && 
+        <DraggableWindow windowTitle="PERMISSIONS" onClose={disablePermissionsWindow}>
+          <Permissions />
+        </DraggableWindow>
+      }
+      <SpaceScene />
     </main>
   );
 }
