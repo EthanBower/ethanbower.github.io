@@ -1,5 +1,3 @@
-"use client";
-
 export default function Version() {
     const versionNumber = process.env.SITE_APP_VERSION || "dev-local";
 
