@@ -115,7 +115,7 @@ export default function PopupWindow({ windowTitle, onClose, children }: PopupWin
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
             {/* Window positioning layer for directly managing DOM strings enabling smooth rendering */}
             <div ref={windowRef} className="z-10" style={{ transform: "translate3d(0px, 0px, 0)" }}>
-                {/* Animation Layer */}
+                {/* Animation Layer - NOTE: popup-window contains animation times */}
                 <div className={`popup-window ${visible ? "scale-100 opacity-100" : "scale-[0.82] opacity-0 pointer-events-none"}`}>             
                     <div onPointerDown={onPointerDown} className="cursor-grab active:cursor-grabbing select-none flex items-center gap-4 p-4 pb-2">
                         {/* Left Side SVG Icon */}
