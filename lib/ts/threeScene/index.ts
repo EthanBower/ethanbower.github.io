@@ -13,13 +13,15 @@ export class SceneController {
   
   static getInstance() {
     if (!SceneController.instance) {
-      SceneController.instance = new SceneController();
+        console.log("Creating instance");
+        SceneController.instance = new SceneController();
     }
     return SceneController.instance;
   }
 
-  init(canvasElm: HTMLDivElement) {
+  public async init(canvasElm: HTMLDivElement): Promise<void> {
     this.frontPage = new FrontPageAnimation(canvasElm);
+    await this.frontPage.loadAssets();
     this.ready = true;
   }
 }
@@ -207,7 +209,7 @@ class MainCamera extends Animatable {
         this.frontPage = frontPage;
 
         // Initial camera position
-        this.camera.position.set(0, 30, 58);
+        this.camera.position.set(0, 80, 58);
 
         frontPage.frontPageRenderer.renderer.domElement.addEventListener("mousemove", this.setTargetRotation);
         frontPage.frontPageRenderer.renderer.domElement.addEventListener("mouseleave", this.resetTargetRotation);

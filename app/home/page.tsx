@@ -6,15 +6,23 @@ import SpaceScene from "@/lib/components/home/spaceScene";
 import PopupWindow from "@/lib/components/global/popupWindow";
 import { AppPermissions } from "@/lib/ts/appPermissions";
 
+const WORK_IN_PROGRESS = () => {};
+
 export default function Home() {
-  const [permissionsPageEnabled, setEnabled] = useState(false);
+  const [permissionsPageEnabled, setPermissionsEnabled] = useState(false);
+  const [enableAnimation, setAnimationEnabled] = useState(false);
   const disablePermissionsWindow = async () => {
-    setEnabled(false);
+    setPermissionsEnabled(false);
+    setAnimationEnabled(true);
   };
-  
+
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setEnabled(AppPermissions.gyroPermissions.gyroCompatible);
+    if (AppPermissions.gyroPermissions.gyroCompatible) {
+      setPermissionsEnabled(true);
+      return;
+    }
+
+    setAnimationEnabled(true);
   }, []);
 
   return (
@@ -25,7 +33,7 @@ export default function Home() {
           <Permissions />
         </PopupWindow>
       }
-      <SpaceScene />
+      <SpaceScene onLoadingComplete={ WORK_IN_PROGRESS } isReadyToAnimate={ enableAnimation } />
     </main>
   );
 }
