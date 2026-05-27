@@ -10,44 +10,42 @@ type SpaceSceneProps = Readonly<{
 
 export default function SpaceScene({ onLoadingComplete, isReadyToAnimate }: SpaceSceneProps) {
   const threeJsRef = useRef<HTMLDivElement | null>(null);
-  const assetsLoadedRef = useRef(false); // Track asset readiness without causing re-renders
+  const assetsLoadedRef = useRef(false);
+  const initializedRef = useRef(false); 
 
   // Handle initialization and asset loading strictly 'once' on mount
   useEffect(() => {
-    if (!threeJsRef.current) return;
+    // todo - Remove guard against double execution in strict mode when pageScene gets a proper disposal
+    if (!threeJsRef.current || initializedRef.current) return;
+    initializedRef.current = true;
 
     const pageScene = SceneController.getInstance();
-    const initLoading = async () => {
-      if (threeJsRef.current) threeJsRef.current.innerHTML = "";
-      
+    const initLoading = async () => {      
       await pageScene.init(threeJsRef.current!);
       pageScene.frontPage!.animatePage();
       assetsLoadedRef.current = true;
-      onLoadingComplete();
-
-      // Check if the parent page gave us permission prematurely
-      if (isReadyToAnimate && pageScene.frontPage) {
-        pageScene.frontPage.animatePage();
-      }
+      
+      onLoadingComplete(); 
     };
 
     initLoading();
 
     return () => { 
-      //pageScene.dispose();
+      // pageScene.dispose();
     };
   }, [onLoadingComplete]); 
 
-  // Listen natively to the parent's reactive permission toggle
-  useEffect(() => {
-    console.log("Ani - " + String(assetsLoadedRef.current));
+  // Listen to parents toggle
+  useEffect(() => {    
     if (isReadyToAnimate && assetsLoadedRef.current) {
       const pageScene = SceneController.getInstance();
-      pageScene.frontPage!.mainCamera.introAnimation.isAnimating = true;
+      if (pageScene.frontPage?.mainCamera?.introAnimation) {
+        pageScene.frontPage.mainCamera.introAnimation.isAnimating = true;
+      }
     }
-  }, [isReadyToAnimate]); 
+  }, [isReadyToAnimate]); // This will fire when Home updates 'enableAnimation' to true
 
   return (
-    <div ref={threeJsRef} id="three-root" />
+    <div ref={threeJsRef} id="three-root" className="w-full h-full" />
   );
 }

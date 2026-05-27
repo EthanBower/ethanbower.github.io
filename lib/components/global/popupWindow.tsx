@@ -3,25 +3,28 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
+// Animation time in MS for snap-back of window.
+const ANIMATION_TIME_MS = 400;
+const TRANSITION_STYLE = `transform ${ANIMATION_TIME_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+const WINDOW_TITLE_TYPE_TIME_MS = 80;
+
 type PopupWindowProps = Readonly<{
     windowTitle: string;
     onClose: () => Promise<void>;
     children: React.ReactNode;
 }>;
 
-// Animation time in MS for snap-back of window. NOTE: Make sure to also update in TSX HTML below manually for consistency; that animation fades in-and-out.
-const ANIMATION_TIME_MS = 400;
-const TRANSITION_STYLE = `transform ${ANIMATION_TIME_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
-const WINDOW_TITLE_TYPE_TIME_MS = 80;
-
 export default function PopupWindow({ windowTitle, onClose, children }: PopupWindowProps) {
     const [visible, setVisible] = useState(false);  
     const [typedTitle, setTypedTitle] = useState("");
-    const windowRef = useRef<HTMLDivElement>(null); // This gets us a performance boost by directly updating DOM style. Bypasses React re-renders during drag.
+    const windowRef = useRef<HTMLDivElement>(null);
     const offset = useRef({ x: 0, y: 0 });
     const currentPosition = useRef({ x: 0, y: 0 });
     const timeoutId = useRef<NodeJS.Timeout | null>(null);
+    const activeMoveListener = useRef<((e: PointerEvent) => void) | null>(null);
+    const activeUpListener = useRef<(() => void) | null>(null);
 
+    // Title typewriter effect
     useEffect(() => {
         let currentLength = 0;
 
@@ -31,21 +34,19 @@ export default function PopupWindow({ windowTitle, onClose, children }: PopupWin
                 setTypedTitle(windowTitle.slice(0, currentLength));
                 return;
             }
-            
-            // Remove timer once the full title is typed
             clearInterval(intervalId);
-        }, WINDOW_TITLE_TYPE_TIME_MS); // 60ms delay per letter. Decrease for faster typing, increase for slower.
+        }, WINDOW_TITLE_TYPE_TIME_MS);
 
-        return () => clearInterval(intervalId); // Safety cleanup if component unmounts mid-type
+        return () => clearInterval(intervalId);
     }, [windowTitle]);
 
-    // Clean up all global listeners and timers on unmount to prevent leaks
+    // Cleanup all global listeners and timers safely on unmount
     useEffect(() => {
         requestAnimationFrame(() => setVisible(true));
         
         return () => {
-            window.removeEventListener("pointermove", onPointerMove);
-            window.removeEventListener("pointerup", onPointerUp);
+            if (activeMoveListener.current) window.removeEventListener("pointermove", activeMoveListener.current);
+            if (activeUpListener.current) window.removeEventListener("pointerup", activeUpListener.current);
             if (timeoutId.current) clearTimeout(timeoutId.current);
         };
     }, []);
@@ -55,6 +56,10 @@ export default function PopupWindow({ windowTitle, onClose, children }: PopupWin
             x: e.clientX - currentPosition.current.x,
             y: e.clientY - currentPosition.current.y,
         };
+
+        // Anchor the specific function instances to current execution environment references
+        activeMoveListener.current = onPointerMove;
+        activeUpListener.current = onPointerUp;
 
         window.addEventListener("pointermove", onPointerMove);
         window.addEventListener("pointerup", onPointerUp);
@@ -73,14 +78,17 @@ export default function PopupWindow({ windowTitle, onClose, children }: PopupWin
     }
 
     function onPointerUp() {
-        window.removeEventListener("pointermove", onPointerMove);
-        window.removeEventListener("pointerup", onPointerUp);
+        // Clear active dragging handlers cleanly from the window object
+        if (activeMoveListener.current) window.removeEventListener("pointermove", activeMoveListener.current);
+        if (activeUpListener.current) window.removeEventListener("pointerup", activeUpListener.current);
+        
+        activeMoveListener.current = null;
+        activeUpListener.current = null;
 
         if (!windowRef.current) return;
 
         const rect = windowRef.current.getBoundingClientRect();
         
-        // Calculate safe layout boundaries
         const initialLeft = rect.left - currentPosition.current.x;
         const initialTop = rect.top - currentPosition.current.y;
 
@@ -89,11 +97,9 @@ export default function PopupWindow({ windowTitle, onClose, children }: PopupWin
         const minY = -initialTop;
         const maxY = window.innerHeight - initialTop - rect.height;
 
-        // Determine the clamped coordinates
         const clampedX = Math.max(minX, Math.min(maxX, currentPosition.current.x));
         const clampedY = Math.max(minY, Math.min(maxY, currentPosition.current.y));
 
-        // If out of bounds, apply snap back CSS transition & cache the timeout instance so it can be safely cleared if needed
         if (clampedX !== currentPosition.current.x || clampedY !== currentPosition.current.y) {
             windowRef.current.style.transition = TRANSITION_STYLE;
             windowRef.current.style.transform = `translate3d(${clampedX}px, ${clampedY}px, 0)`;
@@ -113,18 +119,14 @@ export default function PopupWindow({ windowTitle, onClose, children }: PopupWin
 
     return (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-            {/* Window positioning layer for directly managing DOM strings enabling smooth rendering */}
             <div ref={windowRef} className="z-10" style={{ transform: "translate3d(0px, 0px, 0)" }}>
-                {/* Animation Layer - NOTE: popup-window contains animati*/}
                 <div className={`popup-window ${visible ? "scale-100 opacity-100" : "scale-[0.82] opacity-0 pointer-events-none"}`}>             
                     <div onPointerDown={onPointerDown} className="cursor-grab active:cursor-grabbing select-none flex items-center gap-4 p-4 pb-2">
-                        {/* Left Side SVG Icon */}
                         <div className="flex-shrink-0 text-indigo-400">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 20" fill="currentColor" className="w-8 h-8" >
                                 <path fillRule="evenodd" d="M14.47 2.47a.75.75 0 011.06 0l6 6a.75.75 0 010 1.06l-6 6a.75.75 0 11-1.06-1.06L19.94 9l-5.47-5.47a.75.75 0 010-1.06zm-4.94 0a.75.75 0 00-1.06 0l-6 6a.75.75 0 000 1.06l6 6a.75.75 0 101.06-1.06L4.06 9l5.47-5.47a.75.75 0 000-1.06z" clipRule="evenodd" />
                             </svg>
                         </div>
-                        {/* Right Side: Text Stack Container */}
                         <div className="flex flex-col min-w-0 text-left">
                             <h3 className="text-sm font-semibold text-white tracking-wide font-mono flex items-center gap-0.5">
                                 <span>{typedTitle}</span>   
