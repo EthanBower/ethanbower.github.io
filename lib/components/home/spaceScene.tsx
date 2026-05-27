@@ -3,27 +3,49 @@
 import { SceneController } from "@/lib/ts/threeScene";
 import { useEffect, useRef } from "react";
 
-export default function SpaceScene() {
-  const threeJsRef = useRef<HTMLDivElement | null>(null);
+type SpaceSceneProps = Readonly<{
+    onLoadingComplete: () => void;
+    isReadyToAnimate: boolean;
+}>;
 
+export default function SpaceScene({ onLoadingComplete, isReadyToAnimate }: SpaceSceneProps) {
+  const threeJsRef = useRef<HTMLDivElement | null>(null);
+  const assetsLoadedRef = useRef(false);
+  const initializedRef = useRef(false); 
+
+  // Handle initialization and asset loading strictly 'once' on mount
   useEffect(() => {
-    if (!threeJsRef.current) return;
+    // todo - Remove guard against double execution in strict mode when pageScene gets a proper disposal
+    if (!threeJsRef.current || initializedRef.current) return;
+    initializedRef.current = true;
 
     const pageScene = SceneController.getInstance();
-    const init = async () => {
-      pageScene.init(threeJsRef.current!);
-      await pageScene.frontPage!.loadAssets();
+    const initLoading = async () => {      
+      await pageScene.init(threeJsRef.current!);
       pageScene.frontPage!.animatePage();
-    }
+      assetsLoadedRef.current = true;
+      
+      onLoadingComplete(); 
+    };
 
-    init();
+    initLoading();
 
     return () => { 
-      // Dispose of THREE JS OBJS, Dispose of listeners
+      // pageScene.dispose();
     };
-  }, []);
+  }, [onLoadingComplete]); 
+
+  // Listen to parents toggle
+  useEffect(() => {    
+    if (isReadyToAnimate && assetsLoadedRef.current) {
+      const pageScene = SceneController.getInstance();
+      if (pageScene.frontPage?.mainCamera?.introAnimation) {
+        pageScene.frontPage.mainCamera.introAnimation.isAnimating = true;
+      }
+    }
+  }, [isReadyToAnimate]); // This will fire when Home updates 'enableAnimation' to true
 
   return (
-    <div ref={threeJsRef} id="three-root" />
+    <div ref={threeJsRef} id="three-root" className="w-full h-full" />
   );
 }

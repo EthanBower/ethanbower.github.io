@@ -9,7 +9,7 @@ export class IntroAnimation extends Animatable {
 
     constructor(frontPage: FrontPageAnimation) {
         super();
-        this.isAnimating = true;
+        this.isAnimating = false;
         this.frontPage = frontPage;
     }
 

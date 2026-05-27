@@ -10,6 +10,7 @@ export default function Permissions() {
     const threeScene = SceneController.getInstance();
     if (!threeScene.ready) {
       alert("Scene is not yet ready...");
+      return;
     }
     
     threeScene.frontPage!.mainCamera.enableGyroEventListener();
