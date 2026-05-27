@@ -22,26 +22,24 @@ export default function SpaceScene({ onLoadingComplete, isReadyToAnimate }: Spac
     const pageScene = SceneController.getInstance();
     const initLoading = async () => {      
       await pageScene.init(threeJsRef.current!);
-      pageScene.frontPage!.animatePage();
-      assetsLoadedRef.current = true;
-      
+      pageScene.runAnimationLoop();
+      assetsLoadedRef.current = true;  
       onLoadingComplete(); 
     };
 
     initLoading();
 
     return () => { 
-      // pageScene.dispose();
+      //pageScene.dispose();
     };
   }, [onLoadingComplete]); 
 
   // Listen to parents toggle
   useEffect(() => {    
     if (isReadyToAnimate && assetsLoadedRef.current) {
-      const pageScene = SceneController.getInstance();
-      if (pageScene.frontPage?.mainCamera?.introAnimation) {
-        pageScene.frontPage.mainCamera.introAnimation.isAnimating = true;
-      }
+      SceneController
+        .getInstance()
+        .moveCameraDownToHomePage();
     }
   }, [isReadyToAnimate]); // This will fire when Home updates 'enableAnimation' to true
 

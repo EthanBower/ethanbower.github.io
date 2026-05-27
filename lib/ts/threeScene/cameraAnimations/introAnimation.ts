@@ -1,7 +1,7 @@
 "use client;"
 
 import { FrontPageAnimation, Utils } from "..";
-import { Animatable } from "../animatable";
+import { Animatable } from "../abstracts/animatable";
 
 export class IntroAnimation extends Animatable {
     public cameraTargetY: number = 0;
@@ -23,5 +23,9 @@ export class IntroAnimation extends Animatable {
         }
 
         camera.position.y += (this.cameraTargetY - camera.position.y) * 0.04;
+    }
+
+    protected override onDispose(): void {
+        return;
     }
 }

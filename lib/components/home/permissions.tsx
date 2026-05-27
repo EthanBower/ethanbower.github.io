@@ -13,7 +13,7 @@ export default function Permissions() {
       return;
     }
     
-    threeScene.frontPage!.mainCamera.enableGyroEventListener();
+    threeScene.initGyro();
   }
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
-import { FrontPageAnimation } from ".";
-
+import { globals } from "..";
+import { Disposable } from "./disposable";
 
 type TickTask = {
     interval: number;
@@ -9,7 +9,7 @@ type TickTask = {
     onTickExecution: () => void;
 }
 
-export abstract class Animatable {
+export abstract class Animatable extends Disposable {
     public isAnimating: boolean = true;
     private tickTasks: TickTask[] = [];
     private static animationsRegistry: Animatable[] = [];
@@ -17,6 +17,7 @@ export abstract class Animatable {
     protected abstract update(): void;
 
     constructor() {
+        super();
         Animatable.animationsRegistry.push(this);
     }
 
@@ -29,12 +30,16 @@ export abstract class Animatable {
         }
     }
 
+    public static disposeAnimationRegistry() {
+        Animatable.animationsRegistry = [];
+    }
+
     protected registerTick(interval: number, onTickExecution: () => void) {
-        this.tickTasks.push({ interval, lastRun: FrontPageAnimation.timeTracker.lastFrameTime, onTickExecution });
+        this.tickTasks.push({ interval, lastRun: globals.timeTracker!.lastFrameTime, onTickExecution });
     }
 
     private runTicks(): void {
-        const now = FrontPageAnimation.timeTracker.lastFrameTime;
+        const now = globals.timeTracker!.lastFrameTime;
 
         for (const tick of this.tickTasks) {
             if (now - tick.lastRun >= tick.interval) {

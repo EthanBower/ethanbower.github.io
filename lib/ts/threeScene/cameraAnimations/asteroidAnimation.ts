@@ -1,7 +1,7 @@
 "use client";
 
 import { FrontPageAnimation, Utils } from "..";
-import { Animatable } from "../animatable";
+import { Animatable } from "../abstracts/animatable";
 
 export class AsteroidAnimation extends Animatable {
     public cameraTargetZ: number = 0;
@@ -24,6 +24,10 @@ export class AsteroidAnimation extends Animatable {
 
         // Smooth zoom
         camera.position.z += (this.cameraTargetZ - camera.position.z) * 0.04;
+    }
+
+    protected override onDispose(): void {
+        return;
     }
 
     public startZoomIntoAsteroid(): void {
