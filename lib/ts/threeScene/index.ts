@@ -222,9 +222,6 @@ class AstroidScene extends Animatable {
     }
 
     override update(): void {
-        // Safe Guard: If the model hasn't loaded yet, or we are disposed, don't run animation math
-        if (!this.asteroidModel || this.isDisposed) return;
-        this.isDisposed = true;
         const time = globals.timeTracker!.time; 
 
         // Slow rotation (space drift feel)
