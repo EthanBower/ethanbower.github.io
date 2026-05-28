@@ -11,13 +11,10 @@ type SpaceSceneProps = Readonly<{
 export default function SpaceScene({ onLoadingComplete, isReadyToAnimate }: SpaceSceneProps) {
   const threeJsRef = useRef<HTMLDivElement | null>(null);
   const assetsLoadedRef = useRef(false);
-  const initializedRef = useRef(false); 
 
-  // Handle initialization and asset loading strictly 'once' on mount
+  // Handle initialization and asset loading
   useEffect(() => {
-    // todo - Remove guard against double execution in strict mode when pageScene gets a proper disposal
-    if (!threeJsRef.current || initializedRef.current) return;
-    initializedRef.current = true;
+    if (!threeJsRef.current) return;
 
     const pageScene = SceneController.getInstance();
     const initLoading = async () => {      
@@ -30,7 +27,7 @@ export default function SpaceScene({ onLoadingComplete, isReadyToAnimate }: Spac
     initLoading();
 
     return () => { 
-      //pageScene.dispose();
+      pageScene.dispose();
     };
   }, [onLoadingComplete]); 
 

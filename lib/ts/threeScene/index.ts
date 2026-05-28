@@ -31,16 +31,65 @@ export class SceneController {
     }
 
     public initGyro(): void {
-        this.frontPage!.mainCamera.enableGyroEventListener();
+        this.frontPage!.eventListeners.enableGyroEventListener();
     }
 
     public moveCameraDownToHomePage(): void {
         this.frontPage!.mainCamera.introAnimation.isAnimating = true;
     }
 
-    public dispose(): void {
-        this.frontPage!.dispose();
+    public async dispose(): Promise<void> {
+        await this.frontPage!.dispose();
         SceneController.instance = null;
+    }
+}
+
+class AnimationEventListeners extends Disposable {
+    private frontPage: FrontPageAnimation;
+    private rendererDom: HTMLCanvasElement;
+    
+    constructor(frontPage: FrontPageAnimation) {
+        super();
+        this.frontPage = frontPage;
+        this.rendererDom = frontPage.frontPageRenderer.renderer.domElement;
+
+        // Adds subtle camera tilt on scene
+        this.rendererDom.addEventListener("mousemove", this.frontPage.mainCamera.setTargetRotation);
+        this.rendererDom.addEventListener("mouseleave", this.frontPage.mainCamera.resetTargetRotation);
+
+        // Resets the entire canvas rendering size on screen change
+        window.addEventListener('resize', frontPage.canvas.updateCanvasSize);
+
+        //Prevent the canvas from 'rubber banding' on scroll
+        this.rendererDom.addEventListener("wheel", frontPage.frontPageRenderer.preventWheel, { passive: false });
+        this.rendererDom.addEventListener("touchmove", frontPage.frontPageRenderer.preventTouch, { passive: false });
+    
+        // Get waves plane to resize on screen change
+        window.addEventListener('resize', frontPage.wavesScene.updatePlaneOnWindowResize);
+
+        // Get mouse to connect to dots
+        this.rendererDom.addEventListener('mousemove', frontPage.dotScene.mouseDot.mouseMoveEvent);
+        this.rendererDom.addEventListener('mouseleave', frontPage.dotScene.mouseDot.mouseLeaveEvent);
+    }
+
+    public enableGyroEventListener() {
+        window.addEventListener("deviceorientation", this.frontPage.mainCamera.handleDeviceOrientation);
+    }
+
+    protected override onDispose(): void {
+        this.rendererDom.removeEventListener("mousemove", this.frontPage.mainCamera.setTargetRotation);
+        this.rendererDom.removeEventListener("mouseleave", this.frontPage.mainCamera.resetTargetRotation);
+        window.removeEventListener("deviceorientation", this.frontPage.mainCamera.handleDeviceOrientation);
+
+        window.removeEventListener('resize', this.frontPage.canvas.updateCanvasSize);
+
+        this.rendererDom.removeEventListener("wheel", this.frontPage.frontPageRenderer.preventWheel);
+        this.rendererDom.removeEventListener("touchmove", this.frontPage.frontPageRenderer.preventTouch);
+        
+        window.removeEventListener('resize', this.frontPage.wavesScene.updatePlaneOnWindowResize);
+
+        this.rendererDom.removeEventListener('mousemove', this.frontPage.dotScene.mouseDot.mouseMoveEvent);
+        this.rendererDom.removeEventListener('mouseleave', this.frontPage.dotScene.mouseDot.mouseLeaveEvent);
     }
 }
 
@@ -74,6 +123,7 @@ export class FrontPageAnimation {
     public astroidScene: AstroidScene;
     public wavesScene: WavesScene;
     public dotScene: DotsScene;
+    public eventListeners: AnimationEventListeners;
     private stats: Stats;
     private animationId?: number;
 
@@ -85,6 +135,7 @@ export class FrontPageAnimation {
         this.astroidScene = new AstroidScene(this);
         this.wavesScene = new WavesScene(this);
         this.dotScene = new DotsScene(this);
+        this.eventListeners = new AnimationEventListeners(this);
         this.stats = new Stats();
 
         this.stats.showPanel(0);
@@ -109,10 +160,11 @@ export class FrontPageAnimation {
         this.stats.end();
     }
 
-    public dispose(): void {
+    public async dispose(): Promise<void> {
         cancelAnimationFrame(this.animationId!);
 
         this.frontPageRenderer.renderer.domElement.removeEventListener("click", this.manageClick);
+        this.stats.dom.remove();
 
         Disposable.disposeAllInRegistry();
         Animatable.disposeAllInRegistry();
@@ -141,6 +193,7 @@ class AstroidScene extends Animatable {
         fillLight: null
     };
 
+    // todo - figure out how to dispose of this safely...
     constructor(frontPage: FrontPageAnimation) {
         super();
         this.isAnimating = false;
@@ -169,30 +222,33 @@ class AstroidScene extends Animatable {
     }
 
     override update(): void {
+        // Safe Guard: If the model hasn't loaded yet, or we are disposed, don't run animation math
+        if (!this.asteroidModel || this.isDisposed) return;
+        this.isDisposed = true;
         const time = globals.timeTracker!.time; 
 
         // Slow rotation (space drift feel)
         this.asteroidModel!.rotation.y += 0.002;
         this.asteroidModel!.rotation.x += 0.001;
 
-        // Floating motion
+        // Floating motion with gentle depth wobble
         this.asteroidModel!.position.y += Math.sin(time) * 0.003;
         this.asteroidModel!.position.x += Math.cos(time * 0.7) * 0.001;
-        // Gentle depth wobble
         this.asteroidModel!.position.z += Math.sin(time * 0.5) * 0.0005;
 
         this.lights.rimLight!.intensity = Utils.calcFadeInFadeOut(100, 450, time);
-        this.lights.fillLight!.intensity += Utils.calcFadeInFadeOut(.5, 1.2, time);
+        this.lights.fillLight!.intensity = Utils.calcFadeInFadeOut(150, 500, time);
     }
 
     override onDispose(): void {
         Object.values(this.lights).forEach((light) => {
             if (!light) return;
-
             Utils.disposeLight(light, this.frontPage.frontPageScene.scene);
         });
 
-        Utils.disposeGlft(this.asteroidModel!, this.frontPage.frontPageScene.scene);
+        if (this.asteroidModel) {
+            Utils.disposeGLB2(this.asteroidModel, this.frontPage.frontPageScene.scene);
+        }
     }
 
     private initLighting(): void {
@@ -254,9 +310,6 @@ class MainCamera extends Animatable {
 
         // Initial camera position
         this.camera.position.set(0, 80, 58);
-
-        this.rendererDom.addEventListener("mousemove", this.setTargetRotation);
-        this.rendererDom.addEventListener("mouseleave", this.resetTargetRotation);
     }
 
     override update(): void {
@@ -267,15 +320,7 @@ class MainCamera extends Animatable {
         this.camera.rotation.y = this.cameraRotation.currentRotation.y;
     }
 
-    override onDispose(): void {
-        this.rendererDom.removeEventListener("mousemove", this.setTargetRotation);
-        this.rendererDom.removeEventListener("mouseleave", this.resetTargetRotation);
-        window.removeEventListener("deviceorientation", this.handleDeviceOrientation);
-    }
-
-    public enableGyroEventListener() {
-        window.addEventListener("deviceorientation", this.handleDeviceOrientation);
-    }
+    override onDispose(): void { }
 
     public getVisibleDimensionsAtDepth(z: number) {
         const distance = Math.abs(this.camera.position.z - z);
@@ -296,7 +341,7 @@ class MainCamera extends Animatable {
         this.camera.updateProjectionMatrix();
     }
 
-    private handleDeviceOrientation = (event: DeviceOrientationEvent) => {
+    public handleDeviceOrientation = (event: DeviceOrientationEvent) => {
         const gamma = event.gamma ?? 0; // left/right tilt
         const beta = event.beta ?? 0;   // front/back tilt
 
@@ -309,7 +354,7 @@ class MainCamera extends Animatable {
         this.cameraRotation.targetRotation.x = normalizedBeta * 0.12;
     };
 
-    private setTargetRotation = (e: MouseEvent) => {
+    public setTargetRotation = (e: MouseEvent) => {
         const rect = this.frontPage.frontPageRenderer.renderer.domElement.getBoundingClientRect();
 
         // Normalized mouse coords (-1 to 1)
@@ -321,7 +366,7 @@ class MainCamera extends Animatable {
         this.cameraRotation.targetRotation.x = this.mouse.y * 0.05;
     }
 
-    private resetTargetRotation = () => {
+    public resetTargetRotation = () => {
         this.mouse.x = 0;
         this.mouse.y = 0;
 
@@ -330,19 +375,17 @@ class MainCamera extends Animatable {
     }
 }
 
-class Canvas extends Disposable {
+class Canvas {
     public canvasElm: HTMLDivElement;
     public width!: number;
     public height!: number;
     private frontPage: FrontPageAnimation;
 
     public constructor(canvasElm: HTMLDivElement, frontPage: FrontPageAnimation) {
-        super();
         this.frontPage = frontPage;
         this.canvasElm = canvasElm;
         this.canvasElm.appendChild(this.frontPage.frontPageRenderer.renderer.domElement);
         this.updateCanvasSize();
-        window.addEventListener('resize', this.updateCanvasSize, false);
     }
 
     public updateCanvasSize = () => {
@@ -359,30 +402,18 @@ class Canvas extends Disposable {
         const vWidth = vHeight * this.frontPage.mainCamera.camera.aspect; //Visible width
         return [vWidth, vHeight];
     }
-
-    protected override onDispose(): void {
-        window.removeEventListener('resize', this.updateCanvasSize);
-    }
 }
 
 class FrontPageRenderer {
     public renderer: THREE.WebGLRenderer;
+    public preventWheel = (e: WheelEvent) => e.preventDefault();
+    public preventTouch = (e: TouchEvent) => e.preventDefault();
     private frontPage: FrontPageAnimation;
-
+    
     constructor(frontPage: FrontPageAnimation,) {
         this.frontPage = frontPage;
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false});
         this.renderer.setClearColor(globals.threeJsBackgroundColor, 1);
-
-        // todo - memory leak?
-        //Prevent the canvas from 'rubber banding' on scroll
-        this.renderer.domElement.addEventListener("wheel", (e) => {
-            e.preventDefault();
-        }, { passive: false });
-
-        this.renderer.domElement.addEventListener("touchmove", (e) => {
-            e.preventDefault();
-        }, { passive: false });
     }
 
     public resetRendererWindowSize(width: number, height: number) {
@@ -396,6 +427,17 @@ class FrontPageRenderer {
 
     public dispose() {
         this.renderer.dispose();
+        this.renderer.forceContextLoss();
+        this.renderer.domElement.remove();
+        const gl = this.renderer.getContext();
+
+            // 4. HARD context kill (this is what you're missing)
+        if (gl) {
+            const ext = gl.getExtension("WEBGL_lose_context");
+            if (ext) {
+                ext.loseContext();
+            }
+        }
     }
 }
 
@@ -406,7 +448,7 @@ class DotsScene extends Animatable {
     private activeLineCount = 0;  
     private linePool: THREE.Line[] = [];
     public dots!: Array<Dot>;
-    private mouseDot!: MouseDot;
+    public mouseDot!: MouseDot;
 
     constructor(frontPage: FrontPageAnimation) {
         super();
@@ -470,7 +512,6 @@ class DotsScene extends Animatable {
             positions[4] = dotToMaybeConnect.dotMesh.position.y;
             positions[5] = dotToMaybeConnect.dotMesh.position.z;
             line.geometry.attributes.position.needsUpdate = true;
-            line.geometry.computeBoundingSphere();
 
             // Update opacity
             const distanceAlpha = 1 - (Math.sqrt(distanceSq) / dot.connectableRadius);
@@ -481,7 +522,6 @@ class DotsScene extends Animatable {
     }
 
     private initLinePool(): void {
-        // todo memory leak
         for (let i = 0; i < this.maxLineCount; i++) {
             const positions = new Float32Array(6);
             const geometry = new THREE.BufferGeometry();
@@ -489,6 +529,7 @@ class DotsScene extends Animatable {
             const line = new THREE.Line(geometry, material);
 
             geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            line.frustumCulled = false;
             line.visible = false;
             this.linePool.push(line);
             this.frontPage.frontPageScene.dotsGroup.add(line);
@@ -701,7 +742,6 @@ class WavesScene extends Animatable {
         this.simplexNoise = SimplexNoise.createNoise4D();
         this.initLighting();
         this.initPlane();
-        window.addEventListener('resize', this.updatePlaneOnWindowResize, false);
     }
 
     override update(): void {
@@ -760,6 +800,11 @@ class WavesScene extends Animatable {
         }
     }
 
+    public updatePlaneOnWindowResize = () => {
+        Utils.disposeMesh(this.planeMesh, this.frontPage.frontPageScene.scene);
+        this.initPlane();
+    }
+
     private initLighting(): void {
         const r: number = 30;
         const y: number = 10;
@@ -788,20 +833,17 @@ class WavesScene extends Animatable {
         const oversizeMult = 1.8;
         const viewableDims = this.frontPage.canvas.getViewableRectangle(78);
         const vWidth = viewableDims[0]! * oversizeMult, vHeight = viewableDims[1]! * oversizeMult;
+        const segX = Math.min(Math.floor(vWidth / 2), 128);
+        const segY = Math.min(Math.floor(vHeight / 2), 128);
 
         this.planeMesh = new THREE.Mesh(
-            new THREE.PlaneGeometry(vWidth, vHeight, vWidth / 2, vHeight / 2),
+            new THREE.PlaneGeometry(vWidth, vHeight, segX, segY),
             new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide, fog: true })
         );
         this.planeMesh.rotation.x = -Math.PI / 2 - 0.2;
         this.planeMesh.position.y = -25;        
         
         this.frontPage.frontPageScene.wavesGroup.add(this.planeMesh);
-    }
-
-    private updatePlaneOnWindowResize = () => {
-        Utils.disposeMesh(this.planeMesh, this.frontPage.frontPageScene.scene);
-        this.initPlane();
     }
 
     private updatePlane(): void {
@@ -850,8 +892,6 @@ class MouseDot extends Dot {
         this.cameraVector = new THREE.Vector3(); 
         this.mousePos = new THREE.Vector3();
         this.rendererDom = frontPage.frontPageRenderer.renderer.domElement;
-        this.rendererDom.addEventListener('mousemove', this.mouseMoveEvent, false);
-        this.rendererDom.addEventListener('mouseleave', this.mouseLeaveEvent, false);
     }
 
     public override updateDot(frontPage: FrontPageAnimation): void {
@@ -862,13 +902,7 @@ class MouseDot extends Dot {
         }
     }
 
-    override dispose(): void {
-        this.rendererDom.removeEventListener('mousemove', this.mouseMoveEvent);
-        this.rendererDom.removeEventListener('mouseleave', this.mouseLeaveEvent);
-        super.dispose();
-    }
-
-    private mouseMoveEvent = (e: MouseEvent) => {
+    public mouseMoveEvent = (e: MouseEvent) => {
         this.animateMouseDot = true;
         this.cameraVector.set(
             (e.clientX / this.rendererDom.clientWidth) * 2 - 1,
@@ -881,7 +915,7 @@ class MouseDot extends Dot {
         this.mousePos!.copy(this.frontPage.mainCamera.camera.position).add(this.cameraVector.multiplyScalar(distance));
     }
 
-    private mouseLeaveEvent = () => {
+    public mouseLeaveEvent = () => {
         this.animateMouseDot = false;
     }
 }
@@ -934,32 +968,29 @@ export class Utils {
         light.dispose();
     }
 
-    public static disposeGlft(glftModel: THREE.Group<THREE.Object3DEventMap>, scene: THREE.Scene) {
-        glftModel.traverse((object) => {
-            if ((object as THREE.Mesh).isMesh) {
-                const mesh = object as THREE.Mesh;
-                mesh.geometry.dispose();
+    public static disposeGLB2(model: THREE.Group<THREE.Object3DEventMap>, scene: THREE.Scene) {
+        model.traverse((node: any) => {
+            if (node.isMesh) {
+                node.geometry.dispose();
 
-                if (Array.isArray(mesh.material)) {
-                    mesh.material.forEach((mat) => mat.dispose());
-                } else {
-                    mesh.material.dispose();
+                if (node.material.isMaterial) {
+                    this.disposeMaterial(node.material);
+                } else if (Array.isArray(node.material)) {
+                    node.material.forEach(this.disposeMaterial);
                 }
             }
         });
 
-        scene.remove(glftModel);
+        scene.remove(model);
     }
 
     public static disposeMesh(mesh: THREE.Mesh, scene: THREE.Scene) {
-        // Remove the mesh from the scene so it stops rendering
         scene.remove(mesh);
 
         if (mesh.geometry) {
             mesh.geometry.dispose();
         }
 
-        // Dispose of the material (GPU shaders)
         if (mesh.material) {
             if (Array.isArray(mesh.material)) {
                 mesh.material.forEach((mat) => Utils.disposeMaterial(mat));
