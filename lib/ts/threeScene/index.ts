@@ -966,6 +966,7 @@ export class Utils {
     }
 
     public static disposeGLB2(model: THREE.Group<THREE.Object3DEventMap>, scene: THREE.Scene) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         model.traverse((node: any) => {
             if (node.isMesh) {
                 node.geometry.dispose();
@@ -1000,7 +1001,8 @@ export class Utils {
 
     public static disposeMaterial(material: THREE.Material) {
         material.dispose();
-
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const matAsRecord = material as unknown as Record<string, any>;
 
         for (const key in matAsRecord) {
