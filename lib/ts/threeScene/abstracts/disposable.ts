@@ -1,3 +1,5 @@
+"use client";
+
 export abstract class Disposable {
     private static disposableRegistry = new Set<Disposable>();
     private disposed = false;

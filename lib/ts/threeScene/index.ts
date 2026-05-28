@@ -1,3 +1,5 @@
+"use client";
+
 import * as THREE from "three";
 import * as SimplexNoise from "simplex-noise";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -1001,7 +1003,7 @@ export class Utils {
 
     public static disposeMaterial(material: THREE.Material) {
         material.dispose();
-        
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const matAsRecord = material as unknown as Record<string, any>;
 
