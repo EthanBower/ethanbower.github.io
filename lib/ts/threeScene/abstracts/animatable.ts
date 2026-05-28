@@ -1,7 +1,7 @@
 "use client";
 
-import { FrontPageAnimation } from ".";
-
+import { globals } from "..";
+import { Disposable } from "./disposable";
 
 type TickTask = {
     interval: number;
@@ -9,19 +9,20 @@ type TickTask = {
     onTickExecution: () => void;
 }
 
-export abstract class Animatable {
+export abstract class Animatable extends Disposable {
     public isAnimating: boolean = true;
     private tickTasks: TickTask[] = [];
-    private static animationsRegistry: Animatable[] = [];
+    private static animationsRegistry = new Set<Animatable>();
 
     protected abstract update(): void;
 
     constructor() {
-        Animatable.animationsRegistry.push(this);
+        super();
+        Animatable.animationsRegistry.add(this);
     }
 
     public static updateAll(): void {
-        for(const animatable of this.animationsRegistry) {
+        for (const animatable of this.animationsRegistry) {
             if (animatable.isAnimating) {
                 animatable.update();
                 animatable.runTicks();
@@ -29,12 +30,22 @@ export abstract class Animatable {
         }
     }
 
+    public override dispose(): void {
+        this.tickTasks.length = 0;
+        Animatable.animationsRegistry.delete(this);
+        super.dispose();
+    }
+
     protected registerTick(interval: number, onTickExecution: () => void) {
-        this.tickTasks.push({ interval, lastRun: FrontPageAnimation.timeTracker.lastFrameTime, onTickExecution });
+        this.tickTasks.push({
+            interval,
+            lastRun: globals.timeTracker.lastFrameTime,
+            onTickExecution
+        });
     }
 
     private runTicks(): void {
-        const now = FrontPageAnimation.timeTracker.lastFrameTime;
+        const now = globals.timeTracker.lastFrameTime;
 
         for (const tick of this.tickTasks) {
             if (now - tick.lastRun >= tick.interval) {

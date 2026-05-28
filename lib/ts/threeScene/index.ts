@@ -3,27 +3,94 @@ import * as SimplexNoise from "simplex-noise";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { AsteroidAnimation } from "./cameraAnimations/asteroidAnimation";
 import { IntroAnimation } from "./cameraAnimations/introAnimation";
-import { Animatable } from "./animatable";
 import Stats from "three/examples/jsm/libs/stats.module.js";
+import { Animatable } from "./abstracts/animatable";
+import { Disposable } from "./abstracts/disposable";
 
 export class SceneController {
-  private static instance: SceneController;
-  public frontPage?: FrontPageAnimation;
-  public ready: boolean = false;
-  
-  static getInstance() {
-    if (!SceneController.instance) {
-        console.log("Creating instance");
-        SceneController.instance = new SceneController();
-    }
-    return SceneController.instance;
-  }
+    private static instance?: SceneController | null;
+    public frontPage?: FrontPageAnimation;
+    public ready: boolean = false;
 
-  public async init(canvasElm: HTMLDivElement): Promise<void> {
-    this.frontPage = new FrontPageAnimation(canvasElm);
-    await this.frontPage.loadAssets();
-    this.ready = true;
-  }
+    static getInstance(): SceneController {
+        if (!SceneController.instance) {
+            console.log("Creating instance");
+            SceneController.instance = new SceneController();
+        }
+        return SceneController.instance;
+    }
+
+    public async init(canvasElm: HTMLDivElement): Promise<void> {
+        this.frontPage = new FrontPageAnimation(canvasElm);
+        await this.frontPage.loadAssets();
+        this.ready = true;
+    }
+
+    public runAnimationLoop(): void {
+        this.frontPage!.animatePage();
+    }
+
+    public initGyro(): void {
+        this.frontPage!.eventListeners.enableGyroEventListener();
+    }
+
+    public moveCameraDownToHomePage(): void {
+        this.frontPage!.mainCamera.introAnimation.isAnimating = true;
+    }
+
+    public async dispose(): Promise<void> {
+        await this.frontPage!.dispose();
+        SceneController.instance = null;
+    }
+}
+
+class AnimationEventListeners extends Disposable {
+    private frontPage: FrontPageAnimation;
+    private rendererDom: HTMLCanvasElement;
+    
+    constructor(frontPage: FrontPageAnimation) {
+        super();
+        this.frontPage = frontPage;
+        this.rendererDom = frontPage.frontPageRenderer.renderer.domElement;
+
+        // Adds subtle camera tilt on scene
+        this.rendererDom.addEventListener("mousemove", this.frontPage.mainCamera.setTargetRotation);
+        this.rendererDom.addEventListener("mouseleave", this.frontPage.mainCamera.resetTargetRotation);
+
+        // Resets the entire canvas rendering size on screen change
+        window.addEventListener('resize', frontPage.canvas.updateCanvasSize);
+
+        //Prevent the canvas from 'rubber banding' on scroll
+        this.rendererDom.addEventListener("wheel", frontPage.frontPageRenderer.preventWheel, { passive: false });
+        this.rendererDom.addEventListener("touchmove", frontPage.frontPageRenderer.preventTouch, { passive: false });
+    
+        // Get waves plane to resize on screen change
+        window.addEventListener('resize', frontPage.wavesScene.updatePlaneOnWindowResize);
+
+        // Get mouse to connect to dots
+        this.rendererDom.addEventListener('mousemove', frontPage.dotScene.mouseDot.mouseMoveEvent);
+        this.rendererDom.addEventListener('mouseleave', frontPage.dotScene.mouseDot.mouseLeaveEvent);
+    }
+
+    public enableGyroEventListener() {
+        window.addEventListener("deviceorientation", this.frontPage.mainCamera.handleDeviceOrientation);
+    }
+
+    protected override onDispose(): void {
+        this.rendererDom.removeEventListener("mousemove", this.frontPage.mainCamera.setTargetRotation);
+        this.rendererDom.removeEventListener("mouseleave", this.frontPage.mainCamera.resetTargetRotation);
+        window.removeEventListener("deviceorientation", this.frontPage.mainCamera.handleDeviceOrientation);
+
+        window.removeEventListener('resize', this.frontPage.canvas.updateCanvasSize);
+
+        this.rendererDom.removeEventListener("wheel", this.frontPage.frontPageRenderer.preventWheel);
+        this.rendererDom.removeEventListener("touchmove", this.frontPage.frontPageRenderer.preventTouch);
+        
+        window.removeEventListener('resize', this.frontPage.wavesScene.updatePlaneOnWindowResize);
+
+        this.rendererDom.removeEventListener('mousemove', this.frontPage.dotScene.mouseDot.mouseMoveEvent);
+        this.rendererDom.removeEventListener('mouseleave', this.frontPage.dotScene.mouseDot.mouseLeaveEvent);
+    }
 }
 
 class TimeTracker {
@@ -49,7 +116,6 @@ class TimeTracker {
 }
 
 export class FrontPageAnimation {
-    public static timeTracker: TimeTracker = new TimeTracker();
     public frontPageRenderer: FrontPageRenderer;
     public mainCamera: MainCamera;
     public canvas: Canvas;
@@ -57,7 +123,9 @@ export class FrontPageAnimation {
     public astroidScene: AstroidScene;
     public wavesScene: WavesScene;
     public dotScene: DotsScene;
+    public eventListeners: AnimationEventListeners;
     private stats: Stats;
+    private animationId?: number;
 
     public constructor(canvasElm: HTMLDivElement) {   
         this.frontPageScene = new FrontPageSceneManager();
@@ -67,22 +135,14 @@ export class FrontPageAnimation {
         this.astroidScene = new AstroidScene(this);
         this.wavesScene = new WavesScene(this);
         this.dotScene = new DotsScene(this);
+        this.eventListeners = new AnimationEventListeners(this);
         this.stats = new Stats();
 
         this.stats.showPanel(0);
         document.body.appendChild(this.stats.dom);
 
-        this.frontPageRenderer.renderer.domElement.addEventListener("click", () => {
-            if (this.mainCamera.asteroidAnimation.cameraTargetZ == -150) {
-                this.wavesScene.isAnimating = true;
-                this.astroidScene.isAnimating = false;
-                this.mainCamera.asteroidAnimation.startZoomOutAsteroid();
-            } else {
-                this.wavesScene.isAnimating = false;
-                this.astroidScene.isAnimating = true;
-                this.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
-            }
-        });
+        // todo - remove this and replace with button press
+        this.frontPageRenderer.renderer.domElement.addEventListener("click", this.manageClick);
     }
 
     public loadAssets(): Promise<void> {
@@ -90,14 +150,37 @@ export class FrontPageAnimation {
     }
 
     public animatePage(): void {
-        requestAnimationFrame(() => this.animatePage());
+        this.animationId = requestAnimationFrame(() => this.animatePage());
 
-        FrontPageAnimation.timeTracker.updateTime();
+        globals.timeTracker!.updateTime();
 
         this.stats.begin();
         Animatable.updateAll();
         this.frontPageRenderer.render();
         this.stats.end();
+    }
+
+    public async dispose(): Promise<void> {
+        cancelAnimationFrame(this.animationId!);
+
+        this.frontPageRenderer.renderer.domElement.removeEventListener("click", this.manageClick);
+        this.stats.dom.remove();
+
+        Disposable.disposeAllInRegistry();
+        Animatable.disposeAllInRegistry();
+        this.frontPageRenderer.dispose();
+    }
+
+    private manageClick = () => {
+        if (this.mainCamera.asteroidAnimation.cameraTargetZ == -150) {
+            this.wavesScene.isAnimating = true;
+            this.astroidScene.isAnimating = false;
+            this.mainCamera.asteroidAnimation.startZoomOutAsteroid();
+        } else {
+            this.wavesScene.isAnimating = false;
+            this.astroidScene.isAnimating = true;
+            this.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
+        }
     }
 }
 
@@ -105,9 +188,12 @@ class AstroidScene extends Animatable {
     public asteroidModel?: THREE.Group<THREE.Object3DEventMap>;
     private gltLoader: GLTFLoader;
     private frontPage: FrontPageAnimation;
-    private rimLight!: THREE.PointLight;
-    private fillLight!: THREE.PointLight;
+    private lights: { rimLight: THREE.PointLight | null; fillLight: THREE.PointLight | null; } = {
+        rimLight: null,
+        fillLight: null
+    };
 
+    // todo - figure out how to dispose of this safely...
     constructor(frontPage: FrontPageAnimation) {
         super();
         this.isAnimating = false;
@@ -136,38 +222,47 @@ class AstroidScene extends Animatable {
     }
 
     override update(): void {
-        const time = FrontPageAnimation.timeTracker.time; 
+        const time = globals.timeTracker!.time; 
 
         // Slow rotation (space drift feel)
         this.asteroidModel!.rotation.y += 0.002;
         this.asteroidModel!.rotation.x += 0.001;
 
-        // Floating motion
+        // Floating motion with gentle depth wobble
         this.asteroidModel!.position.y += Math.sin(time) * 0.003;
         this.asteroidModel!.position.x += Math.cos(time * 0.7) * 0.001;
-        // Gentle depth wobble
         this.asteroidModel!.position.z += Math.sin(time * 0.5) * 0.0005;
 
-        this.rimLight.intensity = Utils.calcFadeInFadeOut(100, 450, time);
-        this.fillLight.intensity += Utils.calcFadeInFadeOut(.5, 1.2, time);
+        this.lights.rimLight!.intensity = Utils.calcFadeInFadeOut(100, 450, time);
+        this.lights.fillLight!.intensity = Utils.calcFadeInFadeOut(150, 500, time);
+    }
+
+    override onDispose(): void {
+        Object.values(this.lights).forEach((light) => {
+            if (!light) return;
+            Utils.disposeLight(light, this.frontPage.frontPageScene.scene);
+        });
+
+        if (this.asteroidModel) {
+            Utils.disposeGLB2(this.asteroidModel, this.frontPage.frontPageScene.scene);
+        }
     }
 
     private initLighting(): void {
         // Blue rim light
-        this.rimLight = new THREE.PointLight(0x66aaff, 450, 45, 1);
-        this.rimLight.position.set(11, 13, -180);
+        this.lights.rimLight = new THREE.PointLight(0x66aaff, 450, 45, 1);
+        this.lights.rimLight.position.set(11, 13, -180);
 
         // Warm fill light
-        this.fillLight = new THREE.PointLight(0xff8844, 5, 45, 2);
-        this.fillLight.position.set(0, 0, -150);
+        this.lights.fillLight = new THREE.PointLight(0xff8844, 5, 45, 2);
+        this.lights.fillLight.position.set(0, 0, -150);
 
-        this.frontPage.frontPageScene.astroidGroup.add(this.rimLight);
-        this.frontPage.frontPageScene.astroidGroup.add(this.fillLight);
+        this.frontPage.frontPageScene.astroidGroup.add(this.lights.rimLight);
+        this.frontPage.frontPageScene.astroidGroup.add(this.lights.fillLight);
     }
 }
 
 class FrontPageSceneManager {
-    public static backgroundColor: number = 0x1a1a1a;
     public scene: THREE.Scene;
     public astroidGroup: THREE.Group;
     public wavesGroup: THREE.Group;
@@ -179,7 +274,7 @@ class FrontPageSceneManager {
         this.wavesGroup = new THREE.Group();
         this.dotsGroup = new THREE.Group();
 
-        this.scene.fog = new THREE.FogExp2(FrontPageSceneManager.backgroundColor, 0.009);
+        this.scene.fog = new THREE.FogExp2(globals.threeJsBackgroundColor, 0.009);
         this.scene.add(this.astroidGroup);
         this.scene.add(this.wavesGroup);
         this.scene.add(this.dotsGroup);
@@ -200,6 +295,7 @@ class MainCamera extends Animatable {
     };
     private mouse: THREE.Vector2 = new THREE.Vector2();
     private frontPage: FrontPageAnimation;
+    private rendererDom: HTMLCanvasElement;
 
     constructor(canvasElm: HTMLDivElement, frontPage: FrontPageAnimation) {
         super();
@@ -207,15 +303,13 @@ class MainCamera extends Animatable {
         this.asteroidAnimation = new AsteroidAnimation(frontPage);
         this.introAnimation = new IntroAnimation(frontPage);
         this.frontPage = frontPage;
+        this.rendererDom = frontPage.frontPageRenderer.renderer.domElement;
 
         // Initial camera position
         this.camera.position.set(0, 80, 58);
-
-        frontPage.frontPageRenderer.renderer.domElement.addEventListener("mousemove", this.setTargetRotation);
-        frontPage.frontPageRenderer.renderer.domElement.addEventListener("mouseleave", this.resetTargetRotation);
     }
 
-    public override update(): void {
+    override update(): void {
         this.cameraRotation.currentRotation.x += (this.cameraRotation.targetRotation.x - this.cameraRotation.currentRotation.x) * 0.05;
         this.cameraRotation.currentRotation.y += (this.cameraRotation.targetRotation.y - this.cameraRotation.currentRotation.y) * 0.05;
 
@@ -223,9 +317,7 @@ class MainCamera extends Animatable {
         this.camera.rotation.y = this.cameraRotation.currentRotation.y;
     }
 
-    public enableGyroEventListener() {
-        window.addEventListener("deviceorientation", this.handleDeviceOrientation);
-    }
+    override onDispose(): void { }
 
     public getVisibleDimensionsAtDepth(z: number) {
         const distance = Math.abs(this.camera.position.z - z);
@@ -246,7 +338,7 @@ class MainCamera extends Animatable {
         this.camera.updateProjectionMatrix();
     }
 
-    private handleDeviceOrientation = (event: DeviceOrientationEvent) => {
+    public handleDeviceOrientation = (event: DeviceOrientationEvent) => {
         const gamma = event.gamma ?? 0; // left/right tilt
         const beta = event.beta ?? 0;   // front/back tilt
 
@@ -259,7 +351,7 @@ class MainCamera extends Animatable {
         this.cameraRotation.targetRotation.x = normalizedBeta * 0.12;
     };
 
-    private setTargetRotation = (e: MouseEvent) => {
+    public setTargetRotation = (e: MouseEvent) => {
         const rect = this.frontPage.frontPageRenderer.renderer.domElement.getBoundingClientRect();
 
         // Normalized mouse coords (-1 to 1)
@@ -271,7 +363,7 @@ class MainCamera extends Animatable {
         this.cameraRotation.targetRotation.x = this.mouse.y * 0.05;
     }
 
-    private resetTargetRotation = () => {
+    public resetTargetRotation = () => {
         this.mouse.x = 0;
         this.mouse.y = 0;
 
@@ -290,16 +382,15 @@ class Canvas {
         this.frontPage = frontPage;
         this.canvasElm = canvasElm;
         this.canvasElm.appendChild(this.frontPage.frontPageRenderer.renderer.domElement);
-        this.updateCanvasSize(frontPage);
-        window.addEventListener('resize', () => this.updateCanvasSize(frontPage), false);
+        this.updateCanvasSize();
     }
 
-    public updateCanvasSize(frontPage: FrontPageAnimation): void {
+    public updateCanvasSize = () => {
         this.width = this.canvasElm!.clientWidth; 
         this.height = this.canvasElm!.clientHeight; 
 
-        frontPage.frontPageRenderer.resetRendererWindowSize(this.width, this.height);
-        frontPage.mainCamera.resetCameraAspectRatio(this.width, this.height);
+        this.frontPage.frontPageRenderer.resetRendererWindowSize(this.width, this.height);
+        this.frontPage.mainCamera.resetCameraAspectRatio(this.width, this.height);
     }
 
     public getViewableRectangle(distanceFromCamera: number): Array<number> {
@@ -312,21 +403,14 @@ class Canvas {
 
 class FrontPageRenderer {
     public renderer: THREE.WebGLRenderer;
+    public preventWheel = (e: WheelEvent) => e.preventDefault();
+    public preventTouch = (e: TouchEvent) => e.preventDefault();
     private frontPage: FrontPageAnimation;
-
+    
     constructor(frontPage: FrontPageAnimation,) {
         this.frontPage = frontPage;
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false});
-        this.renderer.setClearColor(FrontPageSceneManager.backgroundColor, 1);
-
-        //Prevent the canvas from 'rubber banding' on scroll
-        this.renderer.domElement.addEventListener("wheel", (e) => {
-            e.preventDefault();
-        }, { passive: false });
-
-        this.renderer.domElement.addEventListener("touchmove", (e) => {
-            e.preventDefault();
-        }, { passive: false });
+        this.renderer.setClearColor(globals.threeJsBackgroundColor, 1);
     }
 
     public resetRendererWindowSize(width: number, height: number) {
@@ -337,6 +421,21 @@ class FrontPageRenderer {
     public render() {
         this.renderer.render(this.frontPage.frontPageScene.scene, this.frontPage.mainCamera.camera);
     }
+
+    public dispose() {
+        this.renderer.dispose();
+        this.renderer.forceContextLoss();
+        this.renderer.domElement.remove();
+        const gl = this.renderer.getContext();
+
+            // 4. HARD context kill (this is what you're missing)
+        if (gl) {
+            const ext = gl.getExtension("WEBGL_lose_context");
+            if (ext) {
+                ext.loseContext();
+            }
+        }
+    }
 }
 
 class DotsScene extends Animatable {
@@ -346,7 +445,7 @@ class DotsScene extends Animatable {
     private activeLineCount = 0;  
     private linePool: THREE.Line[] = [];
     public dots!: Array<Dot>;
-    private mouseDot!: MouseDot;
+    public mouseDot!: MouseDot;
 
     constructor(frontPage: FrontPageAnimation) {
         super();
@@ -372,44 +471,9 @@ class DotsScene extends Animatable {
         this.mouseDot.updateDot(this.frontPage);
     }
 
-    private initLinePool(): void {
-        for (let i = 0; i < this.maxLineCount; i++) {
-            const positions = new Float32Array(6);
-            const geometry = new THREE.BufferGeometry();
-            const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, depthTest: true });
-            const line = new THREE.Line(geometry, material);
-
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            line.visible = false;
-            this.linePool.push(line);
-            this.frontPage.frontPageScene.dotsGroup.add(line);
-        }
-    }
-
-    private initDots(): void {
-        const cameraZ = this.frontPage.mainCamera.camera.position.z;
-        this.dots = [];
-
-        for (let i = 0; i < this.dotCount; i++) {
-            const z = Utils.getRandomBetween(cameraZ - Dot.dotCameraDistanceSettings.minZCameraDistance, cameraZ - Dot.dotCameraDistanceSettings.maxZCameraDistance);
-            const dims = this.frontPage.mainCamera.getVisibleDimensionsAtDepth(z);
-            const dot = new Dot(
-                Utils.getRandomBetween(-dims.halfWidth, dims.halfWidth),
-                Utils.getRandomBetween(-dims.halfHeight, dims.halfHeight),
-                z);
-
-            this.dots.push(dot);
-            this.frontPage.frontPageScene.dotsGroup.add(dot.dotMesh);
-        }
-
-        this.mouseDot = new MouseDot(this.frontPage);
-        this.frontPage.frontPageScene.dotsGroup.add(this.mouseDot.dotMesh);
-    }
-
-    private resetLines(): void {
-        this.activeLineCount = 0;
-        for(const line of this.linePool) {
-            line.visible = false;
+    override onDispose(): void {
+        for (const line of this.linePool) {
+            Utils.disposeLine(line, this.frontPage.frontPageScene.scene);
         }
     }
 
@@ -445,7 +509,6 @@ class DotsScene extends Animatable {
             positions[4] = dotToMaybeConnect.dotMesh.position.y;
             positions[5] = dotToMaybeConnect.dotMesh.position.z;
             line.geometry.attributes.position.needsUpdate = true;
-            line.geometry.computeBoundingSphere();
 
             // Update opacity
             const distanceAlpha = 1 - (Math.sqrt(distanceSq) / dot.connectableRadius);
@@ -454,50 +517,91 @@ class DotsScene extends Animatable {
             (line.material as THREE.LineBasicMaterial).opacity = distanceAlpha * dotOpacityAlpha;
         };
     }
+
+    private initLinePool(): void {
+        for (let i = 0; i < this.maxLineCount; i++) {
+            const positions = new Float32Array(6);
+            const geometry = new THREE.BufferGeometry();
+            const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, depthTest: true });
+            const line = new THREE.Line(geometry, material);
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            line.frustumCulled = false;
+            line.visible = false;
+            this.linePool.push(line);
+            this.frontPage.frontPageScene.dotsGroup.add(line);
+        }
+    }
+
+    private initDots(): void {
+        const cameraZ = this.frontPage.mainCamera.camera.position.z;
+        this.dots = [];
+
+        for (let i = 0; i < this.dotCount; i++) {
+            const z = Utils.getRandomBetween(cameraZ - globals.dotSettings.dotCameraDistanceSettings.minZCameraDistance, cameraZ - globals.dotSettings.dotCameraDistanceSettings.maxZCameraDistance);
+            const dims = this.frontPage.mainCamera.getVisibleDimensionsAtDepth(z);
+            const dotPosition = new THREE.Vector3(
+                Utils.getRandomBetween(-dims.halfWidth, dims.halfWidth),
+                Utils.getRandomBetween(-dims.halfHeight, dims.halfHeight),
+                z);
+            const dot = new Dot(dotPosition, this.frontPage);
+
+            this.dots.push(dot);
+            this.frontPage.frontPageScene.dotsGroup.add(dot.dotMesh);
+        }
+
+        this.mouseDot = new MouseDot(this.frontPage);
+        this.frontPage.frontPageScene.dotsGroup.add(this.mouseDot.dotMesh);
+    }
+
+    private resetLines(): void {
+        this.activeLineCount = 0;
+        for(const line of this.linePool) {
+            line.visible = false;
+        }
+    }
 }
 
-class Dot {
-    public static boundingBoxMode = true;
+class Dot extends Disposable {
     public dotRadius: number;
     public connectableRadius: number;
     public id: string;
     public dotMesh: THREE.Mesh;
     public velocity: THREE.Vector3;
     public material: THREE.MeshBasicMaterial;
-    public spawnOpacityAlpha = 0;
-    public static dotCameraDistanceSettings: { maxZCameraDistance: number; minZCameraDistance: number } = {
-        maxZCameraDistance : 130,
-        minZCameraDistance : 30
-    };
+    public spawnOpacityAlpha: number = 0;
     private tempVecs: { collisionVec: THREE.Vector3, collisionVec2: THREE.Vector3, testVec: THREE.Vector3, waveCollisionVec: THREE.Vector3 } = { 
         collisionVec: new THREE.Vector3(),
         collisionVec2: new THREE.Vector3(),
         testVec: new THREE.Vector3(),
         waveCollisionVec: new THREE.Vector3()
     };
-    private static dotColorGradient: { near: THREE.Color, far: THREE.Color } = {
-        near: new THREE.Color(0xbdbdbd),
-        far: new THREE.Color(0x084eff)
-    }
+    protected frontPage: FrontPageAnimation;
 
-    constructor(x: number, y: number, z: number) {
+    constructor(dotPos: THREE.Vector3, frontPage: FrontPageAnimation) {
+        super();
         this.dotRadius = 0.35;
         this.connectableRadius = 25;
         this.id = crypto.randomUUID();
 
-        this.material = new THREE.MeshBasicMaterial({ color: Dot.dotColorGradient.near, transparent: true, opacity: 0, fog: true });
+        this.material = new THREE.MeshBasicMaterial({ color: globals.dotSettings.dotColorGradient.near, transparent: true, opacity: 0, fog: true });
         this.dotMesh = new THREE.Mesh(new THREE.CircleGeometry(this.dotRadius, 5), this.material);
-        this.dotMesh.position.set(x, y, z);
+        this.dotMesh.position.copy(dotPos);
         this.velocity = new THREE.Vector3(
             Utils.getRandomBetween(-0.05, 0.05, .007),
             Utils.getRandomBetween(-0.05, 0.05, .007),
             Utils.getRandomBetween(-0.03, 0.03, .004));
+        this.frontPage = frontPage;
     }
 
     public updateDot(frontPage: FrontPageAnimation): void {
         this.runCollisionOpenSpace(frontPage);
         this.runDotDistanceGradient(frontPage);
         this.updateSpawnFadeIn();
+    }
+
+    public override onDispose(): void {
+        Utils.disposeMesh(this.dotMesh, this.frontPage.frontPageScene.scene);
     }
 
     private runCollisionOpenSpace(frontPage: FrontPageAnimation): void {
@@ -514,17 +618,17 @@ class Dot {
 
         // Outside screen
         if (outsideX || outsideY) {
-            this.recycle(frontPage, local, -Dot.dotCameraDistanceSettings.minZCameraDistance, -Dot.dotCameraDistanceSettings.maxZCameraDistance);
+            this.recycle(frontPage, local, -globals.dotSettings.dotCameraDistanceSettings.minZCameraDistance, -globals.dotSettings.dotCameraDistanceSettings.maxZCameraDistance);
         }
 
         // Behind camera
-        if (local.z > -Dot.dotCameraDistanceSettings.minZCameraDistance) {
-            this.recycle(frontPage, local, -Dot.dotCameraDistanceSettings.minZCameraDistance, -Dot.dotCameraDistanceSettings.maxZCameraDistance);
+        if (local.z > -globals.dotSettings.dotCameraDistanceSettings.minZCameraDistance) {
+            this.recycle(frontPage, local, -globals.dotSettings.dotCameraDistanceSettings.minZCameraDistance, -globals.dotSettings.dotCameraDistanceSettings.maxZCameraDistance);
         }
 
         // Too far away
-        if (local.z < -Dot.dotCameraDistanceSettings.maxZCameraDistance) {
-            this.recycle(frontPage, local, -Dot.dotCameraDistanceSettings.minZCameraDistance, -Dot.dotCameraDistanceSettings.maxZCameraDistance);
+        if (local.z < -globals.dotSettings.dotCameraDistanceSettings.maxZCameraDistance) {
+            this.recycle(frontPage, local, -globals.dotSettings.dotCameraDistanceSettings.minZCameraDistance, -globals.dotSettings.dotCameraDistanceSettings.maxZCameraDistance);
         }
 
         // Apply collision response in world space
@@ -601,7 +705,7 @@ class Dot {
         const distance = Math.abs(cameraZ - this.dotMesh.position.z);
         const t = THREE.MathUtils.clamp(THREE.MathUtils.mapLinear(distance, 30, 110, 0, 1), 0, 1);
 
-        this.material.color.lerpColors(Dot.dotColorGradient.near, Dot.dotColorGradient.far, t);
+        this.material.color.lerpColors(globals.dotSettings.dotColorGradient.near, globals.dotSettings.dotColorGradient.far, t);
     }
 
     private updateSpawnFadeIn(): void {
@@ -635,7 +739,6 @@ class WavesScene extends Animatable {
         this.simplexNoise = SimplexNoise.createNoise4D();
         this.initLighting();
         this.initPlane();
-        window.addEventListener('resize', () => this.updatePlaneOnWindowResize(), false);
     }
 
     override update(): void {
@@ -643,8 +746,17 @@ class WavesScene extends Animatable {
         this.updateLights(this.lights.light1!, this.lights.light2!, this.lights.light3!, this.lights.light4!);
     }
 
+    override onDispose(): void {
+        Utils.disposeMesh(this.planeMesh, this.frontPage.frontPageScene.scene);
+        Object.values(this.lights).forEach((light) => {
+            if(!light) return;
+
+            Utils.disposeLight(light, this.frontPage.frontPageScene.scene);
+        });
+    }
+
     public resolveDotCollision(dot: Dot) {
-        const time = FrontPageAnimation.timeTracker.time * 0.17;
+        const time = globals.timeTracker.time * 0.17;
         const nextPos = this.tempVecs.tempVec1
             .copy(dot.dotMesh.position)
             .add(dot.velocity);
@@ -674,15 +786,20 @@ class WavesScene extends Animatable {
                 .copy(normal)
                 .multiplyScalar(penetration + 0.001);
             dot.dotMesh.position.add(this.tempVecs.tempVec3);
-            // recompute velocity direction vs surface
+            // Recompute velocity direction vs surface
             const velDot = dot.velocity.dot(normal);
 
-            // only reflect if moving into the surface
+            // Only reflect if moving into the surface
             if (velDot < 0) {
                 dot.velocity.addScaledVector(normal, -2 * velDot);
                 dot.velocity.multiplyScalar(0.98); // light damping only
             }
         }
+    }
+
+    public updatePlaneOnWindowResize = () => {
+        Utils.disposeMesh(this.planeMesh, this.frontPage.frontPageScene.scene);
+        this.initPlane();
     }
 
     private initLighting(): void {
@@ -713,9 +830,11 @@ class WavesScene extends Animatable {
         const oversizeMult = 1.8;
         const viewableDims = this.frontPage.canvas.getViewableRectangle(78);
         const vWidth = viewableDims[0]! * oversizeMult, vHeight = viewableDims[1]! * oversizeMult;
+        const segX = Math.min(Math.floor(vWidth / 2), 128);
+        const segY = Math.min(Math.floor(vHeight / 2), 128);
 
         this.planeMesh = new THREE.Mesh(
-            new THREE.PlaneGeometry(vWidth, vHeight, vWidth / 2, vHeight / 2),
+            new THREE.PlaneGeometry(vWidth, vHeight, segX, segY),
             new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide, fog: true })
         );
         this.planeMesh.rotation.x = -Math.PI / 2 - 0.2;
@@ -724,15 +843,9 @@ class WavesScene extends Animatable {
         this.frontPage.frontPageScene.wavesGroup.add(this.planeMesh);
     }
 
-    private updatePlaneOnWindowResize(): void {
-        Utils.disposeObject(this.planeMesh);
-        this.frontPage.frontPageScene.wavesGroup.remove(this.planeMesh);
-        this.initPlane();
-    }
-
     private updatePlane(): void {
         const gArray: THREE.TypedArray = this.planeMesh.geometry.attributes.position.array;
-        const time: number = FrontPageAnimation.timeTracker.time * 0.17;
+        const time: number = globals.timeTracker.time * 0.17;
 
         for (let i = 0; i < gArray.length; i += 3) {
           gArray[i + 2] = this.getWaveHeight(gArray[i], gArray[i + 1], time);
@@ -748,7 +861,7 @@ class WavesScene extends Animatable {
     }
 
     private updateLights(... lights: THREE.PointLight[]): void {
-        const time = FrontPageAnimation.timeTracker.time;
+        const time = globals.timeTracker.time;
         const d = 50;
         let i = 0;
         for (const light of lights) {
@@ -760,31 +873,22 @@ class WavesScene extends Animatable {
 }
 
 class MouseDot extends Dot {
-    private frontPage: FrontPageAnimation;
     private cameraVector: THREE.Vector3;
     private mousePos: THREE.Vector3;
     private animateMouseDot: boolean = false;
     private zBuffer: number;
+    private rendererDom: HTMLCanvasElement;
 
     constructor(frontPage: FrontPageAnimation, zBuffer = -70) {
-        super(0, 0, zBuffer);
+        super(new THREE.Vector3(0 ,0, zBuffer), frontPage);
         this.zBuffer = zBuffer;
         this.connectableRadius = 35;
         (this.dotMesh.material as THREE.Material).opacity = 1;
         (this.dotMesh.material as THREE.Material).transparent = true;
         this.dotMesh.visible = false;
-        this.frontPage = frontPage;
         this.cameraVector = new THREE.Vector3(); 
         this.mousePos = new THREE.Vector3();
-
-        frontPage.frontPageRenderer.renderer.domElement.addEventListener('mousemove', (e: MouseEvent) => {
-            this.animateMouseDot = true;
-            this.calcPointerPosition(e);
-        }, false);
-
-        frontPage.frontPageRenderer.renderer.domElement.addEventListener('mouseleave', () => {
-            this.animateMouseDot = false;
-        }, false);
+        this.rendererDom = frontPage.frontPageRenderer.renderer.domElement;
     }
 
     public override updateDot(frontPage: FrontPageAnimation): void {
@@ -795,16 +899,21 @@ class MouseDot extends Dot {
         }
     }
 
-    private calcPointerPosition(e: MouseEvent) {
+    public mouseMoveEvent = (e: MouseEvent) => {
+        this.animateMouseDot = true;
         this.cameraVector.set(
-            (e.clientX / this.frontPage.frontPageRenderer.renderer.domElement.clientWidth) * 2 - 1,
-            -(e.clientY / this.frontPage.frontPageRenderer.renderer.domElement.clientHeight) * 2 + 1,
+            (e.clientX / this.rendererDom.clientWidth) * 2 - 1,
+            -(e.clientY / this.rendererDom.clientHeight) * 2 + 1,
             0);
         this.cameraVector.unproject(this.frontPage.mainCamera.camera);
         this.cameraVector.sub(this.frontPage.mainCamera.camera.position).normalize();
 
         const distance = (this.dotMesh.position.z - this.frontPage.mainCamera.camera.position.z) / this.cameraVector.z;
         this.mousePos!.copy(this.frontPage.mainCamera.camera.position).add(this.cameraVector.multiplyScalar(distance));
+    }
+
+    public mouseLeaveEvent = () => {
+        this.animateMouseDot = false;
     }
 }
 
@@ -835,84 +944,87 @@ export class Utils {
         return min + (Math.sin(time * 0.5) * 0.5 + 0.5) * (max - min);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public static disposeObject(obj: any): void {
-        if (!obj) return;
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const disposeMaterial = (mat: any) => {
-            if (!mat) {
-                return;
-            }
-
-            const maps = [
-                'map','lightMap','aoMap','emissiveMap','bumpMap','normalMap',
-                'displacementMap','roughnessMap','metalnessMap','alphaMap'
-            ];
-            maps.forEach((k) => {
-                if (mat[k] && typeof mat[k].dispose === 'function') {
-                    mat[k].dispose();
-                }
-            });
-            for (const key in mat) {
-                const v = mat[key];
-                if (v && typeof v.dispose === 'function' && !maps.includes(key)) {
-                    v.dispose();
-                }
-            }
-
-            if (typeof mat.dispose === 'function') {
-                mat.dispose();
-            }
-        };
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const disposeSingle = (o: any) => {
-            if (!o) {
-                return;
-            }
-
-            try {
-                if (o.parent && typeof o.parent.remove === 'function') {
-                    o.parent.remove(o);
-                }
-            } catch (e) {
-                console.warn('Error removing object from parent, possibly already removed:', e);
-            }
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const visit = (child: any) => {
-                if (!child) {
-                    return;
-                }
-
-                if (child.geometry && typeof child.geometry.dispose === 'function') {
-                    child.geometry.dispose();
-                }
-
-                if (child.material) {
-                    if (Array.isArray(child.material)) child.material.forEach(disposeMaterial);
-                    else disposeMaterial(child.material);
-                }
-
-                if (child.texture && typeof child.texture.dispose === 'function') {
-                    child.texture.dispose();
-                }
-            };
-
-            if (typeof o.traverse === 'function') {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                o.traverse((c: any) => visit(c));
-            } else {
-                visit(o);
-            }
-        };
-
-        if (Array.isArray(obj)) {
-            obj.forEach(disposeSingle);
+    public static disposeLine(line: THREE.Line, scene: THREE.Scene) {
+        scene.remove(line);
+                    
+        if (line.geometry) {
+            line.geometry.dispose();
         }
-        else {
-            disposeSingle(obj);
+
+        if (line.material) {
+            if (Array.isArray(line.material)) {
+                line.material.forEach(mat => mat.dispose());
+            } else {
+                line.material.dispose();
+            }
+        }
+    }
+
+    public static disposeLight(light: THREE.PointLight, scene: THREE.Scene) {
+        scene.remove(light);
+        light.dispose();
+    }
+
+    public static disposeGLB2(model: THREE.Group<THREE.Object3DEventMap>, scene: THREE.Scene) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        model.traverse((node: any) => {
+            if (node.isMesh) {
+                node.geometry.dispose();
+
+                if (node.material.isMaterial) {
+                    this.disposeMaterial(node.material);
+                } else if (Array.isArray(node.material)) {
+                    node.material.forEach(this.disposeMaterial);
+                }
+            }
+        });
+
+        scene.remove(model);
+    }
+
+    public static disposeMesh(mesh: THREE.Mesh, scene: THREE.Scene) {
+        scene.remove(mesh);
+
+        if (mesh.geometry) {
+            mesh.geometry.dispose();
+        }
+
+        if (mesh.material) {
+            if (Array.isArray(mesh.material)) {
+                mesh.material.forEach((mat) => Utils.disposeMaterial(mat));
+                return;
+            }
+
+            Utils.disposeMaterial(mesh.material);
+        }
+    }
+
+    public static disposeMaterial(material: THREE.Material) {
+        material.dispose();
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const matAsRecord = material as unknown as Record<string, any>;
+
+        for (const key in matAsRecord) {
+            const property = matAsRecord[key];
+            if (property && typeof property.dispose === 'function') {
+                property.dispose();
+            }
         }
     }
 }
+
+export const globals = {
+    timeTracker: new TimeTracker(),
+    threeJsBackgroundColor: 0x1a1a1a,
+    dotSettings: {
+        dotCameraDistanceSettings: {
+            maxZCameraDistance : 130,
+            minZCameraDistance : 30
+        },
+        dotColorGradient: {
+            near: new THREE.Color(0xbdbdbd),
+            far: new THREE.Color(0x084eff)
+        }
+    }
+};
