@@ -10,7 +10,7 @@ const WINDOW_TITLE_TYPE_TIME_MS = 80;
 
 type PopupWindowProps = Readonly<{
     windowTitle: string;
-    onClose: () => Promise<void>;
+    onClose: () => Promise<void> | void;
     children: React.ReactNode;
 }>;
 
@@ -117,6 +117,7 @@ export default function PopupWindow({ windowTitle, onClose, children }: PopupWin
         await onClose();
     }
 
+    // todo - move SPAN to dedicated svg...
     return (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
             <div ref={windowRef} className="z-10" style={{ transform: "translate3d(0px, 0px, 0)" }}>

@@ -5,16 +5,17 @@ import { useEffect, useRef } from "react";
 
 type SpaceSceneProps = Readonly<{
     onLoadingComplete: () => void;
-    isReadyToAnimate: boolean;
 }>;
 
-export default function SpaceScene({ onLoadingComplete, isReadyToAnimate }: SpaceSceneProps) {
+export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
   const threeJsRef = useRef<HTMLDivElement | null>(null);
   const assetsLoadedRef = useRef(false);
+  const instantiatedRef = useRef(false);
 
   // Handle initialization and asset loading
   useEffect(() => {
-    if (!threeJsRef.current) return;
+    if (!threeJsRef.current || instantiatedRef.current == true) return;
+    instantiatedRef.current = true;
 
     const pageScene = SceneController.getInstance();
     const initLoading = async () => {      
@@ -27,18 +28,9 @@ export default function SpaceScene({ onLoadingComplete, isReadyToAnimate }: Spac
     initLoading();
 
     return () => { 
-      pageScene.dispose();
+      //pageScene.dispose();
     };
   }, [onLoadingComplete]); 
-
-  // Listen to parents toggle
-  useEffect(() => {    
-    if (isReadyToAnimate && assetsLoadedRef.current) {
-      SceneController
-        .getInstance()
-        .moveCameraDownToHomePage();
-    }
-  }, [isReadyToAnimate]); // This will fire when Home updates 'enableAnimation' to true
 
   return (
     <div ref={threeJsRef} id="three-root" className="w-full h-full" />

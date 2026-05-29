@@ -126,7 +126,7 @@ export class FrontPageAnimation {
     public wavesScene: WavesScene;
     public dotScene: DotsScene;
     public eventListeners: AnimationEventListeners;
-    private stats: Stats;
+    //private stats: Stats;
     private animationId?: number;
 
     public constructor(canvasElm: HTMLDivElement) {   
@@ -138,10 +138,10 @@ export class FrontPageAnimation {
         this.wavesScene = new WavesScene(this);
         this.dotScene = new DotsScene(this);
         this.eventListeners = new AnimationEventListeners(this);
-        this.stats = new Stats();
+        //this.stats = new Stats();
 
-        this.stats.showPanel(0);
-        document.body.appendChild(this.stats.dom);
+        //this.stats.showPanel(0);
+        //document.body.appendChild(this.stats.dom);
 
         // todo - remove this and replace with button press
         this.frontPageRenderer.renderer.domElement.addEventListener("click", this.manageClick);
@@ -156,17 +156,17 @@ export class FrontPageAnimation {
 
         globals.timeTracker!.updateTime();
 
-        this.stats.begin();
+        //this.stats.begin();
         Animatable.updateAll();
         this.frontPageRenderer.render();
-        this.stats.end();
+        //this.stats.end();
     }
 
     public async dispose(): Promise<void> {
         cancelAnimationFrame(this.animationId!);
 
         this.frontPageRenderer.renderer.domElement.removeEventListener("click", this.manageClick);
-        this.stats.dom.remove();
+        //this.stats.dom.remove();
 
         Disposable.disposeAllInRegistry();
         Animatable.disposeAllInRegistry();
