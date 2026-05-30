@@ -10,25 +10,34 @@ import PopupWindow from "@/lib/components/global/popupWindow";
 
 export default function Home() {
   const [permissionsDisplay, setPermissionsEnabled] = useState(false);
+  const [navDisplay, setNavDisplayEnabled] = useState(false);
   const [settingsDisplay, setSettingsEnabled] = useState(false);
   const navbarItems = [
-    { label: "Settings", icon: "/settings-gear.svg", onClick: () => { setSettingsEnabled(true) } },
-    { label: "Home", icon: "/settings-gear.svg", onClick: () => {} },
-    { label: "Missions", icon: "/settings-gear.svg", onClick: () => {} },
-    { label: "About", icon: "/settings-gear.svg", onClick: () => {} },
+    { label: "Settings", icon: "/settings-gear.svg", onClick: () => { setSettingsEnabled(true); setNavDisplayEnabled(false); } },
+    { label: "Home", icon: "/home.svg", onClick: () => { SceneController.getInstance().moveAwayFromMoon() } },
+    { label: "Moon", icon: "/planet.svg", onClick: () => { SceneController.getInstance().moveToMoon() } },
   ];
 
-  const moveSpaceSceneCameraIntro = async () => {
+  async function moveSpaceSceneCameraIntro () {
     setPermissionsEnabled(false);
     SceneController.getInstance().moveCameraDownToHomePage();
+    
+    const timer = setTimeout(() => {
+      setNavDisplayEnabled(true);
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+    };
   };
 
-  const closeSettingsWindow = () => {
+  function closeSettingsWindow() {
+    setNavDisplayEnabled(true);
     setSettingsEnabled(false);
   }
 
-  const runAfterLoad = () => {
-    if (!AppPermissions.gyroPermissions.gyroCompatible) {
+  function runAfterLoad() {
+    if (AppPermissions.gyroPermissions.gyroCompatible) {
       setPermissionsEnabled(true);    
     } else {
       moveSpaceSceneCameraIntro();
@@ -37,7 +46,7 @@ export default function Home() {
 
   return (
     <main className="relative w-full h-screen bg-black">
-      { !permissionsDisplay && <NavigationMenu items={navbarItems} /> }
+      <NavigationMenu items={navbarItems} closeFlag={!navDisplay} />
       { settingsDisplay && <PopupWindow windowTitle="SETTINGS" onClose={closeSettingsWindow}><p>Test</p></PopupWindow> }
       { permissionsDisplay && <Permissions onClose={moveSpaceSceneCameraIntro} /> }
       <SpaceScene onLoadingComplete={runAfterLoad} />

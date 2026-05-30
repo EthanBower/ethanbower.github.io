@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
-const ANIMATION_TIME_MS = 0.4;
+const ANIMATION_TIME_MS = 0.3;
 
 type PopupWindowProps = Readonly<{
     windowTitle: string;
@@ -45,27 +45,27 @@ export default function PopupWindow({ windowTitle, onClose, children }: PopupWin
     return (
         <div ref={windowRef} className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <motion.div className="z-10 pointer-events-auto" drag dragConstraints={windowRef} dragMomentum={true} dragElastic={0.02} whileDrag={{ scale: 1.03 }} >
-                <motion.div variants={{ hidden: { opacity: 0, filter: "blur(10px)" }, visible: { opacity: 1, filter: "blur(0px)" }, exit: { opacity: 0, filter: "blur(10px)" } }} initial="hidden" animate={visible ? "visible" : "exit"} transition={{ duration: ANIMATION_TIME_MS }} >
-                    <motion.div className="popup-window shadow-2xl will-change-transform" variants={{ hidden: { scale: 1.5, y: 0 }, visible: { scale: 1, y: 0 }, exit: { scale: 0.8, y: 0 } }} initial="hidden" animate={visible ? "visible" : "exit"} transition={{ duration: ANIMATION_TIME_MS, ease: [0.16, 1, 0.3, 1] }} >
-                    <div className="cursor-grab active:cursor-grabbing select-none flex items-center gap-4 p-4 pb-2">
-                        <Image src="/double-arrow.svg" alt="Terminal Icon" width={24} height={24} priority />
-                        <div className="flex flex-col text-left">
-                            <h3 className="text-sm font-semibold text-white font-mono flex items-center gap-1">
-                                <span>{typedTitle}</span>
-                                <span className="animate-pulse">_</span>
-                            </h3>
-                            <p className="text-xs text-white/50 mt-0.5">
-                                For optimal experience, please grant motion permissions.
-                            </p>
+                <motion.div className="popup-window shadow-2xl" variants={{ hidden: { opacity: 0, filter: "blur(10px)" }, visible: { opacity: 1, filter: "blur(0px)" }, exit: { opacity: 0, filter: "blur(10px)" } }} initial="hidden" animate={visible ? "visible" : "exit"} transition={{ duration: ANIMATION_TIME_MS }} >
+                    <motion.div variants={{ hidden: { scale: 1.5, y: 0 }, visible: { scale: 1, y: 0 }, exit: { scale: 0.8, y: 0 } }} initial="hidden" animate={visible ? "visible" : "exit"} transition={{ duration: ANIMATION_TIME_MS, ease: [0.16, 1, 0.3, 1] }} >
+                        <div className="cursor-grab active:cursor-grabbing select-none flex items-center gap-4 p-4 pb-2">
+                            <Image src="/double-arrow.svg" alt="Terminal Icon" width={24} height={24} priority />
+                            <div className="flex flex-col text-left">
+                                <h3 className="text-sm font-semibold text-white font-mono flex items-center gap-1">
+                                    <span>{typedTitle}</span>
+                                    <span className="animate-pulse">_</span>
+                                </h3>
+                                <p className="text-xs text-white/50 mt-0.5">
+                                    For optimal experience, please grant motion permissions.
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                    <div className="bg-black/25 m-1 p-3 rounded-xl">
-                        {children}
-                        <button onClick={handleClose} className="popup-button-red flex items-center justify-center gap-2" >
-                            <Image src="/exit.svg" alt="Exit" width={24} height={24} />
-                            <span>Exit Window</span>
-                        </button>
-                    </div>                    
+                        <div className="bg-black/25 m-1 p-3 rounded-xl">
+                            {children}
+                            <button onClick={handleClose} className="popup-button-red flex items-center justify-center gap-2" >
+                                <Image src="/exit.svg" alt="Exit" width={24} height={24} />
+                                <span>Exit Window</span>
+                            </button>
+                        </div>                    
                     </motion.div>
                 </motion.div>
             </motion.div>

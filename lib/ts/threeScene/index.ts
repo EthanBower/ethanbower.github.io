@@ -40,6 +40,18 @@ export class SceneController {
         this.frontPage!.mainCamera.introAnimation.isAnimating = true;
     }
 
+    public moveToMoon(): void {
+        this.frontPage!.wavesScene.isAnimating = false;
+        this.frontPage!.astroidScene.isAnimating = true;
+        this.frontPage!.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
+    }
+
+    public moveAwayFromMoon(): void {
+        this.frontPage!.wavesScene.isAnimating = true;
+        this.frontPage!.astroidScene.isAnimating = false;
+        this.frontPage!.mainCamera.asteroidAnimation.startZoomOutAsteroid();
+    }
+
     public async dispose(): Promise<void> {
         await this.frontPage!.dispose();
         SceneController.instance = null;
@@ -142,9 +154,6 @@ export class FrontPageAnimation {
 
         //this.stats.showPanel(0);
         //document.body.appendChild(this.stats.dom);
-
-        // todo - remove this and replace with button press
-        this.frontPageRenderer.renderer.domElement.addEventListener("click", this.manageClick);
     }
 
     public loadAssets(): Promise<void> {
@@ -165,24 +174,11 @@ export class FrontPageAnimation {
     public async dispose(): Promise<void> {
         cancelAnimationFrame(this.animationId!);
 
-        this.frontPageRenderer.renderer.domElement.removeEventListener("click", this.manageClick);
         //this.stats.dom.remove();
 
         Disposable.disposeAllInRegistry();
         Animatable.disposeAllInRegistry();
         this.frontPageRenderer.dispose();
-    }
-
-    private manageClick = () => {
-        if (this.mainCamera.asteroidAnimation.cameraTargetZ == -150) {
-            this.wavesScene.isAnimating = true;
-            this.astroidScene.isAnimating = false;
-            this.mainCamera.asteroidAnimation.startZoomOutAsteroid();
-        } else {
-            this.wavesScene.isAnimating = false;
-            this.astroidScene.isAnimating = true;
-            this.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
-        }
     }
 }
 

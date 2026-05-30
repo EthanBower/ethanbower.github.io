@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #212121;
-  --foreground: #171717;
+  --background: #linear-gradient(to bottom, #7a7a7a, #4d00a5);
+  --foreground: #212121;
 }
 
 @theme inline {
@@ -21,7 +21,7 @@
 
 html,
 body {
-  background: var(--background);
+  background: var(--background);  
   color: var(--foreground);
   margin: 0;
   padding: 0;
@@ -44,7 +44,7 @@ body {
 }
 
 .popup-window {
-  @apply p-[10px] m-[5px] pointer-events-auto border rounded-[24px] text-white select-none backdrop-blur-[3px];
+  @apply p-[10px] m-[5px] pointer-events-auto border rounded-[24px] text-white select-none blur-[5px] backdrop-blur-[3px];
   border-color: rgba(255, 255, 255, 0.12);
   background: 
     radial-gradient(120% 120% at 50% 0, #ff00000d, #ff00000f), 
