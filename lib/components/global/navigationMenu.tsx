@@ -1,96 +1,29 @@
 "use client";
 
 import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, Variants } from "framer-motion";
 import { useState } from "react";
 
-const navbarVariants = {
-  initial: {
-    y: 120,
-    scale: .8
-  },
-  enter: { 
-    y: 0, 
-    scale: 1,
-    transition: { 
-      type: "spring", 
-      stiffness: 140, 
-      damping: 6, 
-      mass: 0.8
-    }
-  },
-  exit: { 
-    y: 150, 
-    scale: 0.85,
-    transition: { 
-      type: "spring", 
-      stiffness: 180, 
-      damping: 22, 
-      mass: 0.8,
-      delay: .5
-    }
-  }
+const navbarVariants: Variants = {
+  initial: { y: 120, scale: .8 },
+  enter: { y: 0, scale: 1, transition: { type: "spring", stiffness: 140, damping: 6, mass: 0.8 } },
+  exit: { y: 150, scale: 0.85, transition: { type: "spring", stiffness: 180, damping: 22, mass: 0.8, delay: .5 } }
 };
 
-const containerVariants = {
-  enter: {
-    transition: {
-      delayChildren: 0.25,
-      staggerChildren: 0.1,
-      staggerDirection: 1,
-    }
-  },
-  exit: {
-    transition: {
-      delayChildren: 0.25,
-      staggerChildren: 0.1,
-      staggerDirection: -1,
-    }
-  }
+const containerVariants: Variants = {
+  enter: { transition: { delayChildren: 0.25, staggerChildren: 0.1, staggerDirection: 1 } },
+  exit: { transition: { delayChildren: 0.25, staggerChildren: 0.1, staggerDirection: -1 } }
 };
 
-const toolTipVariants = {
-  initial: {
-    opacity: 0,
-    y: 0,
-    scale: 0.95,
-    filter: "blur(10px)" 
-  },
-  enter: {
-    opacity: 1,
-    y: -43,
-    scale: 1,
-    filter: "blur(0px)"
-  },
-  exit: {
-    opacity: 0,
-    y: 0, 
-    scale: 0.95, 
-    filter: "blur(10px)"
-  }
+const toolTipVariants: Variants = {
+  initial: { opacity: 0, y: 0, scale: 0.95, filter: "blur(10px)" },
+  enter: { opacity: 1, y: -43, scale: 1, filter: "blur(0px)" },
+  exit: { opacity: 0, y: 0, scale: 0.95, filter: "blur(10px)" }
 };
 
-const itemVariants = {
-  enter: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 260,
-      damping: 18,
-    },
-  },
-  exit: {
-    opacity: 0,
-    y: 30,
-    scale: 0.8,
-    transition: {
-      type: "spring",
-      stiffness: 260,
-      damping: 18,
-    }
-  }
+const itemVariants: Variants = {
+  enter: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 260, damping: 18, } },
+  exit: { opacity: 0, y: 30, scale: 0.8, transition: { type: "spring", stiffness: 260, damping: 18 } }
 };
 
 interface NavItem {
