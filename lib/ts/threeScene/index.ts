@@ -84,6 +84,9 @@ class AnimationEventListeners extends Disposable {
         // Get mouse to connect to dots
         this.rendererDom.addEventListener('mousemove', frontPage.dotScene.mouseDot.mouseMoveEvent);
         this.rendererDom.addEventListener('mouseleave', frontPage.dotScene.mouseDot.mouseLeaveEvent);
+
+        // Remove or add dots based off of screen size
+        window.addEventListener('resize', frontPage.dotScene.reCalculateDots);
     }
 
     public enableGyroEventListener() {
@@ -104,6 +107,8 @@ class AnimationEventListeners extends Disposable {
 
         this.rendererDom.removeEventListener('mousemove', this.frontPage.dotScene.mouseDot.mouseMoveEvent);
         this.rendererDom.removeEventListener('mouseleave', this.frontPage.dotScene.mouseDot.mouseLeaveEvent);
+
+        window.addEventListener('resize', this.frontPage.dotScene.reCalculateDots);
     }
 }
 
@@ -138,7 +143,7 @@ export class FrontPageAnimation {
     public wavesScene: WavesScene;
     public dotScene: DotsScene;
     public eventListeners: AnimationEventListeners;
-    //private stats: Stats;
+    private stats: Stats;
     private animationId?: number;
 
     public constructor(canvasElm: HTMLDivElement) {   
@@ -150,10 +155,10 @@ export class FrontPageAnimation {
         this.wavesScene = new WavesScene(this);
         this.dotScene = new DotsScene(this);
         this.eventListeners = new AnimationEventListeners(this);
-        //this.stats = new Stats();
+        this.stats = new Stats();
 
-        //this.stats.showPanel(0);
-        //document.body.appendChild(this.stats.dom);
+        this.stats.showPanel(0);
+        document.body.appendChild(this.stats.dom);
     }
 
     public loadAssets(): Promise<void> {
@@ -165,16 +170,16 @@ export class FrontPageAnimation {
 
         globals.timeTracker!.updateTime();
 
-        //this.stats.begin();
+        this.stats.begin();
         Animatable.updateAll();
         this.frontPageRenderer.render();
-        //this.stats.end();
+        this.stats.end();
     }
 
     public async dispose(): Promise<void> {
         cancelAnimationFrame(this.animationId!);
 
-        //this.stats.dom.remove();
+        this.stats.dom.remove();
 
         Disposable.disposeAllInRegistry();
         Animatable.disposeAllInRegistry();
@@ -442,15 +447,16 @@ class DotsScene extends Animatable {
     private maxLineCount: number;
     private activeLineCount = 0;  
     private linePool: THREE.Line[] = [];
-    public dots!: Array<Dot>;
+    public dots: Array<Dot> = [];
     public mouseDot!: MouseDot;
 
     constructor(frontPage: FrontPageAnimation) {
         super();
         this.frontPage = frontPage;
         this.maxLineCount = 200;
-        this.dotCount = 55;
-        this.initDots();
+        this.dotCount = this.calcDotCount();
+        this.spawnDots(this.dotCount);
+        this.initMouseDot();
         this.initLinePool();
         this.registerTick(20, () => { 
             this.resetLines();
@@ -516,6 +522,34 @@ class DotsScene extends Animatable {
         };
     }
 
+    public reCalculateDots = () => {
+        const targetCount = this.calcDotCount();
+
+        if (targetCount > this.dots.length) {
+            const amountToAdd = targetCount - this.dots.length;
+            this.spawnDots(amountToAdd);
+        }
+
+        if (targetCount < this.dots.length) {
+            const amountToRemove = this.dots.length - targetCount;
+
+            for (let i = 0; i < amountToRemove; i++) {
+                const dot = this.dots.pop();
+
+                if (dot) {
+                    dot.dispose();
+                }
+            }
+        }
+
+        this.dotCount = targetCount;
+    }
+
+    private calcDotCount(): number {
+        const dotCountRecommended = Math.round((window.innerWidth * window.innerHeight) / globals.dotSceneSettings.pixelsPerDot);
+        return Math.min(dotCountRecommended, globals.dotSceneSettings.dotCountMax);
+    }
+
     private initLinePool(): void {
         for (let i = 0; i < this.maxLineCount; i++) {
             const positions = new Float32Array(6);
@@ -531,11 +565,10 @@ class DotsScene extends Animatable {
         }
     }
 
-    private initDots(): void {
+    private spawnDots(dotsToSpawn: number): void {
         const cameraZ = this.frontPage.mainCamera.camera.position.z;
-        this.dots = [];
 
-        for (let i = 0; i < this.dotCount; i++) {
+        for (let i = 0; i < dotsToSpawn; i++) {
             const z = Utils.getRandomBetween(cameraZ - globals.dotSettings.dotCameraDistanceSettings.minZCameraDistance, cameraZ - globals.dotSettings.dotCameraDistanceSettings.maxZCameraDistance);
             const dims = this.frontPage.mainCamera.getVisibleDimensionsAtDepth(z);
             const dotPosition = new THREE.Vector3(
@@ -547,7 +580,9 @@ class DotsScene extends Animatable {
             this.dots.push(dot);
             this.frontPage.frontPageScene.dotsGroup.add(dot.dotMesh);
         }
+    }
 
+    private initMouseDot() {
         this.mouseDot = new MouseDot(this.frontPage);
         this.frontPage.frontPageScene.dotsGroup.add(this.mouseDot.dotMesh);
     }
@@ -983,16 +1018,13 @@ export class Utils {
     public static disposeMesh(mesh: THREE.Mesh, scene: THREE.Scene) {
         scene.remove(mesh);
 
-        if (mesh.geometry) {
-            mesh.geometry.dispose();
-        }
+        mesh.removeFromParent();
 
-        if (mesh.material) {
-            if (Array.isArray(mesh.material)) {
-                mesh.material.forEach((mat) => Utils.disposeMaterial(mat));
-                return;
-            }
+        mesh.geometry.dispose();
 
+        if (Array.isArray(mesh.material)) {
+            mesh.material.forEach(mat => Utils.disposeMaterial(mat));
+        } else {
             Utils.disposeMaterial(mesh.material);
         }
     }
@@ -1015,6 +1047,10 @@ export class Utils {
 export const globals = {
     timeTracker: new TimeTracker(),
     threeJsBackgroundColor: 0x1a1a1a,
+    dotSceneSettings: {
+        pixelsPerDot: 12000,
+        dotCountMax: 65
+    },
     dotSettings: {
         dotCameraDistanceSettings: {
             maxZCameraDistance : 130,
