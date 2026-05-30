@@ -1,36 +1,55 @@
 "use client";
 
-import { useState } from "react";
+import { SceneController } from "@/lib/ts/threeScene";
 import Permissions from "../../lib/components/home/permissions";
 import SpaceScene from "@/lib/components/home/spaceScene";
-import PopupWindow from "@/lib/components/global/popupWindow";
+import { useState } from "react";
 import { AppPermissions } from "@/lib/ts/appPermissions";
+import NavigationMenu from "@/lib/components/global/navigationMenu";
+import PopupWindow from "@/lib/components/global/popupWindow";
 
 export default function Home() {
-  const [permissionsPageEnabled, setPermissionsEnabled] = useState(false);
-  const [enableAnimation, setAnimationEnabled] = useState(false);
+  const [permissionsDisplay, setPermissionsEnabled] = useState(false);
+  const [navDisplay, setNavDisplayEnabled] = useState(false);
+  const [settingsDisplay, setSettingsEnabled] = useState(false);
+  const navbarItems = [
+    { label: "Settings", icon: "/settings-gear.svg", onClick: () => { setSettingsEnabled(true); setNavDisplayEnabled(false); } },
+    { label: "Home", icon: "/home.svg", onClick: () => { SceneController.getInstance().moveAwayFromMoon() } },
+    { label: "Moon", icon: "/planet.svg", onClick: () => { SceneController.getInstance().moveToMoon() } },
+  ];
 
-  const disablePermissionsWindow = async () => {
+  async function moveSpaceSceneCameraIntro () {
     setPermissionsEnabled(false);
-    setAnimationEnabled(true);
+    SceneController.getInstance().moveCameraDownToHomePage();
+    
+    const timer = setTimeout(() => {
+      setNavDisplayEnabled(true);
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+    };
   };
 
-  const handleLoadingComplete = () => {
+  function closeSettingsWindow() {
+    setNavDisplayEnabled(true);
+    setSettingsEnabled(false);
+  }
+
+  function runAfterLoad() {
     if (AppPermissions.gyroPermissions.gyroCompatible) {
-      setPermissionsEnabled(true);
+      setPermissionsEnabled(true);    
     } else {
-      setAnimationEnabled(true);
+      moveSpaceSceneCameraIntro();
     }
   };
 
   return (
     <main className="relative w-full h-screen bg-black">
-      { permissionsPageEnabled && (
-        <PopupWindow windowTitle="PERMISSIONS" onClose={disablePermissionsWindow}>
-          <Permissions />
-        </PopupWindow>
-      )}
-      <SpaceScene onLoadingComplete={handleLoadingComplete} isReadyToAnimate={enableAnimation} />
+      <NavigationMenu items={navbarItems} closeFlag={!navDisplay} />
+      { settingsDisplay && <PopupWindow windowTitle="SETTINGS" onClose={closeSettingsWindow}><p>Test</p></PopupWindow> }
+      { permissionsDisplay && <Permissions onClose={moveSpaceSceneCameraIntro} /> }
+      <SpaceScene onLoadingComplete={runAfterLoad} />
     </main>
   );
 }

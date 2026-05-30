@@ -40,6 +40,18 @@ export class SceneController {
         this.frontPage!.mainCamera.introAnimation.isAnimating = true;
     }
 
+    public moveToMoon(): void {
+        this.frontPage!.wavesScene.isAnimating = false;
+        this.frontPage!.astroidScene.isAnimating = true;
+        this.frontPage!.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
+    }
+
+    public moveAwayFromMoon(): void {
+        this.frontPage!.wavesScene.isAnimating = true;
+        this.frontPage!.astroidScene.isAnimating = false;
+        this.frontPage!.mainCamera.asteroidAnimation.startZoomOutAsteroid();
+    }
+
     public async dispose(): Promise<void> {
         await this.frontPage!.dispose();
         SceneController.instance = null;
@@ -126,7 +138,7 @@ export class FrontPageAnimation {
     public wavesScene: WavesScene;
     public dotScene: DotsScene;
     public eventListeners: AnimationEventListeners;
-    private stats: Stats;
+    //private stats: Stats;
     private animationId?: number;
 
     public constructor(canvasElm: HTMLDivElement) {   
@@ -138,13 +150,10 @@ export class FrontPageAnimation {
         this.wavesScene = new WavesScene(this);
         this.dotScene = new DotsScene(this);
         this.eventListeners = new AnimationEventListeners(this);
-        this.stats = new Stats();
+        //this.stats = new Stats();
 
-        this.stats.showPanel(0);
-        document.body.appendChild(this.stats.dom);
-
-        // todo - remove this and replace with button press
-        this.frontPageRenderer.renderer.domElement.addEventListener("click", this.manageClick);
+        //this.stats.showPanel(0);
+        //document.body.appendChild(this.stats.dom);
     }
 
     public loadAssets(): Promise<void> {
@@ -156,33 +165,20 @@ export class FrontPageAnimation {
 
         globals.timeTracker!.updateTime();
 
-        this.stats.begin();
+        //this.stats.begin();
         Animatable.updateAll();
         this.frontPageRenderer.render();
-        this.stats.end();
+        //this.stats.end();
     }
 
     public async dispose(): Promise<void> {
         cancelAnimationFrame(this.animationId!);
 
-        this.frontPageRenderer.renderer.domElement.removeEventListener("click", this.manageClick);
-        this.stats.dom.remove();
+        //this.stats.dom.remove();
 
         Disposable.disposeAllInRegistry();
         Animatable.disposeAllInRegistry();
         this.frontPageRenderer.dispose();
-    }
-
-    private manageClick = () => {
-        if (this.mainCamera.asteroidAnimation.cameraTargetZ == -150) {
-            this.wavesScene.isAnimating = true;
-            this.astroidScene.isAnimating = false;
-            this.mainCamera.asteroidAnimation.startZoomOutAsteroid();
-        } else {
-            this.wavesScene.isAnimating = false;
-            this.astroidScene.isAnimating = true;
-            this.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
-        }
     }
 }
 
