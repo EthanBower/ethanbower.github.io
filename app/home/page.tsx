@@ -28,7 +28,7 @@ export default function Home() {
   }
 
   const runAfterLoad = () => {
-    if (AppPermissions.gyroPermissions.gyroCompatible) {
+    if (!AppPermissions.gyroPermissions.gyroCompatible) {
       setPermissionsEnabled(true);    
     } else {
       moveSpaceSceneCameraIntro();

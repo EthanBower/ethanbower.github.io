@@ -10,18 +10,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --animate-slide-up: slide-up 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-
-  @keyframes slide-up {
-    from {
-      opacity: 0;
-      transform: translateY(150px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -56,7 +44,7 @@ body {
 }
 
 .popup-window {
-  @apply p-[10px] m-[5px] pointer-events-auto border rounded-[24px] text-white select-none transform-gpu transition-all duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] backdrop-blur-[3px];
+  @apply p-[10px] m-[5px] pointer-events-auto border rounded-[24px] text-white select-none backdrop-blur-[3px];
   border-color: rgba(255, 255, 255, 0.12);
   background: 
     radial-gradient(120% 120% at 50% 0, #ff00000d, #ff00000f), 
