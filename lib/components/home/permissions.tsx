@@ -2,8 +2,8 @@
 
 import { useTransition } from "react";
 import { AppPermissions } from "@/lib/ts/appPermissions";
-import { SceneController } from "../../ts/threeScene";
 import PopupWindow from "../global/popupWindow";
+import { useSettings } from "../global/settingsProvider";
 
 type PermissionsProps = Readonly<{
   onClose: () => void;
@@ -11,6 +11,7 @@ type PermissionsProps = Readonly<{
 
 export default function Permissions({ onClose }: PermissionsProps) {
   const [isPending, startTransition] = useTransition();
+  const { setSettings } = useSettings();
 
   const handleClose = async () => {
     onClose();
@@ -21,20 +22,16 @@ export default function Permissions({ onClose }: PermissionsProps) {
     if (isPending) return;
 
     startTransition(async () => {
-      await AppPermissions.enableGyroscopeAsync();
-
-      const threeScene = SceneController.getInstance();
-      if (!threeScene.ready) {
-        alert("Scene is not yet ready...");
-        return;
-      }
-
-      await threeScene.initGyro();
+      await AppPermissions.askGyroPermissionsAsync();
+      setSettings((s) => ({
+          ...s,
+          motionEnabled: AppPermissions.gyroPermissions.gyroCompatible
+      }));
     });
   };
 
   return (
-    <PopupWindow windowTitle="PERMISSIONS" onClose={handleClose}>
+    <PopupWindow windowIcon="/double-arrow.svg" windowTitle="PERMISSIONS" windowTitleDescription="For optimal experience, please grant motion permissions." onClose={handleClose}>
       <button onClick={handleEnableGyro} disabled={isPending} className="popup-button-blue disabled:opacity-50" >
         {isPending ? "Activating..." : "Activate Motion"}
       </button>

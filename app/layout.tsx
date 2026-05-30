@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Version from "@/lib/components/global/version";
+import { SettingsProvider } from "@/lib/components/global/settingsProvider";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"]
@@ -25,8 +26,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${spaceGrotesk.className} ${geistSans.variable} h-full antialiased`}>
       <body>
-        {children}
-        <Version />
+        <SettingsProvider>
+          {children}
+        </SettingsProvider>
       </body>
     </html>
   );

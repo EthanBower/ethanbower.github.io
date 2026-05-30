@@ -37,6 +37,7 @@ interface NavbarItems {
   closeFlag: boolean;
 } 
 
+// todo - unmount once closed
 export default function Navbar({ items, closeFlag }: NavbarItems) {
   const currentVariant = closeFlag ? "exit" : "enter";
 

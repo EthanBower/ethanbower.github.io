@@ -13,7 +13,7 @@ export class AppPermissions {
             (typeof (DeviceOrientationEvent as any).requestPermission === "function");
     }
 
-    public static async enableGyroscopeAsync(): Promise<void> {
+    public static async askGyroPermissionsAsync(): Promise<void> {
         try {
             if (!this.gyroPermissions.gyroCompatible) {
                 return;
@@ -23,6 +23,7 @@ export class AppPermissions {
             const permission = await (DeviceOrientationEvent as any).requestPermission();
             if (permission !== "granted") {
                 AppPermissions.gyroPermissions.gyroscopeEnabled = false;
+                return;
             }
             
             AppPermissions.gyroPermissions.gyroscopeEnabled = true;

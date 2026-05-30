@@ -52,6 +52,10 @@ export class SceneController {
         this.frontPage!.mainCamera.asteroidAnimation.startZoomOutAsteroid();
     }
 
+    public setStatsEnable(showStats: boolean): void {
+        this.frontPage?.setStatsEnable(showStats);
+    }
+
     public async dispose(): Promise<void> {
         await this.frontPage!.dispose();
         SceneController.instance = null;
@@ -143,7 +147,7 @@ export class FrontPageAnimation {
     public wavesScene: WavesScene;
     public dotScene: DotsScene;
     public eventListeners: AnimationEventListeners;
-    private stats: Stats;
+    public stats?: Stats;
     private animationId?: number;
 
     public constructor(canvasElm: HTMLDivElement) {   
@@ -155,10 +159,6 @@ export class FrontPageAnimation {
         this.wavesScene = new WavesScene(this);
         this.dotScene = new DotsScene(this);
         this.eventListeners = new AnimationEventListeners(this);
-        this.stats = new Stats();
-
-        this.stats.showPanel(0);
-        document.body.appendChild(this.stats.dom);
     }
 
     public loadAssets(): Promise<void> {
@@ -170,16 +170,27 @@ export class FrontPageAnimation {
 
         globals.timeTracker!.updateTime();
 
-        this.stats.begin();
+        this.stats?.begin();
         Animatable.updateAll();
         this.frontPageRenderer.render();
-        this.stats.end();
+        this.stats?.end();
+    }
+
+    public setStatsEnable(showStats: boolean): void {
+        if (!showStats) {
+            this.stats?.dom.remove();
+            this.stats = undefined;
+        } else {
+            this.stats = new Stats();
+            this.stats.showPanel(0);
+            document.body.appendChild(this.stats.dom);
+        }
     }
 
     public async dispose(): Promise<void> {
         cancelAnimationFrame(this.animationId!);
 
-        this.stats.dom.remove();
+        this.stats?.dom.remove();
 
         Disposable.disposeAllInRegistry();
         Animatable.disposeAllInRegistry();
