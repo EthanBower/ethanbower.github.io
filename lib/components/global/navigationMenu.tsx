@@ -57,7 +57,7 @@ export default function Navbar({ items }: NavbarItems) {
                     <span className="text-xs tracking-wide">{item.label}</span>
                   </motion.button>
                 </motion.div>
-              )})}; 
+              )})} 
           </motion.div>
       </motion.div>  
     </motion.nav>
