@@ -52,6 +52,14 @@ export class SceneController {
         this.frontPage!.mainCamera.asteroidAnimation.startZoomOutAsteroid();
     }
 
+    public changeDotSpawnCount(dotCount: number): void {
+        this.frontPage!.dotScene.reinitializeDotSpawn(dotCount);
+    }
+
+    public setStatsEnable(showStats: boolean): void {
+        this.frontPage?.setStatsEnable(showStats);
+    }
+
     public async dispose(): Promise<void> {
         await this.frontPage!.dispose();
         SceneController.instance = null;
@@ -143,7 +151,7 @@ export class FrontPageAnimation {
     public wavesScene: WavesScene;
     public dotScene: DotsScene;
     public eventListeners: AnimationEventListeners;
-    private stats: Stats;
+    public stats?: Stats;
     private animationId?: number;
 
     public constructor(canvasElm: HTMLDivElement) {   
@@ -155,10 +163,6 @@ export class FrontPageAnimation {
         this.wavesScene = new WavesScene(this);
         this.dotScene = new DotsScene(this);
         this.eventListeners = new AnimationEventListeners(this);
-        this.stats = new Stats();
-
-        this.stats.showPanel(0);
-        document.body.appendChild(this.stats.dom);
     }
 
     public loadAssets(): Promise<void> {
@@ -170,16 +174,27 @@ export class FrontPageAnimation {
 
         globals.timeTracker!.updateTime();
 
-        this.stats.begin();
+        this.stats?.begin();
         Animatable.updateAll();
         this.frontPageRenderer.render();
-        this.stats.end();
+        this.stats?.end();
+    }
+
+    public setStatsEnable(showStats: boolean): void {
+        if (!showStats) {
+            this.stats?.dom.remove();
+            this.stats = undefined;
+        } else {
+            this.stats = new Stats();
+            this.stats.showPanel(0);
+            document.body.appendChild(this.stats.dom);
+        }
     }
 
     public async dispose(): Promise<void> {
         cancelAnimationFrame(this.animationId!);
 
-        this.stats.dom.remove();
+        this.stats?.dom.remove();
 
         Disposable.disposeAllInRegistry();
         Animatable.disposeAllInRegistry();
@@ -298,7 +313,6 @@ class MainCamera extends Animatable {
     };
     private mouse: THREE.Vector2 = new THREE.Vector2();
     private frontPage: FrontPageAnimation;
-    private rendererDom: HTMLCanvasElement;
 
     constructor(canvasElm: HTMLDivElement, frontPage: FrontPageAnimation) {
         super();
@@ -306,7 +320,6 @@ class MainCamera extends Animatable {
         this.asteroidAnimation = new AsteroidAnimation(frontPage);
         this.introAnimation = new IntroAnimation(frontPage);
         this.frontPage = frontPage;
-        this.rendererDom = frontPage.frontPageRenderer.renderer.domElement;
 
         // Initial camera position
         this.camera.position.set(0, 80, 58);
@@ -443,7 +456,7 @@ class FrontPageRenderer {
 
 class DotsScene extends Animatable {
     private frontPage: FrontPageAnimation;
-    private dotCount: number;
+    public dotCount: number;
     private maxLineCount: number;
     private activeLineCount = 0;  
     private linePool: THREE.Line[] = [];
@@ -463,6 +476,8 @@ class DotsScene extends Animatable {
             for(const dot of this.dots) {
                 this.connectDotsWithLines(dot);
             }
+        });
+        this.registerTick(10, () => {
             this.connectDotsWithLines(this.mouseDot);
         });
     }
@@ -523,8 +538,10 @@ class DotsScene extends Animatable {
     }
 
     public reCalculateDots = () => {
-        const targetCount = this.calcDotCount();
+        this.reinitializeDotSpawn(this.calcDotCount());
+    }
 
+    public reinitializeDotSpawn(targetCount: number): void {
         if (targetCount > this.dots.length) {
             const amountToAdd = targetCount - this.dots.length;
             this.spawnDots(amountToAdd);
@@ -618,7 +635,7 @@ class Dot extends Disposable {
         this.id = crypto.randomUUID();
 
         this.material = new THREE.MeshBasicMaterial({ color: globals.dotSettings.dotColorGradient.near, transparent: true, opacity: 0, fog: true });
-        this.dotMesh = new THREE.Mesh(new THREE.CircleGeometry(this.dotRadius, 5), this.material);
+        this.dotMesh = new THREE.Mesh(new THREE.CircleGeometry(this.dotRadius, 6), this.material);
         this.dotMesh.position.copy(dotPos);
         this.velocity = new THREE.Vector3(
             Utils.getRandomBetween(-0.05, 0.05, .007),

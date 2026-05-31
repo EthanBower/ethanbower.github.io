@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react'
 import Home from '../app/home/page'
 import '@testing-library/jest-dom'
+import { SettingsProvider } from '@/lib/components/global/settingsProvider';
 
 jest.mock('three', () => {
   const originalThree = jest.requireActual('three');
@@ -37,7 +38,10 @@ jest.mock("three/examples/jsm/libs/stats.module.js", () => {
 describe('Home Page', () => {
   it('renders the hello world heading', () => {
     // ARRANGE: Render the component
-    const { container } = render(<Home />);
+    const { container } = render(
+      <SettingsProvider>
+        <Home />
+      </ SettingsProvider>);
 
     // ACT: Look for the specific element
     const canvas = container.querySelector('canvas');

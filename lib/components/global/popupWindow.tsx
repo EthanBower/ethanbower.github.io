@@ -10,11 +10,13 @@ const popupWindowScaleVariant: Variants = { hidden: { scale: 1.5, y: 0 }, visibl
 
 type PopupWindowProps = Readonly<{
     windowTitle: string;
-    onClose: () => Promise<void> | void;
+    windowTitleDescription: string;
+    windowIcon: string;
+    onClose?: () => Promise<void> | void;
     children: React.ReactNode;
 }>;
 
-export default function PopupWindow({ windowTitle, onClose, children }: PopupWindowProps) {
+export default function PopupWindow({ windowTitle, windowTitleDescription, windowIcon, onClose, children }: PopupWindowProps) {
     const [visible, setVisible] = useState(false);
     const [typedTitle, setTypedTitle] = useState("");
     const windowRef = useRef<HTMLDivElement>(null);
@@ -41,7 +43,10 @@ export default function PopupWindow({ windowTitle, onClose, children }: PopupWin
     async function handleClose() {
         setVisible(false);
         await new Promise((r) => setTimeout(r, ANIMATION_TIME_MS * 1000));
-        await onClose();
+
+        if (onClose) {
+            await onClose();
+        }
     }
 
     return (
@@ -50,14 +55,14 @@ export default function PopupWindow({ windowTitle, onClose, children }: PopupWin
                 <motion.div className="popup-window shadow-2xl" variants={popupWindowBlurVariant} initial="hidden" animate={visible ? "visible" : "exit"} transition={{ duration: ANIMATION_TIME_MS }} >
                     <motion.div variants={popupWindowScaleVariant} initial="hidden" animate={visible ? "visible" : "exit"} transition={{ duration: ANIMATION_TIME_MS, ease: [0.16, 1, 0.3, 1] }} >
                         <div className="cursor-grab active:cursor-grabbing select-none flex items-center gap-4 p-4 pb-2">
-                            <Image src="/double-arrow.svg" alt="Terminal Icon" width={24} height={24} priority />
+                            <Image src={windowIcon} alt="Terminal Icon" width={24} height={24} priority />
                             <div className="flex flex-col text-left">
                                 <h3 className="text-sm font-semibold text-white font-mono flex items-center gap-1">
                                     <span>{typedTitle}</span>
                                     <span className="animate-pulse">_</span>
                                 </h3>
                                 <p className="text-xs text-white/50 mt-0.5">
-                                    For optimal experience, please grant motion permissions.
+                                    {windowTitleDescription}
                                 </p>
                             </div>
                         </div>
