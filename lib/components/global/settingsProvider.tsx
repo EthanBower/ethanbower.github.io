@@ -1,11 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "app-settings";
-const defaultSettings: { motionEnabled: boolean | null, statsEnabled: boolean } = {
+const defaultSettings: { motionEnabled: boolean | null, statsEnabled: boolean, dotCount: number | null } = {
   motionEnabled: null,
   statsEnabled: false,
+  dotCount: null
 };
 
 type Settings = typeof defaultSettings;
@@ -14,45 +15,41 @@ type SettingsContextType = {
   settings: Settings;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
   resetSettings: () => void;
-  settingsLoaded: boolean;
 };
 
 const SettingsContext = createContext<SettingsContextType | null>(null);
 
 export function SettingsProvider({ children }: { children: React.ReactNode; }) {
-  const [settings, setSettings] = useState(defaultSettings);
-  const [settingsLoaded, setLoaded] = useState(false);
+  const [settings, setSettings] = useState(() => {
+    if (typeof window === "undefined") return defaultSettings;
 
-  // Initialize
-  useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
 
-    if (stored) {
-      try {
-        setSettings(JSON.parse(stored));
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
-      }
+    if (!stored) return defaultSettings;
+
+    try {
+      return JSON.parse(stored);
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+      return defaultSettings;
     }
+  });
 
-    setLoaded(true);
-  }, []);
-
-  // If settings change, update
   useEffect(() => {
-    if (!settingsLoaded) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-  }, [settings, settingsLoaded]);
+  }, [settings]);
 
   function resetSettings() {
     localStorage.removeItem(STORAGE_KEY);
     setSettings(defaultSettings);
   }
 
+  const memo = useMemo(() => ({ settings, setSettings, resetSettings }), [settings]);
+
   return (
-    <SettingsContext value={{ settings, setSettings, resetSettings, settingsLoaded }} >
+    <SettingsContext.Provider value={memo}>
       {children}
-    </SettingsContext>
+    </SettingsContext.Provider>
   );
 }
 

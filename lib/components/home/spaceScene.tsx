@@ -41,9 +41,13 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
   useEffect(() => {
     if (!settings.motionEnabled) return;
-    console.log("GYRO");
     SceneController.getInstance().initGyro();
   }, [settings.motionEnabled]);
+
+  useEffect(() => {
+    if (settings.dotCount === null) return;
+    SceneController.getInstance().changeDotSpawnCount(settings.dotCount);
+  }, [settings.dotCount]);
 
   return (
     <div ref={threeJsRef} id="three-root" className="w-full h-full" />
