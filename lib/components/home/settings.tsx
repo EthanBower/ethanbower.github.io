@@ -2,7 +2,6 @@
 
 import { useSettings } from "../global/settingsProvider";
 import PopupWindow from "../global/popupWindow";
-import { getVersion } from "@/lib/ts/compileTimeSettings";
 import Slider from "../global/slider";
 import { useState } from "react";
 import { SceneController } from "@/lib/ts/threeScene";
@@ -13,10 +12,11 @@ type SettingsProps = Readonly<{
 
 export default function Settings({ onClose }: SettingsProps) {
     const { settings, setSettings, resetSettings } = useSettings();
-    const [ dotCountThreeJs ] = useState(SceneController.getInstance().frontPage!.dotScene.dots.length);
+    const [ currentDotCount, setCurrentDotCount ] = useState(SceneController.getInstance().frontPage!.dotScene.dots.length);
 
     // to-do make a callback on three js app to update the real dot count
     function changeDotCount(dotNumber: number) {
+        setCurrentDotCount(dotNumber);
         setSettings((s) => ({
             ...s,
             dotCount: dotNumber
@@ -31,15 +31,17 @@ export default function Settings({ onClose }: SettingsProps) {
     }
 
     return (
-        <PopupWindow 
-            windowIcon="/settings-gear.svg" 
-            windowTitle="SETTINGS" 
-            windowTitleDescription={`App Version: ${getVersion()}`} 
-            onClose={onClose} >
-            <button onClick={toggleStats} className="popup-button-blue disabled:opacity-50" >
+        <PopupWindow windowIcon="/settings-gear.svg" windowTitle="SETTINGS" windowTitleDescription={`App Version: ${process.env.SITE_APP_VERSION || "dev-local"}`} onClose={onClose} >
+            <button onClick={toggleStats} className={`${ settings.statsEnabled ? "popup-button-green" : "popup-button-blue" } disabled:opacity-50`} >
                 { settings.statsEnabled ? "Turn Off Statistics" : "Turn On Statistics"}
             </button>
-            <Slider onChange={changeDotCount} value={dotCountThreeJs}></Slider>
+            <div>
+                <div>
+                    <p>Dot Count: {currentDotCount}</p>
+                    <p>Note: Resizing window will set it back to auto-mode.</p>
+                </div>
+                <Slider onChange={changeDotCount} value={currentDotCount}></Slider>
+            </div>
             <button onClick={resetSettings} className="popup-button-blue disabled:opacity-50" >
                 Clear Cache
             </button>
