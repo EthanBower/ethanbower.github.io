@@ -20,20 +20,22 @@ type SettingsContextType = {
 const SettingsContext = createContext<SettingsContextType | null>(null);
 
 export function SettingsProvider({ children }: { children: React.ReactNode; }) {
-  const [settings, setSettings] = useState(() => {
-    if (typeof window === "undefined") return defaultSettings;
+  const [settings, setSettings] = useState(defaultSettings);
 
+  // Intentionally set to ignore this rule as this is only run once on mount to hydrate localstorage,
+  // which needs to run client side.
+  useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
 
-    if (!stored) return defaultSettings;
-
-    try {
-      return JSON.parse(stored);
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-      return defaultSettings;
+    if (stored) {
+      try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSettings(JSON.parse(stored));
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
     }
-  });
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
