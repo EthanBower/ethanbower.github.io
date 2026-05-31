@@ -32,7 +32,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
     return () => { 
       //pageScene.dispose();
     };
-  }, [onLoadingComplete]); 
+  }, []); 
 
   // Configure custom settings once localSettings is parsed/read
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
   }, [settings.statsEnabled]);
 
   useEffect(() => {
-    if (!settings.motionEnabled) return;
+    if (!settings.motionEnabled !== true) return;
     SceneController.getInstance().initGyro();
   }, [settings.motionEnabled]);
 

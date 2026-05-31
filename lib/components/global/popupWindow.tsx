@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { motion, useDragControls, Variants } from "framer-motion";
-import Separator from "./dashedSeperator";
 import DashedSeparator from "./dashedSeperator";
 
 const ANIMATION_TIME_MS = 0.3;
@@ -72,11 +71,11 @@ export default function PopupWindow({ windowTitle, windowTitleDescription, windo
                         <DashedSeparator />
                         <div className="bg-black/25 p-3 rounded-xl">
                             {children}
-                            <button onClick={handleClose} className="popup-button-red flex items-center justify-center gap-2" >
-                                <Image src="/exit.svg" alt="Exit" width={24} height={24} />
-                                <span>Exit Window</span>
-                            </button>
-                        </div>                    
+                        </div>       
+                        <button onClick={handleClose} className="popup-button-red flex items-center justify-center gap-2" >
+                            <Image src="/exit.svg" alt="Exit" width={24} height={24} />
+                            <span>Exit Window</span>
+                        </button>             
                     </motion.div>
                 </motion.div>
             </motion.div>

@@ -11,7 +11,7 @@ import { useSettings } from "@/lib/components/global/settingsProvider";
 
 export default function Home() {
   const { settings } = useSettings();
-  const [permissionsDisplay, setPermissionsEnabled] = useState(AppPermissions.gyroPermissions.gyroCompatible && settings.motionEnabled === null);
+  const [permissionsDisplay, setPermissionsDisplayEnabled] = useState(false);
   const [navDisplay, setNavDisplayEnabled] = useState(false);
   const [settingsDisplay, setSettingsEnabled] = useState(false);
   const navbarItems = [
@@ -20,14 +20,19 @@ export default function Home() {
     { label: "Moon", icon: "/planet.svg", onClick: () => { SceneController.getInstance().moveToMoon() } },
   ];
 
+  // Gyro and settings are obtained on client to prevent hydration issues
   useEffect(() => {
-    if (!permissionsDisplay) {
+    const permissionsNeeded = AppPermissions.gyroPermissions.gyroCompatible && settings.motionEnabled === null;
+
+    if (!permissionsNeeded) {
       moveSpaceSceneCameraIntro();
+    } else {
+      setPermissionsDisplayEnabled(true);
     }
   }, []);
 
   async function moveSpaceSceneCameraIntro () {
-    setPermissionsEnabled(false);
+    setPermissionsDisplayEnabled(false);
     SceneController.getInstance().moveCameraDownToHomePage();
     const timer = setTimeout(() => { setNavDisplayEnabled(true); }, 1000);
     return () => { clearTimeout(timer); };

@@ -32,19 +32,21 @@ export default function Settings({ onClose }: SettingsProps) {
 
     return (
         <PopupWindow windowIcon="/settings-gear.svg" windowTitle="SETTINGS" windowTitleDescription={`App Version: ${process.env.SITE_APP_VERSION || "dev-local"}`} onClose={onClose} >
-            <button onClick={toggleStats} className={`${ settings.statsEnabled ? "popup-button-green" : "popup-button-blue" } disabled:opacity-50`} >
-                { settings.statsEnabled ? "Turn Off Statistics" : "Turn On Statistics"}
-            </button>
-            <div>
+            <div className="flex m-[5px]">
+                <button onClick={toggleStats} className={`${ settings.statsEnabled ? "popup-button-green" : "popup-button-blue" } m-[4px] disabled:opacity-50`} >
+                    { settings.statsEnabled ? "Turn Off Statistics" : "Turn On Statistics"}
+                </button>
+                <button onClick={resetSettings} className="popup-button-blue m-[4px] disabled:opacity-50" >
+                    Clear Cache
+                </button>
+            </div>     
+            <div className="m-[5px]">
                 <div>
-                    <p>Dot Count: {currentDotCount}</p>
-                    <p>Note: Resizing window will set it back to auto-mode.</p>
+                    <p>DOT DENSITY: <b>{currentDotCount}</b> particles</p>
+                    <p className="text-sm">Resizing window will set it back to auto-mode.</p>
                 </div>
                 <Slider onChange={changeDotCount} value={currentDotCount}></Slider>
             </div>
-            <button onClick={resetSettings} className="popup-button-blue disabled:opacity-50" >
-                Clear Cache
-            </button>
         </PopupWindow>
     );
 }
