@@ -29,6 +29,7 @@ export default function Home() {
     if (!permissionsNeeded) {
       moveSpaceSceneCameraIntro();
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPermissionsDisplayEnabled(true);
     }
   }, []);
