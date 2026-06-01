@@ -3,8 +3,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "app-settings";
-const defaultSettings: { motionEnabled: boolean | null, statsEnabled: boolean, dotCount: number | null } = {
-  motionEnabled: null,
+const defaultSettings: { motionEnabled: boolean, statsEnabled: boolean, dotCount: number | null } = {
+  motionEnabled: false,
   statsEnabled: false,
   dotCount: null
 };
@@ -24,7 +24,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode; }) {
 
   // Intentionally set to ignore this rule as this is only run once on mount to hydrate localstorage,
   // which needs to run client side.
-  /*
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
 
@@ -36,7 +35,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode; }) {
         localStorage.removeItem(STORAGE_KEY);
       }
     }
-  }, []); */
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));

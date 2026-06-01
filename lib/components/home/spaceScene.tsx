@@ -50,6 +50,6 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
   }, [settings.dotCount]);
 
   return (
-    <div ref={threeJsRef} id="three-root" className="w-full h-full" />
+    <div ref={threeJsRef} id="three-root" className="w-full h-full z-0" />
   );
 }
