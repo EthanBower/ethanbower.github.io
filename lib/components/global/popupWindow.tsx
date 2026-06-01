@@ -72,7 +72,7 @@ export default function PopupWindow({ windowTitle, windowTitleDescription, windo
                         <div className="bg-black/25 p-3 rounded-xl">
                             {children}
                         </div>       
-                        <button onClick={handleClose} className="popup-button-red flex items-center justify-center gap-2" >
+                        <button onClick={handleClose} className="popup-button-red flex items-center justify-center gap-2 mt-[10px]!" >
                             <Image src="/exit.svg" alt="Exit" width={24} height={24} />
                             <span>Exit Window</span>
                         </button>             
