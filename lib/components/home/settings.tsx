@@ -2,10 +2,11 @@
 
 import { useSettings } from "../global/settingsProvider";
 import PopupWindow from "../global/popupWindow";
-import { getVersion } from "@/lib/ts/compileTimeSettings";
-import Slider from "../global/slider";
+import Slider from "../utilities/slider";
 import { useState } from "react";
 import { SceneController } from "@/lib/ts/threeScene";
+import Image from "next/image";
+import ButtonToggle from "../utilities/buttonToggle";
 
 type SettingsProps = Readonly<{
   onClose: () => void;
@@ -13,10 +14,11 @@ type SettingsProps = Readonly<{
 
 export default function Settings({ onClose }: SettingsProps) {
     const { settings, setSettings, resetSettings } = useSettings();
-    const [ dotCountThreeJs ] = useState(SceneController.getInstance().frontPage!.dotScene.dots.length);
+    const [ currentDotCount, setCurrentDotCount ] = useState(SceneController.getInstance().frontPage!.dotScene.dots.length);
 
     // to-do make a callback on three js app to update the real dot count
     function changeDotCount(dotNumber: number) {
+        setCurrentDotCount(dotNumber);
         setSettings((s) => ({
             ...s,
             dotCount: dotNumber
@@ -31,18 +33,30 @@ export default function Settings({ onClose }: SettingsProps) {
     }
 
     return (
-        <PopupWindow 
-            windowIcon="/settings-gear.svg" 
-            windowTitle="SETTINGS" 
-            windowTitleDescription={`App Version: ${getVersion()}`} 
-            onClose={onClose} >
-            <button onClick={toggleStats} className="popup-button-blue disabled:opacity-50" >
-                { settings.statsEnabled ? "Turn Off Statistics" : "Turn On Statistics"}
-            </button>
-            <Slider onChange={changeDotCount} value={dotCountThreeJs}></Slider>
-            <button onClick={resetSettings} className="popup-button-blue disabled:opacity-50" >
-                Clear Cache
-            </button>
+        <PopupWindow windowIcon="/settings-gear.svg" windowTitle="SETTINGS" windowTitleDescription={`App Version: ${process.env.SITE_APP_VERSION || "dev-local"}`} onClose={onClose} >
+            <div className="flex m-[5px] gap-2 items-center justify-center">
+                <div className="flex-1">
+                    <div className="flex items-center justify-center gap-2">
+                        <span>Statistics {settings.statsEnabled ? "ON" : "OFF"}</span>
+                        <ButtonToggle enabled={settings.statsEnabled} onChange={toggleStats} />
+                    </div>
+                </div>
+                <div className="self-stretch w-[1px] rounded-xl bg-gray-300/30"/>
+                <button onClick={resetSettings} className="popup-button-blue m-[4px] flex-1 cursor-pointer" >
+                    <div className="flex items-center justify-center gap-2">
+                        <Image src="/reset-arrows.svg" alt="" width={24} height={24} className="flex"/>
+                        <span>Reset Cache</span>
+                    </div>
+                </button>
+            </div>     
+            <div className="h-[1px] rounded-xl my-3 w-full bg-gray-300/30" />
+            <div className="m-[5px]">
+                <div className="pb-[10px] text-center">
+                    <p>DOT DENSITY: <b>{currentDotCount}</b> PARTICLES</p>
+                    <p className="text-sm">Resizing window will set it back to auto-mode.</p>
+                </div>
+                <Slider onChange={changeDotCount} value={currentDotCount} />
+            </div>
         </PopupWindow>
     );
 }

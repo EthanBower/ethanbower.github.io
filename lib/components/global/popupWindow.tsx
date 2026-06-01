@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { motion, Variants } from "framer-motion";
+import { motion, useDragControls, Variants } from "framer-motion";
+import DashedSeparator from "../utilities/dashedSeperator";
 
 const ANIMATION_TIME_MS = 0.3;
 const popupWindowBlurVariant: Variants = { hidden: { opacity: 0, filter: "blur(10px)" }, visible: { opacity: 1, filter: "blur(0px)" }, exit: { opacity: 0, filter: "blur(10px)" } };
@@ -17,6 +18,7 @@ type PopupWindowProps = Readonly<{
 }>;
 
 export default function PopupWindow({ windowTitle, windowTitleDescription, windowIcon, onClose, children }: PopupWindowProps) {
+    const dragControls = useDragControls();
     const [visible, setVisible] = useState(false);
     const [typedTitle, setTypedTitle] = useState("");
     const windowRef = useRef<HTMLDivElement>(null);
@@ -51,10 +53,10 @@ export default function PopupWindow({ windowTitle, windowTitleDescription, windo
 
     return (
         <div ref={windowRef} className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <motion.div className="z-10 pointer-events-auto" drag dragConstraints={windowRef} dragMomentum={true} dragElastic={0.02} whileDrag={{ scale: 1.03 }} >
-                <motion.div className="popup-window shadow-2xl" variants={popupWindowBlurVariant} initial="hidden" animate={visible ? "visible" : "exit"} transition={{ duration: ANIMATION_TIME_MS }} >
+            <motion.div className="z-10 pointer-events-auto" drag dragListener={false} dragControls={dragControls} dragConstraints={windowRef} dragMomentum={true} dragElastic={0.02} whileDrag={{ scale: 1.03 }} >
+                <motion.div layout className="popup-window shadow-2xl" variants={popupWindowBlurVariant} initial="hidden" animate={visible ? "visible" : "exit"} transition={{ duration: ANIMATION_TIME_MS }} >
                     <motion.div variants={popupWindowScaleVariant} initial="hidden" animate={visible ? "visible" : "exit"} transition={{ duration: ANIMATION_TIME_MS, ease: [0.16, 1, 0.3, 1] }} >
-                        <div className="cursor-grab active:cursor-grabbing select-none flex items-center gap-4 p-4 pb-2">
+                        <div className="cursor-grab active:cursor-grabbing select-none flex items-center gap-4 p-4 pb-2" onPointerDown={(e) => dragControls.start(e)} >
                             <Image src={windowIcon} alt="Terminal Icon" width={24} height={24} priority />
                             <div className="flex flex-col text-left">
                                 <h3 className="text-sm font-semibold text-white font-mono flex items-center gap-1">
@@ -66,13 +68,14 @@ export default function PopupWindow({ windowTitle, windowTitleDescription, windo
                                 </p>
                             </div>
                         </div>
-                        <div className="bg-black/25 m-1 p-3 rounded-xl">
+                        <DashedSeparator />
+                        <div className="bg-black/25 p-3 rounded-xl">
                             {children}
-                            <button onClick={handleClose} className="popup-button-red flex items-center justify-center gap-2" >
-                                <Image src="/exit.svg" alt="Exit" width={24} height={24} />
-                                <span>Exit Window</span>
-                            </button>
-                        </div>                    
+                        </div>       
+                        <button onClick={handleClose} className="popup-button-red flex items-center justify-center gap-2 mt-[10px]! cursor-pointer" >
+                            <Image src="/exit.svg" alt="Exit" width={24} height={24} />
+                            <span>Exit Window</span>
+                        </button>  
                     </motion.div>
                 </motion.div>
             </motion.div>

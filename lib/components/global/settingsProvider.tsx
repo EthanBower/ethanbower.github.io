@@ -3,8 +3,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "app-settings";
-const defaultSettings: { motionEnabled: boolean | null, statsEnabled: boolean, dotCount: number | null } = {
-  motionEnabled: null,
+const defaultSettings: { motionEnabled: boolean, statsEnabled: boolean, dotCount: number | null } = {
+  motionEnabled: false,
   statsEnabled: false,
   dotCount: null
 };

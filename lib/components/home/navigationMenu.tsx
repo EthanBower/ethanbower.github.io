@@ -5,7 +5,7 @@ import { AnimatePresence, motion, Variants } from "framer-motion";
 import { useState } from "react";
 
 const navbarVariants: Variants = {
-  initial: { y: 120, scale: .8 },
+  initial: { y: 120, scale: .8, transition: { delay: 1 } },
   enter: { y: 0, scale: 1, transition: { type: "spring", stiffness: 140, damping: 6, mass: 0.8 } },
   exit: { y: 150, scale: 0.85, transition: { type: "spring", stiffness: 180, damping: 22, mass: 0.8, delay: .5 } }
 };
@@ -22,8 +22,9 @@ const toolTipVariants: Variants = {
 };
 
 const itemVariants: Variants = {
+  initial: { opacity: 0, y: 35, scale: 0.5 },
   enter: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 260, damping: 18, } },
-  exit: { opacity: 0, y: 30, scale: 0.8, transition: { type: "spring", stiffness: 260, damping: 18 } }
+  exit: { opacity: 0, y: 35, scale: 0.5, transition: { type: "spring", stiffness: 260, damping: 18 } }
 };
 
 interface NavItem {
@@ -32,19 +33,24 @@ interface NavItem {
   onClick: () => void;
 }
 
-interface NavbarItems {
+interface NavbarProp {
   items: NavItem[];
-  closeFlag: boolean;
+  isNavbarClosed: boolean;
 } 
 
-// todo - unmount once closed
-export default function Navbar({ items, closeFlag }: NavbarItems) {
-  const currentVariant = closeFlag ? "exit" : "enter";
-
+export default function Navbar({ items, isNavbarClosed }: NavbarProp) {
   return (
-    <motion.nav variants={navbarVariants} initial="exit" animate={currentVariant} transition={{ delay: closeFlag ? 1: 0 }} className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 transform-gpu will-change-transform">
-      <motion.div transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 5 }} animate={{ y: [0, -2, -1, -3, 0] }} >
-          <motion.div variants={containerVariants} initial="initial" animate={currentVariant} className="flex items-center gap-8 px-8 py-4 rounded-full backdrop-blur-[8px] backdrop-saturate-180 shadow-[0_8px_32px_0_rgba(0,0,0,0.15),inset_0_1px_1px_0_rgba(255,255,255,0.3)] backdrop-blur-2xl bg-white/5 border-white/10" >
+    <AnimatePresence>
+      { !isNavbarClosed && <NavbarHandler items={items}/> }
+    </AnimatePresence>
+  );
+}
+
+function NavbarHandler({ items }: { items: NavItem[] }) {
+  return (
+    <motion.nav variants={navbarVariants} initial="initial" animate="enter" exit="exit" className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 transform-gpu will-change-transform">
+      <motion.div transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 5 }} animate={{ y: [0, -3, -2, -4, 0] }} >
+          <motion.div variants={containerVariants} className="flex items-center gap-8 px-8 py-4 rounded-full backdrop-blur-[8px] backdrop-saturate-180 shadow-[0_8px_32px_0_rgba(0,0,0,0.15),inset_0_1px_1px_0_rgba(255,255,255,0.3)] backdrop-blur-2xl bg-white/5 border-white/10" >
             {items.map((item) => <NavItem key={item.label} label={item.label} icon={item.icon} onClick={item.onClick} />)} 
           </motion.div>
       </motion.div>  
@@ -66,7 +72,7 @@ function NavItem({ label, icon, onClick }: NavItem) {
           </motion.div>
         )}
       </AnimatePresence>
-      <motion.div variants={itemVariants} >
+      <motion.div variants={itemVariants}>
         <motion.button onClick={onClick} whileHover={{ y: -4, scale: 1.08 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 18 }} className="flex flex-col items-center gap-1 text-white/70 transition-colors" >
           <Image src={icon} alt={label} width={24} height={24} className="transition-transform duration-500 ease-out group-hover:rotate-180" priority />
         </motion.button>
