@@ -63,18 +63,14 @@ function NavItem({ label, icon, onClick }: NavItem) {
 
   return (
     <div className="relative flex flex-col items-center" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} >
-      <AnimatePresence>
-        {isHovered && (
-          <motion.div variants={toolTipVariants} initial="initial" animate="enter" exit="exit" className="absolute" >
-            <div className="bg-black/60 text-white text-[10px] p-[5px] px-2.5 py-1 rounded-md border border-white/10 backdrop-blur-md whitespace-nowrap shadow-lg">
-              <span className="text-xs tracking-wide">{label}</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <motion.div variants={toolTipVariants} initial="initial" animate={isHovered ? "enter" : "initial"} exit="exit" className="absolute" >
+        <div className="bg-black/60 text-white text-[10px] p-[5px] px-2.5 py-1 rounded-md border border-white/10 backdrop-blur-md whitespace-nowrap shadow-lg">
+          <span className="text-xs tracking-wide">{label}</span>
+        </div>
+      </motion.div>
       <motion.div variants={itemVariants}>
-        <motion.button onClick={onClick} whileHover={{ y: -4, scale: 1.08 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 18 }} className="flex flex-col items-center gap-1 text-white/70 transition-colors" >
-          <Image src={icon} alt={label} width={24} height={24} className="transition-transform duration-500 ease-out group-hover:rotate-180" priority />
+        <motion.button onClick={onClick} whileHover={{ y: -4, scale: 1.08 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 18 }} style={{ transform: "translateZ(0)" }} className="flex flex-col items-center gap-1 text-white/70 transition-colors" >
+          <Image src={icon} alt={label} width={26} height={26} className="transition-transform duration-500 ease-out group-hover:rotate-180" priority />
         </motion.button>
       </motion.div>
     </div> 

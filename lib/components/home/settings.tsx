@@ -9,10 +9,11 @@ import Image from "next/image";
 import ButtonToggle from "../utilities/buttonToggle";
 
 type SettingsProps = Readonly<{
-  onClose: () => void;
+    isEnabled: boolean;
+    onClose: () => void;
 }>;
 
-export default function Settings({ onClose }: SettingsProps) {
+export default function Settings({ isEnabled, onClose }: SettingsProps) {
     const { settings, setSettings, resetSettings } = useSettings();
     const [ currentDotCount, setCurrentDotCount ] = useState(SceneController.getInstance().frontPage!.dotScene.dots.length);
 
@@ -33,7 +34,7 @@ export default function Settings({ onClose }: SettingsProps) {
     }
 
     return (
-        <PopupWindow windowIcon="/settings-gear.svg" windowTitle="SETTINGS" windowTitleDescription={`App Version: ${process.env.SITE_APP_VERSION || "dev-local"}`} onClose={onClose} >
+        <PopupWindow windowIcon="/settings-gear.svg" windowTitle="SETTINGS" windowTitleDescription={`App Version: ${process.env.SITE_APP_VERSION || "dev-local"}`} isEnabled={isEnabled} onClose={onClose} >
             <div className="flex m-[5px] gap-2 items-center justify-center">
                 <div className="flex-1">
                     <div className="flex items-center justify-center gap-2">
