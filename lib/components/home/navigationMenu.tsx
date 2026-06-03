@@ -8,28 +8,28 @@ const navbarVariants: Variants = {
   initial: { y: 120, scale: .8, transition: { delay: 1 } },
   enter: { y: 0, scale: 1, transition: { type: "spring", stiffness: 140, damping: 6, mass: 0.8 } },
   exit: { y: 150, scale: 0.85, transition: { type: "spring", stiffness: 180, damping: 22, mass: 0.8, delay: .5 } }
-};
+} as const;
 
 const containerVariants: Variants = {
   enter: { transition: { delayChildren: 0.25, staggerChildren: 0.1, staggerDirection: 1 } },
   exit: { transition: { delayChildren: 0.25, staggerChildren: 0.1, staggerDirection: -1 } }
-};
+} as const;
 
 const toolTipVariants: Variants = {
   initial: { opacity: 0, y: 0, scale: 0.95, filter: "blur(10px)" },
   enter: { opacity: 1, y: -43, scale: 1, filter: "blur(0px)" },
   exit: { opacity: 0, y: 0, scale: 0.95, filter: "blur(10px)" }
-};
+} as const;
 
 const itemVariants: Variants = {
   initial: { opacity: 0, y: 35, scale: 0.5 },
   enter: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 260, damping: 18, } },
   exit: { opacity: 0, y: 35, scale: 0.5, transition: { type: "spring", stiffness: 260, damping: 18 } }
-};
+} as const;
 
 interface NavItem {
   label: string;
-  icon: string;
+  icon: React.ReactNode | string;
   onClick: () => void;
 }
 
@@ -63,18 +63,14 @@ function NavItem({ label, icon, onClick }: NavItem) {
 
   return (
     <div className="relative flex flex-col items-center" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} >
-      <AnimatePresence>
-        {isHovered && (
-          <motion.div variants={toolTipVariants} initial="initial" animate="enter" exit="exit" className="absolute" >
-            <div className="bg-black/60 text-white text-[10px] p-[5px] px-2.5 py-1 rounded-md border border-white/10 backdrop-blur-md whitespace-nowrap shadow-lg">
-              <span className="text-xs tracking-wide">{label}</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <motion.div variants={toolTipVariants} initial="initial" animate={isHovered ? "enter" : "initial"} exit="exit" className="absolute" >
+        <div className="bg-black/60 text-white text-[10px] p-[5px] px-2.5 py-1 rounded-md border border-white/10 backdrop-blur-md whitespace-nowrap shadow-lg">
+          <span className="text-xs tracking-wide">{label}</span>
+        </div>
+      </motion.div>
       <motion.div variants={itemVariants}>
-        <motion.button onClick={onClick} whileHover={{ y: -4, scale: 1.08 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 18 }} className="flex flex-col items-center gap-1 text-white/70 transition-colors" >
-          <Image src={icon} alt={label} width={24} height={24} className="transition-transform duration-500 ease-out group-hover:rotate-180" priority />
+        <motion.button onClick={onClick} whileHover={{ y: -4, scale: 1.08 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 18 }} style={{ transform: "translateZ(0)" }} className="flex flex-col items-center gap-1 text-white/70 transition-colors" >
+          {typeof icon === "string" ? <Image src={icon} alt={label} width={26} height={26} className="transition-transform duration-500 ease-out group-hover:rotate-180" priority /> : icon}
         </motion.button>
       </motion.div>
     </div> 
