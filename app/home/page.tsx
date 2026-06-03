@@ -9,6 +9,8 @@ import NavigationMenu from "@/lib/components/home/navigationMenu";
 import Settings from "@/lib/components/home/settings";
 import { useSettings } from "@/lib/components/global/settingsProvider";
 import Header from "@/lib/components/home/header";
+import Gear from "@/lib/components/icons/gear";
+import HomeIcon from "@/lib/components/icons/home";
 
 export default function Home() {
   const { settings } = useSettings();
@@ -19,12 +21,12 @@ export default function Home() {
   const navbarItems = [
     { 
       label: "Settings", 
-      icon: "/settings-gear.svg", 
+      icon: <Gear />, 
       onClick: () => openSettingsWindow()
     },
     { 
       label: "Home", 
-      icon: "/home.svg", 
+      icon: <HomeIcon />, 
       onClick: () => { SceneController.getInstance().moveAwayFromMoon(); } 
     },
     { 
@@ -58,7 +60,7 @@ export default function Home() {
   function runAfterLoad() {
     setIsSceneLoaded(true);
 
-    const permissionsNeeded = AppPermissions.gyroPermissions.gyroCompatible && !settings.motionEnabled;
+    const permissionsNeeded = !AppPermissions.gyroPermissions.gyroCompatible && !settings.motionEnabled;
     if (permissionsNeeded) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPermissionsDisplayEnabled(true);

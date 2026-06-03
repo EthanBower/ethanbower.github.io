@@ -5,8 +5,10 @@ import PopupWindow from "../global/popupWindow";
 import Slider from "../utilities/slider";
 import { useState } from "react";
 import { SceneController } from "@/lib/ts/threeScene";
-import Image from "next/image";
 import ButtonToggle from "../utilities/buttonToggle";
+import GearIcon from "../icons/gear";
+import ResetArrowsIcon from "../icons/resetArrows";
+import { motion } from "framer-motion";
 
 type SettingsProps = Readonly<{
     isEnabled: boolean;
@@ -33,8 +35,9 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
         }));
     }
 
+    // todo - in dot density section, make a 'warning' banner with yellow/orange background that has slanted stripes (like a construction sign) that says "Increasing dot density may impact performance on some devices" or something like that. Make it so that the warning only appears if the user has set the dot density above a certain number (maybe 1500 or 2000?).
     return (
-        <PopupWindow windowIcon="/settings-gear.svg" windowTitle="SETTINGS" windowTitleDescription={`App Version: ${process.env.SITE_APP_VERSION || "dev-local"}`} isEnabled={isEnabled} onClose={onClose} >
+        <PopupWindow windowIcon={<GearIcon />} windowTitle="SETTINGS" windowTitleDescription={`App Version: ${process.env.SITE_APP_VERSION || "dev-local"}`} isEnabled={isEnabled} onClose={onClose} >
             <div className="flex m-[5px] gap-2 items-center justify-center">
                 <div className="flex-1">
                     <div className="flex items-center justify-center gap-2">
@@ -43,12 +46,12 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
                     </div>
                 </div>
                 <div className="self-stretch w-[1px] rounded-xl bg-gray-300/30"/>
-                <button onClick={resetSettings} className="popup-button-blue m-[4px] flex-1 cursor-pointer" >
+                <motion.button whileHover="hover" whileTap="hover" onClick={resetSettings} className="popup-button-blue m-[4px] flex-1 cursor-pointer" >
                     <div className="flex items-center justify-center gap-2">
-                        <Image src="/reset-arrows.svg" alt="" width={24} height={24} className="flex"/>
+                        <ResetArrowsIcon />
                         <span>Reset Cache</span>
                     </div>
-                </button>
+                </motion.button>  
             </div>     
             <div className="h-[1px] rounded-xl my-3 w-full bg-gray-300/30" />
             <div className="m-[5px]">

@@ -5,6 +5,7 @@ import { AppPermissions } from "@/lib/ts/appPermissions";
 import PopupWindow from "../global/popupWindow";
 import { useSettings } from "../global/settingsProvider";
 import ButtonToggle from "../utilities/buttonToggle";
+import ChevronIcon from "../icons/chevron";
 
 type PermissionsProps = Readonly<{
   isEnabled: boolean;
@@ -31,7 +32,7 @@ export default function Permissions({ isEnabled, onClose }: PermissionsProps) {
   };
 
   return (
-    <PopupWindow windowIcon="/double-arrow.svg" windowTitle="PERMISSIONS" windowTitleDescription="For optimal experience, please grant motion permissions." isEnabled={isEnabled} onClose={onClose}>
+    <PopupWindow windowIcon={<ChevronIcon />} windowTitle="PERMISSIONS" windowTitleDescription="For optimal experience, please grant motion permissions." isEnabled={isEnabled} onClose={onClose}>
       <div className="flex items-center justify-between gap-2">
         <span>{isPending ? "Activating..." : "Activate Motion"}</span>
         <ButtonToggle enabled={settings.motionEnabled} onChange={handleEnableGyro} />

@@ -29,7 +29,7 @@ const itemVariants: Variants = {
 
 interface NavItem {
   label: string;
-  icon: string;
+  icon: React.ReactNode | string;
   onClick: () => void;
 }
 
@@ -70,7 +70,7 @@ function NavItem({ label, icon, onClick }: NavItem) {
       </motion.div>
       <motion.div variants={itemVariants}>
         <motion.button onClick={onClick} whileHover={{ y: -4, scale: 1.08 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 18 }} style={{ transform: "translateZ(0)" }} className="flex flex-col items-center gap-1 text-white/70 transition-colors" >
-          <Image src={icon} alt={label} width={26} height={26} className="transition-transform duration-500 ease-out group-hover:rotate-180" priority />
+          {typeof icon === "string" ? <Image src={icon} alt={label} width={26} height={26} className="transition-transform duration-500 ease-out group-hover:rotate-180" priority /> : icon}
         </motion.button>
       </motion.div>
     </div> 

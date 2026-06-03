@@ -43,7 +43,7 @@ const windowVariants: Variants = {
 type PopupWindowProps = Readonly<{
     windowTitle: string;
     windowTitleDescription: string;
-    windowIcon: string;
+    windowIcon: React.ReactNode;
     isEnabled: boolean;
     onClose?: () => Promise<void> | void;
     children: React.ReactNode;
@@ -59,7 +59,9 @@ export default function PopupWindow({ windowTitle, windowTitleDescription, windo
     return (
         <AnimatePresence>
             {isEnabled && (
-                <WindowContent windowTitle={windowTitle} windowTitleDescription={windowTitleDescription} windowIcon={windowIcon} onClose={handleClose} children={children} />
+                <WindowContent windowTitle={windowTitle} windowTitleDescription={windowTitleDescription} windowIcon={windowIcon} onClose={handleClose}>
+                    {children}
+                </WindowContent>
             )}
         </AnimatePresence>
     );
@@ -67,7 +69,7 @@ export default function PopupWindow({ windowTitle, windowTitleDescription, windo
 
 function WindowContent(
     { windowTitle, windowTitleDescription, windowIcon, onClose, children } :
-    { windowTitle: string; windowTitleDescription: string; windowIcon: string; onClose: () => void; children: React.ReactNode }) {
+    { windowTitle: string; windowTitleDescription: string; windowIcon: React.ReactNode; onClose: () => void; children: React.ReactNode }) {
     const dragControls = useDragControls();
     const windowRef = useRef<HTMLDivElement>(null);
 
@@ -93,7 +95,7 @@ function WindowContent(
                     whileTap={{ scale: 0.995 }}
                     >
                     <div className="cursor-grab active:cursor-grabbing flex items-center gap-4 p-4 pb-2" onPointerDown={(e) => dragControls.start(e)} >
-                        <Image src={windowIcon} alt="Terminal Icon" width={24} height={24} priority />
+                        { windowIcon }
                         <div className="flex flex-col text-left">
                             <h3 className="text-sm font-semibold text-white font-mono flex items-center gap-1">
                                 <Typewriter text={windowTitle} />
@@ -110,7 +112,7 @@ function WindowContent(
                         {children}
                     </motion.div>    
                     <div className="p-2">
-                        <motion.button whileHover="hover" onClick={onClose} className="popup-button-red w-full flex items-center justify-center gap-2 cursor-pointer transition-transform" >
+                        <motion.button whileHover="hover" whileTap="hover" onClick={onClose} className="popup-button-red w-full flex items-center justify-center gap-2 cursor-pointer transition-transform" >
                             <ExitIcon />
                             <span>Exit Window</span>
                         </motion.button>  

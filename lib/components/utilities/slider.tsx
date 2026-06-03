@@ -1,6 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { motion, useMotionValue, useSpring, useTransform, Variants } from "framer-motion";
+
+const fillVariants: Variants = {
+  initial: {
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    boxShadow: "0 0 0px rgba(255, 255, 255, 0.6)"
+  },
+  hover: {
+    backgroundColor: "rgba(255, 255, 255, 0.8)", 
+    boxShadow: "0 0 3px rgba(255, 255, 255, 0.9), 0 0 5px rgba(255, 255, 255, 0.5)" 
+  }
+};
+
+const thumbVariants: Variants = {
+  initial: {
+    scale: 1,
+    boxShadow: "0 0 0px rgba(255, 255, 255, 0.2)"
+  },
+  hover: {
+    scale: 1.2, 
+    boxShadow: "0 0 1px rgba(255, 255, 255, 1), 0 0 10px rgba(255, 255, 255, 0.6)" 
+  }
+};
 
 type DotControlProps = {
   min?: number;
@@ -11,20 +34,59 @@ type DotControlProps = {
 };
 
 export default function Slider({ min = 0, max = 100, step = 1, value = 0, onChange }: DotControlProps) {
-    const [ currentValue, setCurrentValue ] = useState(value);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [currentValue, setCurrentValue] = useState(value);
+    const progress = useMotionValue(currentValue);
+    const last = useMotionValue(currentValue);
+    const rawScaleX = useMotionValue(1);
+    const rawScaleY = useMotionValue(1);
+    const scaleX = useSpring(rawScaleX, { stiffness: 500, damping: 20 });
+    const scaleY = useSpring(rawScaleY, { stiffness: 500, damping: 20 });
+    const xPercent = useTransform(progress, [min, max], ["0%", "100%"]);
 
     function handleNewValue(newVal: number) {
+        let speed = Math.abs(newVal - last.get());
+
+        if (speed > 2) {
+            speed = 2;
+        }
+
+        rawScaleX.set(1 + speed * 0.16);
+        rawScaleY.set(1 - speed * 0.16);
+
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+
+        timeoutRef.current = setTimeout(() => {
+            rawScaleX.set(1);
+            rawScaleY.set(1);
+        }, 80);
+
+        last.set(newVal);
         setCurrentValue(newVal);
+        progress.set(newVal);
         onChange(newVal);
     }
 
     return (
-        <div className="relative w-full">
-            {/* background track */}
-            <div className="absolute top-1/2 w-full h-2.5 -translate-y-1/2 bg-white/10 blur-[1.5px] backdrop-blur-[3px] rounded-full" />
-            {/* fill */}
-            <div className="absolute top-1/2 h-2.5 -translate-y-1/2 bg-white/50 rounded-full blur-[1.5px] backdrop-blur-[3px]" style={{ width: `${((currentValue - min) / (max - min)) * 100}%` }} />
-            {/* slider */}
+        <motion.div whileHover="hover" initial="initial" className="relative w-full h-10 flex items-center">
+            {/* Track */}
+            <div className="absolute w-full h-2.5 bg-white/10 rounded-full" />
+            {/* Fill */}
+            <motion.div variants={fillVariants} className="absolute h-2.5 bg-white/50 rounded-full" style={{ width: xPercent }} />
+            {/* Thumb */}
+            <motion.div 
+                className="absolute w-6 h-6 rounded-full bg-white pointer-events-none" 
+                variants={thumbVariants}
+                style={{
+                    left: xPercent,
+                    x: "-50%",
+                    scaleX,
+                    scaleY
+                }}
+            />
+            {/* This is invisible to allow custom styling above */}
             <input
                 type="range"
                 min={min}
@@ -32,36 +94,8 @@ export default function Slider({ min = 0, max = 100, step = 1, value = 0, onChan
                 step={step}
                 value={currentValue}
                 onChange={(e) => handleNewValue(Number(e.target.value))}
-                className="
-                    relative
-                    z-10
-                    w-full
-                    h-2.5
-                    rounded-full
-                    appearance-none
-                    cursor-pointer
-                    bg-transparent
-                    
-                    [&::-webkit-slider-thumb]:appearance-none
-                    [&::-webkit-slider-thumb]:h-8
-                    [&::-webkit-slider-thumb]:w-8
-                    /* White circle in the center, transparent on the outside */
-                    [&::-webkit-slider-thumb]:bg-[radial-gradient(circle,rgba(255,255,255,1)_0%,rgba(255,255,255,1)_45%,rgba(255,255,255,0)_46%)]
-                    [&::-webkit-slider-thumb]:drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]
-                    [&::-webkit-slider-thumb]:transition
-                    [&::-webkit-slider-thumb]:hover:scale-110 
-                    [&::-webkit-slider-thumb]:rounded-full
-
-                    [&::-moz-range-thumb]:appearance-none
-                    [&::-moz-range-thumb]:h-11
-                    [&::-moz-range-thumb]:w-11
-                    [&::-moz-range-thumb]:bg-[radial-gradient(circle,rgba(255,255,255,1)_0%,rgba(255,255,255,1)_45%,rgba(255,255,255,0)_46%)]
-                    [&::-moz-range-thumb]:drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]
-                    [&::-moz-range-thumb]:border-0
-                    [&::-moz-range-thumb]:transition
-                    [&::-moz-range-thumb]:hover:scale-110 
-                    [&::-moz-range-thumb]:rounded-full
-                "/>
-        </div>
+                className="absolute w-full h-full opacity-0 cursor-pointer"
+            />
+        </motion.div>
     );
 }

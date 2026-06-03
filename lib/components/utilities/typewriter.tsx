@@ -43,6 +43,7 @@ export default function Typewriter({ text, className = "" }: TypewriterProps) {
       const randomChar = KEYBOARD_LAYOUT[Math.floor(Math.random() * KEYBOARD_LAYOUT.length)];
       
       // Inject the wrong character and then schedule a quick deletion
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDisplayedText((prev) => prev + randomChar);
       timeoutId = setTimeout(() => {
         setIsDeleting(true);
