@@ -9,7 +9,7 @@ import ButtonToggle from "../utilities/buttonToggle";
 import GearIcon from "../icons/gear";
 import ResetArrowsIcon from "../icons/resetArrows";
 import { motion } from "framer-motion";
-import Version, { getAppVersion } from "../../ts/version";
+import { getAppVersion } from "../../ts/version";
 
 type SettingsProps = Readonly<{
     isEnabled: boolean;
