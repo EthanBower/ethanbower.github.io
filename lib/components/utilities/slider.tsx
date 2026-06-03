@@ -12,7 +12,7 @@ const fillVariants: Variants = {
     backgroundColor: "rgba(255, 255, 255, 0.8)", 
     boxShadow: "0 0 3px rgba(255, 255, 255, 0.9), 0 0 5px rgba(255, 255, 255, 0.5)" 
   }
-};
+} as const;
 
 const thumbVariants: Variants = {
   initial: {
@@ -23,7 +23,7 @@ const thumbVariants: Variants = {
     scale: 1.2, 
     boxShadow: "0 0 1px rgba(255, 255, 255, 1), 0 0 10px rgba(255, 255, 255, 0.6)" 
   }
-};
+} as const;
 
 type DotControlProps = {
   min?: number;

@@ -17,7 +17,7 @@ const doorVariants = {
       mass: 0.6,
     },
   },
-};
+} as const;
 
 export default function HomeIcon() {
   return (
@@ -36,7 +36,7 @@ export default function HomeIcon() {
           fill="#D6D6D6"
           style={{
             transformBox: "fill-box",
-            transformOrigin: "bottom",
+            transformOrigin: "bottom"
           }}
           variants={doorVariants}
         />        

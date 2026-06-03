@@ -13,7 +13,7 @@ const cursorVariants = {
             ease: "easeInOut"
         }
     }
-};
+} as const;
 
 interface TypewriterProps {
   text: string;

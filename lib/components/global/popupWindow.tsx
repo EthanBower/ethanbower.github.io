@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRef } from "react";
 import { motion, useDragControls, Variants, AnimatePresence } from "framer-motion";
 import DashedSeparator from "../utilities/dashedSeperator";
@@ -38,7 +37,7 @@ const windowVariants: Variants = {
         ease: "easeIn" 
     }
   }
-};
+} as const;
 
 type PopupWindowProps = Readonly<{
     windowTitle: string;
