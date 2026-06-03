@@ -38,7 +38,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
     // todo - in dot density section, make a 'warning' banner with yellow/orange background that has slanted stripes (like a construction sign) that says "Increasing dot density may impact performance on some devices" or something like that. Make it so that the warning only appears if the user has set the dot density above a certain number (maybe 1500 or 2000?).
     return (
         <PopupWindow windowIcon={<GearIcon />} windowTitle="SETTINGS" windowTitleDescription={`App Version: ${process.env.SITE_APP_VERSION || "dev-local"}`} isEnabled={isEnabled} onClose={onClose} >
-            <div className="flex m-[5px] gap-2 items-center justify-center">
+            <div className="flex m-[5px] gap-2 items-center justify-center bg-black/25 p-3 rounded-xl">
                 <div className="flex-1">
                     <div className="flex items-center justify-center gap-2">
                         <span>Statistics {settings.statsEnabled ? "ON" : "OFF"}</span>
@@ -53,8 +53,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
                     </div>
                 </motion.button>  
             </div>     
-            <div className="h-[1px] rounded-xl my-3 w-full bg-gray-300/30" />
-            <div className="m-[5px]">
+            <div className="m-[5px] bg-black/25 p-3 rounded-xl">
                 <div className="pb-[10px] text-center">
                     <p>DOT DENSITY: <b>{currentDotCount}</b> PARTICLES</p>
                     <p className="text-sm">Resizing window will set it back to auto-mode.</p>

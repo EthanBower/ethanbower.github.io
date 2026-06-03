@@ -60,7 +60,7 @@ export default function Home() {
   function runAfterLoad() {
     setIsSceneLoaded(true);
 
-    const permissionsNeeded = !AppPermissions.gyroPermissions.gyroCompatible && !settings.motionEnabled;
+    const permissionsNeeded = AppPermissions.gyroPermissions.gyroCompatible && !settings.motionEnabled;
     if (permissionsNeeded) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPermissionsDisplayEnabled(true);

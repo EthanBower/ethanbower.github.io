@@ -108,7 +108,7 @@ function WindowContent(
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: .15, duration: 0.3 }}
-                        className="bg-black/25 p-3 m-2 rounded-xl" >
+                        >
                         {children}
                     </motion.div>    
                     <div className="p-2">
