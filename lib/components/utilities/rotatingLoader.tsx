@@ -13,7 +13,7 @@ export default function RotatingLoader({ textMessages }: RotatingLoaderProps) {
     useEffect(() => {
         const timer = setInterval(() => {
             setIndex((prev) => (prev + 1) % textMessages.length);
-        }, 1800);
+        }, 1700);
 
         return () => clearInterval(timer);
     }, []);

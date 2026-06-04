@@ -3,7 +3,9 @@
 import Image from "next/image";
 import RotatingLoader from "../utilities/rotatingLoader";
 import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
+const MINIMUM_LOAD_SCREEN_TIME = 2200;
 const LOADING_TEXTS: string[] = [
     "Deploying the Rover...",
     "Calculating trajectory to the Milky Bone Galaxy...",
@@ -17,20 +19,46 @@ type LoadingScreenProps = Readonly<{
 }>;
 
 export default function LoadingScreen({ isEnabled, onCloseAnimationDone }: LoadingScreenProps) {
+    const [isVisible, setIsVisible] = useState(true);
+    const startTimeRef = useRef<number>(0);
+
+    useEffect(() => {
+        startTimeRef.current = performance.now();
+    }, []);
+
+    useEffect(() => {
+        if (!isEnabled) return;
+
+        const loadFinishDelta = performance.now() - startTimeRef.current;
+        const timeRemaining = MINIMUM_LOAD_SCREEN_TIME - loadFinishDelta;
+
+        if (timeRemaining <= 0) {
+            setIsVisible(false);
+            return;
+        }
+
+        const t = setTimeout(() => {
+            setIsVisible(false);
+        }, timeRemaining);
+
+        return () => clearTimeout(t);
+    }, [isEnabled]);
+
     return (
         <AnimatePresence onExitComplete={onCloseAnimationDone}>
-            {!isEnabled && (
+            {isVisible && (
                 <motion.div
                     className="absolute inset-0 bg-gradient-to-b from-black via-[#050816] to-black overflow-hidden z-1"
                     exit={{
                         y: ["0%", "9%", "-100%"],
+                        filter: ["blur(0px)", "blur(0px)", "blur(16px)"],
                         borderTopRightRadius: ["0%", "10%", "20%"],
                         borderTopLeftRadius: ["0%", "10%", "20%"],
                         borderBottomLeftRadius: ["0%", "20%", "100%"],
                         borderBottomRightRadius: ["0%", "20%", "100%"],
                     }}
                     transition={{
-                        times: [0, 0.2, 3, 1],
+                        times: [0, 0.6, 1],
                         ease: ["easeIn", [0.6, -0.28, 1.735, 10.045]],
                         duration: 0.8,
                     }}
