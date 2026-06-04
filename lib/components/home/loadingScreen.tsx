@@ -10,7 +10,28 @@ const LOADING_TEXTS: string[] = [
     "Deploying the Rover...",
     "Calculating trajectory to the Milky Bone Galaxy...",
     "Aligning satellite dishes for maximum belly rubs...",
-    "Checking the perimeter for space mailmen..."
+    "Checking the perimeter for space mailmen...",
+    "Chasing shooting stars across the vacuum...",
+    "Calibrating the Sub-Woofer propulsion system...",
+    "Fueling warp drive engines with maximum zoomies...",
+    "Scanning the cosmic horizon for signs of treats...",
+    "Preparing astronauts for emergency ear scratches...",
+    "Charging solar panels via strategic sunbeam naps...",
+    "Entering low-Earth orbit to retrieve the stick...",
+    "Analyzing Martian soil samples for buried bones...",
+    "Adjusting space helmet for floppy-ear aerodynamics...",
+    "Transmitting data back to Mission Control (the kitchen)...",
+    "Navigating asteroid fields with high-speed tail wags...",
+    "Securing the payload (a collection of tennis balls)...",
+    "Initializing zero-gravity belly rub sequence...",
+    "Stoking the dark matter furnace with kibble...",
+    "Tuning frequency scanners to detect treat crinkles...",
+    "Bypassing the main mainframe for extra head pats...",
+    "Deflecting space vacuum cleaners from the hull...",
+    "Initiating final countdown: 3... 2... 1... BARK OFF!",
+    "Lost in space (spotted a very shiny squirrel)...",
+    "Consulting the Big Dipper for water bowl locations...",
+    "Entering deep hyper-sleep (just a quick 14-hour nap)..."
 ];
 
 type LoadingScreenProps = Readonly<{
@@ -20,9 +41,11 @@ type LoadingScreenProps = Readonly<{
 
 export default function LoadingScreen({ isEnabled, onCloseAnimationDone }: LoadingScreenProps) {
     const [isVisible, setIsVisible] = useState(true);
+    const [randomizedTexts, setRandomizedTexts] = useState<string[]>(LOADING_TEXTS);
     const startTimeRef = useRef<number>(0);
 
     useEffect(() => {
+        setRandomizedTexts(shuffleArray(LOADING_TEXTS));
         startTimeRef.current = performance.now();
     }, []);
 
@@ -50,17 +73,19 @@ export default function LoadingScreen({ isEnabled, onCloseAnimationDone }: Loadi
                 <motion.div
                     className="absolute inset-0 bg-gradient-to-b from-black via-[#050816] to-black overflow-hidden z-1"
                     exit={{
-                        y: ["0%", "9%", "-100%"],
-                        filter: ["blur(0px)", "blur(0px)", "blur(16px)"],
-                        borderTopRightRadius: ["0%", "10%", "20%"],
-                        borderTopLeftRadius: ["0%", "10%", "20%"],
-                        borderBottomLeftRadius: ["0%", "20%", "100%"],
-                        borderBottomRightRadius: ["0%", "20%", "100%"],
+                        y: ["0%", "60%", "-100%"],
+                        filter: ["blur(0px)", "blur(15px)", "blur(20px)"],
+                        borderTopRightRadius: ["0%", "50%", "50%"],
+                        borderTopLeftRadius: ["0%", "50%", "50%"],
+                        borderBottomLeftRadius: ["0%", "50%", "50%"],
+                        borderBottomRightRadius: ["0%", "50%", "50%"],
+                        scaleX: [1, 0.4, 0.4],
+                        scaleY: [1, 0.7, 0.7]
                     }}
                     transition={{
                         times: [0, 0.6, 1],
                         ease: ["easeIn", [0.6, -0.28, 1.735, 10.045]],
-                        duration: 0.8,
+                        duration: 0.55,
                     }}
                 >
                     {/* nebula */}
@@ -104,10 +129,21 @@ export default function LoadingScreen({ isEnabled, onCloseAnimationDone }: Loadi
                                 loading="eager"
                             />
                         </motion.div>
-                        <RotatingLoader textMessages={LOADING_TEXTS} />
+                        <RotatingLoader textMessages={randomizedTexts} />
                     </div>
                 </motion.div>
             )}
         </AnimatePresence>
     );
+}
+
+function shuffleArray<T>(array: T[]): T[] {
+    const shuffled = [...array];
+
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const randomIndex = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[i]];
+    }
+
+    return shuffled;
 }
