@@ -22,10 +22,9 @@ export class AppPermissions {
         return;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const permission = await (
-        DeviceOrientationEvent as any
-      ).requestPermission();
+      const permission =
+        await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (DeviceOrientationEvent as any).requestPermission();
       if (permission !== "granted") {
         AppPermissions.gyroPermissions.gyroscopeEnabled = false;
         return;

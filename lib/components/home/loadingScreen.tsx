@@ -45,6 +45,7 @@ export default function LoadingScreen({ isEnabled, onCloseAnimationDone }: Loadi
     const startTimeRef = useRef<number>(0);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setRandomizedTexts(shuffleArray(LOADING_TEXTS));
         startTimeRef.current = performance.now();
     }, []);

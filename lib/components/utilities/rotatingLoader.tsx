@@ -16,7 +16,7 @@ export default function RotatingLoader({ textMessages }: RotatingLoaderProps) {
         }, 1800);
 
         return () => clearInterval(timer);
-    }, []);
+    }, [textMessages]);
 
     return (
         <motion.div
@@ -48,7 +48,7 @@ export default function RotatingLoader({ textMessages }: RotatingLoaderProps) {
                             damping: 30,
                         }}
                     >
-                        <p className="text-[clamp(0.875rem,1.3vw,1.5rem)] text-center whitespace-normal">
+                        <p className="text-[clamp(0.875rem,1.3vw,1.45rem)] text-center whitespace-normal">
                             {textMessages[index]}
                         </p>
                     </motion.div>
