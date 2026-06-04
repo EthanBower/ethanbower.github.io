@@ -118,7 +118,7 @@ export default function LoadingScreen({ isEnabled, onCloseAnimationDone }: Loadi
                                 repeat: Infinity,
                                 ease: "easeInOut",
                             }}
-                            className="w-[15%] min-w-[150px] max-w-[250px]"
+                            className="w-[30%] min-w-[150px] max-w-[230px]"
                         >
                             <Image
                                 src="./holly-face.svg"

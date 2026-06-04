@@ -13,7 +13,7 @@ export default function RotatingLoader({ textMessages }: RotatingLoaderProps) {
     useEffect(() => {
         const timer = setInterval(() => {
             setIndex((prev) => (prev + 1) % textMessages.length);
-        }, 1700);
+        }, 1800);
 
         return () => clearInterval(timer);
     }, []);
@@ -35,7 +35,7 @@ export default function RotatingLoader({ textMessages }: RotatingLoaderProps) {
                     <div className="h-full w-full rounded-full border-2 border-transparent border-t-purple-500 opacity-40" />
                 </div>
             </div>
-            <div className="relative h-6 overflow-hidden">
+            <div className="relative overflow-hidden">
                 <AnimatePresence mode="popLayout">
                     <motion.div
                         key={index}
@@ -47,9 +47,10 @@ export default function RotatingLoader({ textMessages }: RotatingLoaderProps) {
                             stiffness: 600,
                             damping: 30,
                         }}
-                        className="whitespace-nowrap"
                     >
-                        {textMessages[index]}
+                        <p className="text-[clamp(0.875rem,1.3vw,1.5rem)] text-center whitespace-normal">
+                            {textMessages[index]}
+                        </p>
                     </motion.div>
                 </AnimatePresence>
             </div>
