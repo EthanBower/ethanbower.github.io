@@ -47,7 +47,7 @@ export default function ButtonToggle({ enabled, onChange }: ButtonToggleProps) {
       <motion.span
         style={{ x: springX }}
         className={`pointer-events-none inline-block h-7 w-7 rounded-full shadow-md 
-          ${ enabled ? 'bg-white drop-shadow-[0_0_4px_rgba(255,255,255,0.9)]' : 'bg-white/40 drop-shadow-[0_0_4px_rgba(255,255,255,0.0)]' }`}
+          ${enabled ? "bg-white drop-shadow-[0_0_4px_rgba(255,255,255,0.9)]" : "bg-white/40 drop-shadow-[0_0_4px_rgba(255,255,255,0.0)]"}`}
       />
     </motion.button>
   );

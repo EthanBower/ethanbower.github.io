@@ -5,14 +5,14 @@ import { motion } from "framer-motion";
 
 const KEYBOARD_LAYOUT = "abcdefghijklmnopqrstuvwxyz";
 const cursorVariants = {
-    blinking: {
-        opacity: .5,
-        transition: {
-            duration: 0.8,
-            repeat: Infinity,
-            ease: "easeInOut"
-        }
-    }
+  blinking: {
+    opacity: 0.5,
+    transition: {
+      duration: 0.8,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+  },
 } as const;
 
 interface TypewriterProps {
@@ -33,22 +33,31 @@ export default function Typewriter({ text, className = "" }: TypewriterProps) {
     let currentSpeed = Math.floor(Math.random() * 65) + 40;
 
     // Pause longer on punctuation
-    if (index > 0 && [".", ",", "!", "?"].includes(text[index - 1]) && !isDeleting) {
+    if (
+      index > 0 &&
+      [".", ",", "!", "?"].includes(text[index - 1]) &&
+      !isDeleting
+    ) {
       currentSpeed += 400; // Explicit pause for dramatic effect
     }
 
-    const shouldMakeTypo = Math.random() < 0.10 && !isDeleting && index > 2 && index < text.length - 2;
+    const shouldMakeTypo =
+      Math.random() < 0.1 &&
+      !isDeleting &&
+      index > 2 &&
+      index < text.length - 2;
 
     if (shouldMakeTypo) {
-      const randomChar = KEYBOARD_LAYOUT[Math.floor(Math.random() * KEYBOARD_LAYOUT.length)];
-      
+      const randomChar =
+        KEYBOARD_LAYOUT[Math.floor(Math.random() * KEYBOARD_LAYOUT.length)];
+
       // Inject the wrong character and then schedule a quick deletion
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setDisplayedText((prev) => prev + randomChar);
       timeoutId = setTimeout(() => {
         setIsDeleting(true);
-      }, currentSpeed + 150); 
-      
+      }, currentSpeed + 150);
+
       return () => clearTimeout(timeoutId);
     }
 
@@ -56,9 +65,9 @@ export default function Typewriter({ text, className = "" }: TypewriterProps) {
     if (isDeleting) {
       timeoutId = setTimeout(() => {
         setDisplayedText((prev) => prev.slice(0, -1));
-        setIsDeleting(false); 
+        setIsDeleting(false);
       }, 100);
-      
+
       return () => clearTimeout(timeoutId);
     }
 
@@ -74,7 +83,11 @@ export default function Typewriter({ text, className = "" }: TypewriterProps) {
   return (
     <span className={`inline-flex items-center justify-center ${className}`}>
       <span>{displayedText}</span>
-      <motion.span variants={cursorVariants} animate="blinking" className="inline-block w-[3px] h-[1em] ml-[2px] bg-current vertical-middle align-middle" />
+      <motion.span
+        variants={cursorVariants}
+        animate="blinking"
+        className="inline-block w-[3px] h-[1em] ml-[2px] bg-current vertical-middle align-middle"
+      />
     </span>
   );
 }

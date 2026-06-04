@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { useSettings } from "../global/settingsProvider";
 
 type SpaceSceneProps = Readonly<{
-    onLoadingComplete: () => void;
+  onLoadingComplete: () => void;
 }>;
 
 export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
@@ -20,19 +20,19 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
     instantiatedRef.current = true;
 
     const pageScene = SceneController.getInstance();
-    const initLoading = async () => {      
+    const initLoading = async () => {
       await pageScene.init(threeJsRef.current!);
       pageScene.runAnimationLoop();
-      assetsLoadedRef.current = true;  
-      onLoadingComplete(); 
+      assetsLoadedRef.current = true;
+      onLoadingComplete();
     };
 
     initLoading();
 
-    return () => { 
+    return () => {
       //pageScene.dispose();
     };
-  }, []); 
+  }, []);
 
   // Configure custom settings once localSettings is parsed/read
   useEffect(() => {
@@ -49,7 +49,5 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
     SceneController.getInstance().changeDotSpawnCount(settings.dotCount);
   }, [settings.dotCount]);
 
-  return (
-    <div ref={threeJsRef} id="three-root" className="w-full h-full z-0" />
-  );
+  return <div ref={threeJsRef} id="three-root" className="w-full h-full z-0" />;
 }

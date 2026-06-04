@@ -72,7 +72,6 @@ export default function ExitIcon() {
           hover: {
             x: 4,
             scale: 1.15,
-            filter: "drop-shadow(0 0 6px rgba(255,80,80,.9))",
           },
         }}
         transition={{

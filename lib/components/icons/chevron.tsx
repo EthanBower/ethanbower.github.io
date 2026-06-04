@@ -56,9 +56,9 @@ export default function ChevronIcon() {
                 damping: 18,
               },
             },
-          }} />
-      </g>      
+          }}
+        />
+      </g>
     </motion.svg>
   );
 }
-

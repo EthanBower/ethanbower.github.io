@@ -13,19 +13,14 @@ const eslintConfig = defineConfig([
     rules: {
       "no-warning-comments/no-warning-comments": [
         "warn",
-        { 
-          terms: ["todo", "fixme"], 
-          location: "start"
-        }
+        {
+          terms: ["todo", "fixme"],
+          location: "start",
+        },
       ],
     },
   },
-  globalIgnores([
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
 ]);
 
 export default eslintConfig;

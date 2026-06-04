@@ -1,31 +1,31 @@
-"use client;"
+"use client;";
 
 import { FrontPageAnimation, Utils } from "..";
 import { Animatable } from "../abstracts/animatable";
 
 export class IntroAnimation extends Animatable {
-    public cameraTargetY: number = 0;
-    private frontPage: FrontPageAnimation;
+  public cameraTargetY: number = 0;
+  private frontPage: FrontPageAnimation;
 
-    constructor(frontPage: FrontPageAnimation) {
-        super();
-        this.isAnimating = false;
-        this.frontPage = frontPage;
+  constructor(frontPage: FrontPageAnimation) {
+    super();
+    this.isAnimating = false;
+    this.frontPage = frontPage;
+  }
+
+  override update(): void {
+    const camera = this.frontPage.mainCamera.camera;
+
+    if (Utils.differentialBelow(this.cameraTargetY, camera.position.y, 0.1)) {
+      camera.position.y = this.cameraTargetY;
+      this.isAnimating = false;
+      return;
     }
 
-    override update(): void {
-        const camera = this.frontPage.mainCamera.camera;
+    camera.position.y += (this.cameraTargetY - camera.position.y) * 0.04;
+  }
 
-        if (Utils.differentialBelow(this.cameraTargetY, camera.position.y, 0.1)) {
-            camera.position.y = this.cameraTargetY;
-            this.isAnimating = false;
-            return;
-        }
-
-        camera.position.y += (this.cameraTargetY - camera.position.y) * 0.04;
-    }
-
-    protected override onDispose(): void {
-        return;
-    }
+  protected override onDispose(): void {
+    return;
+  }
 }

@@ -13,7 +13,7 @@ type PermissionsProps = Readonly<{
 }>;
 
 export default function Permissions({ isEnabled, onClose }: PermissionsProps) {
-  const [ isPending, startTransition ] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const { settings, setSettings } = useSettings();
 
   const handleEnableGyro = async () => {
@@ -23,8 +23,8 @@ export default function Permissions({ isEnabled, onClose }: PermissionsProps) {
     startTransition(async () => {
       await AppPermissions.askGyroPermissionsAsync();
       setSettings((s) => ({
-          ...s,
-          motionEnabled: AppPermissions.gyroPermissions.gyroscopeEnabled
+        ...s,
+        motionEnabled: AppPermissions.gyroPermissions.gyroscopeEnabled,
       }));
 
       // todo - add a warning message that gyro was not enabled
@@ -32,10 +32,19 @@ export default function Permissions({ isEnabled, onClose }: PermissionsProps) {
   };
 
   return (
-    <PopupWindow windowIcon={<ChevronIcon />} windowTitle="PERMISSIONS" windowTitleDescription="For optimal experience, please grant motion permissions." isEnabled={isEnabled} onClose={onClose}>
+    <PopupWindow
+      windowIcon={<ChevronIcon />}
+      windowTitle="PERMISSIONS"
+      windowTitleDescription="For optimal experience, please grant motion permissions."
+      isEnabled={isEnabled}
+      onClose={onClose}
+    >
       <div className="flex items-center justify-between gap-2">
         <span>{isPending ? "Activating..." : "Activate Motion"}</span>
-        <ButtonToggle enabled={settings.motionEnabled} onChange={handleEnableGyro} />
+        <ButtonToggle
+          enabled={settings.motionEnabled}
+          onChange={handleEnableGyro}
+        />
       </div>
     </PopupWindow>
   );

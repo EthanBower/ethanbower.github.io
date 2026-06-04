@@ -11,6 +11,7 @@ import { useSettings } from "@/lib/components/global/settingsProvider";
 import Header from "@/lib/components/home/header";
 import Gear from "@/lib/components/icons/gear";
 import HomeIcon from "@/lib/components/icons/home";
+import LoadingScreen from "@/lib/components/home/loadingScreen";
 
 export default function Home() {
   const { settings } = useSettings();
@@ -19,37 +20,43 @@ export default function Home() {
   const [navDisplay, setNavDisplayEnabled] = useState(false);
   const [settingsDisplay, setSettingsDisplayEnabled] = useState(false);
   const navbarItems = [
-    { 
-      label: "Settings", 
-      icon: <Gear />, 
-      onClick: () => openSettingsWindow()
+    {
+      label: "Settings",
+      icon: <Gear />,
+      onClick: () => openSettingsWindow(),
     },
-    { 
-      label: "Home", 
-      icon: <HomeIcon />, 
-      onClick: () => { SceneController.getInstance().moveAwayFromMoon(); } 
+    {
+      label: "Home",
+      icon: <HomeIcon />,
+      onClick: () => {
+        SceneController.getInstance().moveAwayFromMoon();
+      },
     },
-    { 
-      label: "Moon", 
-      icon: "/planet.svg", 
-      onClick: () => { SceneController.getInstance().moveToMoon(); } 
+    {
+      label: "Moon",
+      icon: "/planet.svg",
+      onClick: () => {
+        SceneController.getInstance().moveToMoon();
+      },
     },
   ];
 
-  async function moveSpaceSceneCameraIntro () {
+  async function moveSpaceSceneCameraIntro() {
     setPermissionsDisplayEnabled(false);
     SceneController.getInstance().moveCameraDownToHomePage();
 
-    const timer = setTimeout(() => { 
-      setNavDisplayEnabled(true); 
+    const timer = setTimeout(() => {
+      setNavDisplayEnabled(true);
     }, 1000);
 
-    return () => { clearTimeout(timer); };
-  };
+    return () => {
+      clearTimeout(timer);
+    };
+  }
 
   function openSettingsWindow() {
     setSettingsDisplayEnabled(true);
-    setNavDisplayEnabled(false); 
+    setNavDisplayEnabled(false);
   }
 
   function closeSettingsWindow() {
@@ -58,29 +65,39 @@ export default function Home() {
   }
 
   function runAfterLoad() {
-    setIsSceneLoaded(true);
-
-    const permissionsNeeded = AppPermissions.gyroPermissions.gyroCompatible && !settings.motionEnabled;
+    const permissionsNeeded =
+      AppPermissions.gyroPermissions.gyroCompatible && !settings.motionEnabled;
     if (permissionsNeeded) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPermissionsDisplayEnabled(true);
       return;
-    } 
+    }
 
     moveSpaceSceneCameraIntro();
-  };
+  }
 
   return (
-    <main className="relative w-full h-screen bg-black">
-      <SpaceScene onLoadingComplete={runAfterLoad} />
-      { isSceneLoaded && 
+    <main className="relative w-full h-screen">
+      <LoadingScreen
+        isEnabled={isSceneLoaded}
+        onCloseAnimationDone={runAfterLoad}
+      />
+      <SpaceScene
+        onLoadingComplete={() => {
+          setIsSceneLoaded(true);
+        }}
+      />
+      {isSceneLoaded && (
         <div>
           <Header />
           <NavigationMenu items={navbarItems} isNavbarClosed={!navDisplay} />
           <Settings isEnabled={settingsDisplay} onClose={closeSettingsWindow} />
-          <Permissions isEnabled={permissionsDisplay} onClose={moveSpaceSceneCameraIntro} />
+          <Permissions
+            isEnabled={permissionsDisplay}
+            onClose={moveSpaceSceneCameraIntro}
+          />
         </div>
-      }
+      )}
     </main>
   );
 }
