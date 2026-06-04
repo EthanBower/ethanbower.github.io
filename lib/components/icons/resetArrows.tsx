@@ -14,7 +14,7 @@ const resetIconVariants = {
       damping: 18,
     },
   },
-} as const; 
+} as const;
 
 export default function ResetArrowsIcon() {
   return (

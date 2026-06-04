@@ -9,9 +9,14 @@ interface TextScrambleProps {
   duration?: number;
 }
 
-const GLYPHS = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz1234567890@#$%&*{[}]";
+const GLYPHS =
+  "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz1234567890@#$%&*{[}]";
 
-export default function TextScramble({ text, className = "", duration = 1.5 }: TextScrambleProps) {
+export default function TextScramble({
+  text,
+  className = "",
+  duration = 1.5,
+}: TextScrambleProps) {
   const [displayText, setDisplayText] = useState(text);
 
   useEffect(() => {
@@ -29,7 +34,8 @@ export default function TextScramble({ text, className = "", duration = 1.5 }: T
           if (char === " ") return " ";
           if (index < revealIndex) return char;
           return GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
-        }).join("");
+        })
+        .join("");
 
       setDisplayText(scrambled);
 
@@ -41,21 +47,22 @@ export default function TextScramble({ text, className = "", duration = 1.5 }: T
     };
 
     frameId = requestAnimationFrame(scrambleLoop);
-    
+
     return () => cancelAnimationFrame(frameId);
   }, [text, duration]);
 
   return (
-  <span className="relative inline-block">
-    {/* The invisible text is used to prevent layout shifts during scrambling */}
-    <span className="invisible">{text}</span>
-    <motion.span
-      className={`absolute inset-0 font-mono tracking-wide ${className}`}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }} >
-      {displayText}
-    </motion.span>
-  </span>
+    <span className="relative inline-block">
+      {/* The invisible text is used to prevent layout shifts during scrambling */}
+      <span className="invisible">{text}</span>
+      <motion.span
+        className={`absolute inset-0 font-mono tracking-wide ${className}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        {displayText}
+      </motion.span>
+    </span>
   );
 }

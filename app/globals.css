@@ -21,7 +21,7 @@
 
 html,
 body {
-  background: var(--background);  
+  background: var(--background);
   color: var(--foreground);
   margin: 0;
   padding: 0;
@@ -46,9 +46,16 @@ body {
 .popup-window {
   @apply p-[10px] m-[5px] pointer-events-auto border rounded-[24px] text-white select-none blur-[5px] backdrop-blur-[3px];
   border-color: rgba(255, 255, 255, 0.12);
-  background: 
-    radial-gradient(120% 120% at 50% 0, #ff00000d, #ff00000f), 
-    linear-gradient(140deg, #0f00b166, #0f00b11a 20.59%, #3138a700 49.16%, #3903804a 82.77%, #4b007ed6);
+  background:
+    radial-gradient(120% 120% at 50% 0, #ff00000d, #ff00000f),
+    linear-gradient(
+      140deg,
+      #0f00b166,
+      #0f00b11a 20.59%,
+      #3138a700 49.16%,
+      #3903804a 82.77%,
+      #4b007ed6
+    );
 }
 
 .popup-button-red,
@@ -75,5 +82,14 @@ body {
   }
   to {
     background-position: 24px 0px;
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
   }
 }

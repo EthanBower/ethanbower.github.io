@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Space_Grotesk } from "next/font/google";
-import "./globals.css";
 import { SettingsProvider } from "@/lib/components/global/settingsProvider";
+import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"]
+  subsets: ["latin"],
 });
 
 const geistSans = Geist({
@@ -14,20 +14,25 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
   title: "Ethan Bower",
-  description: "Portfolio Website Created by Ethan Bower"
+  description: "Portfolio Website Created by Ethan Bower",
 };
 
-export const viewport: Viewport = { 
-  width: "device-width", initialScale: 1, viewportFit: "cover" 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode;}>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${spaceGrotesk.className} ${geistSans.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${spaceGrotesk.className} ${geistSans.variable} h-full antialiased`}
+    >
       <body>
-        <SettingsProvider>
-          {children}
-        </SettingsProvider>
+        <SettingsProvider>{children}</SettingsProvider>
       </body>
     </html>
   );

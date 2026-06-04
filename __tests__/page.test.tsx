@@ -1,10 +1,10 @@
-import { render } from '@testing-library/react'
-import Home from '../app/home/page'
-import '@testing-library/jest-dom'
-import { SettingsProvider } from '@/lib/components/global/settingsProvider';
+import { render } from "@testing-library/react";
+import Home from "../app/home/page";
+import "@testing-library/jest-dom";
+import { SettingsProvider } from "@/lib/components/global/settingsProvider";
 
-jest.mock('three', () => {
-  const originalThree = jest.requireActual('three');
+jest.mock("three", () => {
+  const originalThree = jest.requireActual("three");
   return {
     ...originalThree,
     WebGLRenderer: jest.fn().mockImplementation(() => ({
@@ -14,10 +14,11 @@ jest.mock('three', () => {
       setPixelRatio: jest.fn(),
       clear: jest.fn(),
       setClearColor: jest.fn(),
-      autoClear: false,          
+      autoClear: false,
       shadowMap: { enabled: false },
-      domElement: typeof document !== 'undefined' ? document.createElement('canvas') : {},
-    }))
+      domElement:
+        typeof document !== "undefined" ? document.createElement("canvas") : {},
+    })),
   };
 });
 
@@ -35,16 +36,17 @@ jest.mock("three/examples/jsm/libs/stats.module.js", () => {
   };
 });
 
-describe('Home Page', () => {
-  it('renders the hello world heading', () => {
+describe("Home Page", () => {
+  it("renders the hello world heading", () => {
     // ARRANGE: Render the component
     const { container } = render(
       <SettingsProvider>
         <Home />
-      </ SettingsProvider>);
+      </SettingsProvider>,
+    );
 
     // ACT: Look for the specific element
-    const canvas = container.querySelector('canvas');
+    const canvas = container.querySelector("canvas");
     expect(canvas).toBeInTheDocument();
-  })
-})
+  });
+});

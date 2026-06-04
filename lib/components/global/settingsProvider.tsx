@@ -3,10 +3,14 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "app-settings";
-const defaultSettings: { motionEnabled: boolean, statsEnabled: boolean, dotCount: number | null } = {
+const defaultSettings: {
+  motionEnabled: boolean;
+  statsEnabled: boolean;
+  dotCount: number | null;
+} = {
   motionEnabled: false,
   statsEnabled: false,
-  dotCount: null
+  dotCount: null,
 };
 
 type Settings = typeof defaultSettings;
@@ -19,7 +23,7 @@ type SettingsContextType = {
 
 const SettingsContext = createContext<SettingsContextType | null>(null);
 
-export function SettingsProvider({ children }: { children: React.ReactNode; }) {
+export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState(defaultSettings);
 
   // Intentionally set to ignore this rule as this is only run once on mount to hydrate localstorage,
@@ -46,12 +50,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode; }) {
     setSettings(defaultSettings);
   }
 
-  const memo = useMemo(() => ({ settings, setSettings, resetSettings }), [settings]);
+  const memo = useMemo(
+    () => ({ settings, setSettings, resetSettings }),
+    [settings],
+  );
 
   return (
-    <SettingsContext.Provider value={memo}>
-      {children}
-    </SettingsContext.Provider>
+    <SettingsContext.Provider value={memo}>{children}</SettingsContext.Provider>
   );
 }
 
