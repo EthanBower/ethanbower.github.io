@@ -41,7 +41,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     if (stored) {
       try {
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setSettings(JSON.parse(stored));
+        setSettings({
+          ...defaultSettings,
+          ...JSON.parse(stored),
+        });
       } catch {
         localStorage.removeItem(STORAGE_KEY);
       }

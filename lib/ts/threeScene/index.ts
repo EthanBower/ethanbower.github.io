@@ -23,7 +23,6 @@ export class SceneController {
   }
 
   public async init(canvasElm: HTMLDivElement): Promise<void> {
-    console.log("Initializing scene...");
     this.frontPage = new FrontPageAnimation(canvasElm);
     await this.frontPage.loadAssets();
     this.ready = true;
