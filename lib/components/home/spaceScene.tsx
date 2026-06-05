@@ -30,7 +30,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
     initLoading();
 
     return () => {
-      //pageScene.dispose();
+      // todo - dispose
     };
   }, []);
 
