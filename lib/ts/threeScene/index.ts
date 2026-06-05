@@ -230,6 +230,7 @@ export class FrontPageAnimation {
     return this.astroidScene.loadObjects();
   }
 
+  // todo - find a way to break this loop on error...
   public animatePage(): void {
     this.animationId = requestAnimationFrame(() => this.animatePage());
 
