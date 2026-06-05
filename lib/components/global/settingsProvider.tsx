@@ -3,14 +3,21 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "app-settings";
-const defaultSettings: {
+export const defaultSettings: {
   motionEnabled: boolean;
   statsEnabled: boolean;
   dotCount: number | null;
+  waveColors: number[];
 } = {
   motionEnabled: false,
   statsEnabled: false,
   dotCount: null,
+  waveColors: [
+    0x0e09dc,
+    0x8c2700,
+    0x00786e,
+    0xee3bcf
+  ]
 };
 
 type Settings = typeof defaultSettings;

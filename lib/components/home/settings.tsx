@@ -1,6 +1,6 @@
 "use client";
 
-import { useSettings } from "../global/settingsProvider";
+import { defaultSettings, useSettings } from "../global/settingsProvider";
 import PopupWindow from "../global/popupWindow";
 import Slider from "../utilities/slider";
 import { useState } from "react";
@@ -8,8 +8,18 @@ import { SceneController } from "@/lib/ts/threeScene";
 import ButtonToggle from "../utilities/buttonToggle";
 import GearIcon from "../icons/gear";
 import ResetArrowsIcon from "../icons/resetArrows";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { getAppVersion } from "../../ts/version";
+import SquareGradient from "../utilities/squareGradient";
+
+const WAVE_COLOR_PRESETS = [
+  { presetName: "Default Bark Space", colors: defaultSettings.waveColors },
+  { presetName: "Milky Bone Nebula", colors: [0xB22222, 0x3B0764, 0xF2A900, 0x111111] },
+  { presetName: "Event Howlizon", colors: [0x0E09DC, 0x4C1D95, 0xEC4899, 0x030712] },
+  { presetName: "Aurora Fetcher", colors: [0x00786E, 0x10B981, 0xFF8844, 0x061320] },
+  { presetName: "Space Squirrel Dust", colors: [0x1E293B, 0x334155, 0xE2E8F0, 0x0F172A] },
+  { presetName: "Gamma Ray Zoomies", colors: [0x4ade80, 0x2e1065, 0xfacc15, 0x022c22] }
+];
 
 type SettingsProps = Readonly<{
   isEnabled: boolean;
@@ -35,6 +45,13 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
     setSettings((s) => ({
       ...s,
       statsEnabled: !s.statsEnabled,
+    }));
+  }
+
+  function setWaveColor(colors: number[]) {
+    setSettings((s) => ({
+      ...s,
+      waveColors: colors,
     }));
   }
 
@@ -80,6 +97,18 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
           </p>
         </div>
         <Slider onChange={changeDotCount} value={currentDotCount} />
+      </div>
+      <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+        <div className="pb-[10px] text-center">
+          <p>
+            WAVE COLORS
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-4 text-center">
+          {WAVE_COLOR_PRESETS.map((item) => (
+            <SquareGradient key={item.presetName} presetName={item.presetName} colors={item.colors} onClick={setWaveColor} />
+          ))}
+        </div>
       </div>
     </PopupWindow>
   );

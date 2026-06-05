@@ -60,6 +60,14 @@ export class SceneController {
     this.frontPage?.setStatsEnable(showStats);
   }
 
+  public setWaveLighting(colors: number[]): void {
+    const lights = this.frontPage?.wavesScene.lights;
+    lights?.light1?.color.set(colors[0]);
+    lights?.light2?.color.set(colors[1]);
+    lights?.light3?.color.set(colors[2]);
+    lights?.light4?.color.set(colors[3]);
+  }
+
   public async dispose(): Promise<void> {
     await this.frontPage!.dispose();
     SceneController.instance = null;
@@ -941,7 +949,7 @@ class WavesScene extends Animatable {
   private frontPage: FrontPageAnimation;
   private simplexNoise: SimplexNoise.NoiseFunction4D;
   private planeMesh!: THREE.Mesh;
-  private lights: {
+  public lights: {
     light1: THREE.PointLight | null;
     light2: THREE.PointLight | null;
     light3: THREE.PointLight | null;

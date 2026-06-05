@@ -39,7 +39,7 @@ export default function Permissions({ isEnabled, onClose }: PermissionsProps) {
       isEnabled={isEnabled}
       onClose={onClose}
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 m-[5px] bg-black/25 p-3 rounded-xl">
         <span>{isPending ? "Activating..." : "Activate Motion"}</span>
         <ButtonToggle
           enabled={settings.motionEnabled}

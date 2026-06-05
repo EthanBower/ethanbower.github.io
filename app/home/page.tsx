@@ -12,6 +12,7 @@ import Header from "@/lib/components/home/header";
 import Gear from "@/lib/components/icons/gear";
 import HomeIcon from "@/lib/components/icons/home";
 import LoadingScreen from "@/lib/components/home/loadingScreen";
+import PlanetIcon from "@/lib/components/icons/planet";
 
 export default function Home() {
   const { settings } = useSettings();
@@ -34,7 +35,7 @@ export default function Home() {
     },
     {
       label: "Moon",
-      icon: "/planet.svg",
+      icon: <PlanetIcon />,
       onClick: () => {
         SceneController.getInstance().moveToMoon();
       },
