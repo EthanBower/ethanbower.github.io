@@ -70,6 +70,7 @@ export class SceneController {
   }
 
   public async dispose(): Promise<void> {
+    console.log("DISPOSING");
     await this.frontPage!.dispose();
     SceneController.instance = null;
   }
@@ -254,6 +255,7 @@ export class FrontPageAnimation {
   }
 
   public async dispose(): Promise<void> {
+    console.log("DISPOSING2");
     cancelAnimationFrame(this.animationId!);
 
     this.stats?.dom.remove();
