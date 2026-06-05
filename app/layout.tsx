@@ -15,6 +15,11 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: "Ethan Bower",
   description: "Portfolio Website Created by Ethan Bower",
+  other: {
+    'cache-control': 'no-cache, no-store, must-revalidate',
+    'pragma': 'no-cache',
+    'expires': '0'
+  }
 };
 
 export const viewport: Viewport = {
