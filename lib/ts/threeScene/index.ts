@@ -16,7 +16,7 @@ export class SceneController {
 
   static getInstance(): SceneController {
     if (!SceneController.instance) {
-      console.log("Creating instance");
+      console.log("Creating space scene instance...");
       SceneController.instance = new SceneController();
     }
     return SceneController.instance;

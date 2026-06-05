@@ -37,28 +37,6 @@ export default function RootLayout({
       lang="en"
       className={`${spaceGrotesk.className} ${geistSans.variable} h-full antialiased`}
     >
-      <head>
-        <Script
-          id="force-html-refresh"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                var DEPLOY_VERSION = 'v1.0.1'; 
-                var savedVersion = localStorage.getItem('app_version');
-                
-                if (savedVersion !== DEPLOY_VERSION) {
-                  localStorage.setItem('app_version', DEPLOY_VERSION);
-                  
-                  if (savedVersion) {
-                    window.location.reload(true);
-                  }
-                }
-              })();
-            `,
-          }}
-        />
-      </head>
       <body>
         <SettingsProvider>{children}</SettingsProvider>
       </body>
