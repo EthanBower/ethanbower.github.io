@@ -39,6 +39,7 @@ export default function RootLayout({
     >
       <head>
         <Script
+          id="force-html-refresh"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
