@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import { useState } from "react";
 
@@ -65,7 +64,7 @@ const itemVariants: Variants = {
 
 interface NavItem {
   label: string;
-  icon: React.ReactNode | string;
+  icon: React.ReactNode;
   onClick: () => void;
 }
 
@@ -147,18 +146,7 @@ function NavItem({ label, icon, onClick }: NavItem) {
           style={{ transform: "translateZ(0)" }}
           className="flex flex-col items-center gap-1 text-white/70 transition-colors"
         >
-          {typeof icon === "string" ? (
-            <Image
-              src={icon}
-              alt={label}
-              width={26}
-              height={26}
-              className="transition-transform duration-500 ease-out group-hover:rotate-180"
-              priority
-            />
-          ) : (
-            icon
-          )}
+          {icon}
         </motion.button>
       </motion.div>
     </div>

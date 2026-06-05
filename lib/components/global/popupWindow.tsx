@@ -120,32 +120,24 @@ function WindowContent({
           initial="initial"
           animate="enter"
           exit="exit"
-          whileHover={{
-            scale: 1.005,
-            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
-          }}
-          whileDrag={{
-            scale: 1.03,
-            cursor: "grabbing",
-            boxShadow: "0 35px 60px -15px rgba(0, 0, 0, 0.8)",
-          }}
-          whileTap={{ scale: 0.995 }}
         >
-          <div
-            className="cursor-grab active:cursor-grabbing flex items-center gap-4 p-4 pb-2"
-            onPointerDown={(e) => dragControls.start(e)}
-          >
-            {windowIcon}
-            <div className="flex flex-col text-left">
-              <h3 className="text-sm font-semibold text-white font-mono flex items-center gap-1">
-                <Typewriter text={windowTitle} />
-              </h3>
-              <TextScramble
-                text={windowTitleDescription}
-                className="text-xs text-white/50 mt-0.5"
-              />
+          <motion.div whileDrag={{ cursor: "grabbing" }} >
+            <div
+              className="cursor-grab active:cursor-grabbing flex items-center gap-4 p-4 pb-2"
+              onPointerDown={(e) => dragControls.start(e)}
+            >
+              {windowIcon}
+              <div className="flex flex-col text-left">
+                <h3 className="text-sm font-semibold text-white font-mono flex items-center gap-1">
+                  <Typewriter text={windowTitle} />
+                </h3>
+                <TextScramble
+                  text={windowTitleDescription}
+                  className="text-xs text-white/50 mt-0.5"
+                />
+              </div>
             </div>
-          </div>
+          </motion.div>
           <DashedSeparator />
           <motion.div
             initial={{ opacity: 0, y: 5 }}

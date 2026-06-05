@@ -49,5 +49,10 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
     SceneController.getInstance().changeDotSpawnCount(settings.dotCount);
   }, [settings.dotCount]);
 
+  useEffect(() => {
+    if (settings.waveColors === null) return;
+    SceneController.getInstance().setWaveLighting(settings.waveColors);
+  }, [settings.waveColors]);
+
   return <div ref={threeJsRef} id="three-root" className="w-full h-full z-0" />;
 }
