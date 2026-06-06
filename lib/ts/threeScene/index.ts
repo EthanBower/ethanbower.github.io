@@ -68,6 +68,10 @@ export class SceneController {
     lights?.light4?.color.set(colors[3]);
   }
 
+  public setPerformance(performanceNumber: number) {
+    this.frontPage?.frontPageRenderer.setPixelRatio(performanceNumber);
+  }
+
   public async dispose(): Promise<void> {
     await this.frontPage!.dispose();
     SceneController.instance = null;
@@ -490,17 +494,15 @@ class Canvas {
     this.width = this.canvasElm!.clientWidth;
     this.height = this.canvasElm!.clientHeight;
 
-    this.frontPage.frontPageRenderer.resetRendererWindowSize(
-      this.width,
-      this.height,
-    );
+    this.frontPage.frontPageRenderer.renderer.setSize(this.width, this.height);
+    this.frontPage.frontPageRenderer.setPixelRatio();
     this.frontPage.mainCamera.resetCameraAspectRatio(this.width, this.height);
   };
 
   public getViewableRectangle(distanceFromCamera: number): Array<number> {
     const verticalFOV = THREE.MathUtils.degToRad(
       this.frontPage.mainCamera.camera.fov,
-    ); //Vertical FOV
+    );
     const vHeight =
       2 * Math.tan(verticalFOV / 2) * Math.abs(distanceFromCamera); //Visible height, old 75
     const vWidth = vHeight * this.frontPage.mainCamera.camera.aspect; //Visible width
@@ -520,9 +522,8 @@ class FrontPageRenderer {
     this.renderer.setClearColor(globals.threeJsBackgroundColor, 1);
   }
 
-  public resetRendererWindowSize(width: number, height: number) {
-    this.frontPage.frontPageRenderer.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  public setPixelRatio(pixelRatio = 0.8) {
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatio));
   }
 
   public render() {
@@ -538,7 +539,6 @@ class FrontPageRenderer {
     this.renderer.domElement.remove();
     const gl = this.renderer.getContext();
 
-    // 4. HARD context kill (this is what you're missing)
     if (gl) {
       const ext = gl.getExtension("WEBGL_lose_context");
       if (ext) {
@@ -560,7 +560,7 @@ class DotsScene extends Animatable {
   constructor(frontPage: FrontPageAnimation) {
     super();
     this.frontPage = frontPage;
-    this.maxLineCount = 200;
+    this.maxLineCount = 150;
     this.dotCount = this.calcDotCount();
     this.spawnDots(this.dotCount);
     this.initMouseDot();
@@ -979,17 +979,18 @@ class WavesScene extends Animatable {
     this.simplexNoise = SimplexNoise.createNoise4D();
     this.initLighting();
     this.initPlane();
+    this.registerTick(35, () => {
+      this.updatePlane();
+      this.updateLights(
+        this.lights.light1!,
+        this.lights.light2!,
+        this.lights.light3!,
+        this.lights.light4!,
+      );
+    });
   }
 
-  override update(): void {
-    this.updatePlane();
-    this.updateLights(
-      this.lights.light1!,
-      this.lights.light2!,
-      this.lights.light3!,
-      this.lights.light4!,
-    );
-  }
+  override update(): void {}
 
   override onDispose(): void {
     Utils.disposeMesh(this.planeMesh, this.frontPage.frontPageScene.scene);
@@ -1105,7 +1106,6 @@ class WavesScene extends Animatable {
     );
     this.planeMesh.rotation.x = -Math.PI / 2 - 0.2;
     this.planeMesh.position.y = -25;
-
     this.frontPage.frontPageScene.wavesGroup.add(this.planeMesh);
   }
 

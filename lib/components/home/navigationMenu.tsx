@@ -122,7 +122,7 @@ function NavItem({ label, icon, onClick }: NavItem) {
 
   return (
     <div
-      className="relative flex flex-col items-center"
+      className="d-block relative flex flex-col items-center"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -144,7 +144,7 @@ function NavItem({ label, icon, onClick }: NavItem) {
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 400, damping: 18 }}
           style={{ transform: "translateZ(0)" }}
-          className="flex flex-col items-center gap-1 text-white/70 transition-colors"
+          className="flex flex-col items-center gap-1 text-white/70 transition-colors cursor-pointer"
         >
           {icon}
         </motion.button>

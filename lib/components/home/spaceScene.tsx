@@ -3,6 +3,7 @@
 import { SceneController } from "@/lib/ts/threeScene";
 import { useEffect, useRef } from "react";
 import { useSettings } from "../global/settingsProvider";
+import { AppPermissions } from "@/lib/ts/appPermissions";
 
 type SpaceSceneProps = Readonly<{
   onLoadingComplete: () => void;
@@ -40,7 +41,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
   }, [settings.statsEnabled]);
 
   useEffect(() => {
-    if (!settings.motionEnabled !== true) return;
+    if (!settings.motionEnabled !== true && AppPermissions.gyroPermissions.gyroCompatible) return;
     SceneController.getInstance().initGyro();
   }, [settings.motionEnabled]);
 
@@ -50,9 +51,12 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
   }, [settings.dotCount]);
 
   useEffect(() => {
-    if (settings.waveColors === null) return;
     SceneController.getInstance().setWaveLighting(settings.waveColors);
   }, [settings.waveColors]);
+
+  useEffect(() => {
+    SceneController.getInstance().setPerformance(settings.performance);
+  }, [settings.performance]);
 
   return <div ref={threeJsRef} id="three-root" className="w-full h-full z-0" />;
 }

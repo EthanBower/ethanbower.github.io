@@ -7,11 +7,13 @@ export const defaultSettings: {
   motionEnabled: boolean;
   statsEnabled: boolean;
   dotCount: number | null;
+  performance: number;
   waveColors: number[];
 } = {
   motionEnabled: false,
   statsEnabled: false,
   dotCount: null,
+  performance: 0.65,
   waveColors: [
     0x0e09dc,
     0x8c2700,

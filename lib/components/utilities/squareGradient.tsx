@@ -2,7 +2,7 @@ import { motion, Variants } from "framer-motion";
 
 const dynamicSquareVariants: Variants = {
     hover: {
-        scale: 1.15,
+        scale: 1.1,
         boxShadow: "0px 0px 20px rgba(157, 157, 157, 0.5)",
         transition: {
             type: "spring",
@@ -39,7 +39,9 @@ export default function SquareGradient({ presetName, colors, onClick }: SquareGr
             }}
             onClick={() => { onClick(colors) }}
         >
-            {presetName}
+            <span className="p-2 bg-black/20 rounded-md">
+                {presetName}
+            </span>
         </motion.div>
     );
 }
