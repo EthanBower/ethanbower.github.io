@@ -147,7 +147,7 @@ function WindowContent({
                   whileHover="hover"
                   whileTap="hover"
                   onClick={onClose}
-                  className="popup-button-red !rounded-none !rounded-tr-xl !rounded-bl-xl !m-0 !p-3 h-full flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+                  className="popup-button-red !rounded-none !rounded-tr-xl !rounded-bl-xl !m-0 !p-3 h-full max-h-[80px] flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
                 >
                   <ExitIcon />
                   <span>Exit</span>
