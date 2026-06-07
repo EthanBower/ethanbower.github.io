@@ -26,9 +26,9 @@ const WAVE_COLOR_PRESETS = [
 ];
 
 const PERFORMANCE_SETTINGS_PRESETS = [
-  { presetName: "Star Ultra", performance: 2, icon: <RocketIcon /> },
+  { presetName: "Star-Ultra", performance: 2, icon: <RocketIcon /> },
   { presetName: "Sky-High", performance: 1, icon: <SatelliteIcon /> },
-  { presetName: "Earthbound Low", performance: defaultSettings.performance, icon: <TelescopeIcon /> },
+  { presetName: "Earthbound-Low", performance: defaultSettings.performance, icon: <TelescopeIcon /> },
 ];
 
 type SettingsProps = Readonly<{
@@ -81,29 +81,6 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
       isEnabled={isEnabled}
       onClose={onClose}
     >
-      <div className="flex m-[5px] gap-2 items-center justify-center bg-black/25 p-3 rounded-xl">
-        <div className="flex-1">
-          <div className="flex items-center justify-center gap-2">
-            <span>Statistics {settings.statsEnabled ? "ON" : "OFF"}</span>
-            <ButtonToggle
-              enabled={settings.statsEnabled}
-              onChange={toggleStats}
-            />
-          </div>
-        </div>
-        <div className="self-stretch w-[1px] rounded-xl bg-gray-300/30" />
-        <motion.button
-          whileHover="hover"
-          whileTap="hover"
-          onClick={resetSettings}
-          className="popup-button-blue m-[4px] flex-1 cursor-pointer"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <ResetArrowsIcon />
-            <span>Reset Cache</span>
-          </div>
-        </motion.button>
-      </div>
       <div className="m-[5px] bg-black/25 p-3 rounded-xl">
         <div className="pb-[10px] text-center">
           <p>
@@ -130,13 +107,43 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
       <div className="m-[5px] bg-black/25 p-3 rounded-xl">
         <div className="pb-[10px] text-center">
           <p>
-            PERFORMANCE
+            GRAPHICS
           </p>
         </div>
         <div className="flex gap-4 justify-center">
           {PERFORMANCE_SETTINGS_PRESETS.map((item) => (
             <PerformanceButton key={item.presetName} presetName={item.presetName} performanceNumber={item.performance} icon={item.icon} onClick={setPerformance} />
           ))}
+        </div>
+      </div>
+      <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+        <div className="pb-[10px] text-center">
+          <p>
+            DEBUG
+          </p>
+        </div>
+        <div className="flex gap-2 items-center justify-center">
+          <div className="flex-1">
+            <div className="flex items-center justify-center gap-2">
+              <span>Statistics {settings.statsEnabled ? "ON" : "OFF"}</span>
+              <ButtonToggle
+                enabled={settings.statsEnabled}
+                onChange={toggleStats}
+              />
+            </div>
+          </div>
+          <div className="self-stretch w-[1px] rounded-xl bg-gray-300/30" />
+          <motion.button
+            whileHover="hover"
+            whileTap="hover"
+            onClick={resetSettings}
+            className="popup-button-blue m-[4px] flex-1"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <ResetArrowsIcon />
+              <span>Reset Cache</span>
+            </div>
+          </motion.button>
         </div>
       </div>
     </PopupWindow>

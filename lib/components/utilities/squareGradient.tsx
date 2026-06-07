@@ -30,7 +30,7 @@ export default function SquareGradient({ presetName, colors, onClick }: SquareGr
 
     return (
         <motion.div
-            className="p-5 rounded-lg rounded-2xl border-white/40 border-1"
+            className="p-5 rounded-lg rounded-2xl border-white/40 border-1 cursor-pointer"
             variants={dynamicSquareVariants}
             whileHover="hover"
             whileTap="tap"

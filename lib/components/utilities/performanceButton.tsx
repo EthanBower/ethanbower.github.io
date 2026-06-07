@@ -16,9 +16,8 @@ export default function PerformanceButton({ presetName, performanceNumber, icon,
         <motion.button
             onClick={() => onClick(performanceNumber)}
             className={`
-                popup-button-blue relative overflow-hidden rounded-xl p-4
-                border transition-all duration-300 w-26! p-3!
-                flex flex-col text-center items-center justify-center
+                popup-button-blue p-4 w-26! p-3!
+                flex flex-col items-center justify-center
                 ${settings.performance === performanceNumber ? "!bg-cyan-700/50 !border-cyan-400/60" : ""}
             `}
             whileHover="hover"

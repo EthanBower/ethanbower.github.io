@@ -44,7 +44,7 @@ body {
 }
 
 .popup-window {
-  @apply p-[10px] m-[5px] pointer-events-auto border rounded-[24px] text-white select-none blur-[5px] backdrop-blur-[3px];
+  @apply pointer-events-auto border rounded-xl text-white select-none blur-[5px] backdrop-blur-[3px] shadow-2xl flex flex-col overflow-hidden;
   border-color: rgba(255, 255, 255, 0.12);
   background:
     radial-gradient(120% 120% at 50% 0, #ff00000d, #ff00000f),
@@ -61,7 +61,7 @@ body {
 .popup-button-red,
 .popup-button-green,
 .popup-button-blue {
-  @apply w-full mt-[5px] mb-[5px] px-[4px] py-[6px] rounded-xl border transition-all duration-300;
+  @apply w-full mt-[5px] mb-[5px] px-[4px] py-[6px] rounded-xl border transition-all duration-300 cursor-pointer;
 }
 
 .popup-button-red {
