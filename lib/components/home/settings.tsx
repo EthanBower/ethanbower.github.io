@@ -9,12 +9,12 @@ import ButtonToggle from "../utilities/buttonToggle";
 import GearIcon from "../icons/gear";
 import ResetArrowsIcon from "../icons/resetArrows";
 import { motion } from "framer-motion";
-import { getAppVersion } from "../../ts/version";
 import SquareGradient from "../utilities/squareGradient";
 import PerformanceButton from "../utilities/performanceButton";
 import RocketIcon from "../icons/rocket";
 import SatelliteIcon from "../icons/satellite";
 import TelescopeIcon from "../icons/telescope";
+import Version from "../utilities/version";
 
 const WAVE_COLOR_PRESETS = [
   { presetName: "Default Bark Space", colors: defaultSettings.waveColors },
@@ -77,7 +77,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
     <PopupWindow
       windowIcon={<GearIcon />}
       windowTitle="SETTINGS"
-      windowTitleDescription={`App Version: ${getAppVersion()}`}
+      windowTitleDescription={`App Version: ${Version()}`}
       isEnabled={isEnabled}
       onClose={onClose}
     >
