@@ -568,13 +568,22 @@ class DotsScene extends Animatable {
     this.spawnDots(this.dotCount);
     this.initMouseDot();
     this.initLinePool();
+
+    // Compute how far apart each dot is relative to each other.
+    // This is done at a slow pace as it is not necessary for slow moving objects.
+    this.registerTick(250, () => {
+      this.rebuildSpatialGrid();
+    });
+
+    // Clear lines and then draw them based on current spatial grid.
     this.registerTick(45, () => {
       this.resetLines();
-      this.rebuildSpatialGrid();
       for (const dot of this.dots) {
         this.connectDotsWithLines(dot);
       }
     });
+
+    // Connect lines with mouse, meant to be fast and responsive.
     this.registerTick(10, () => {
       this.connectDotsWithLines(this.mouseDot);
     });
@@ -693,7 +702,6 @@ class DotsScene extends Animatable {
     for (const dot of this.dots) {
       const pos = dot.dotMesh.position;
       const cellKeys = this.getSpatialGridCellKey(pos.x, pos.y, pos.z);
-
       let bucket = this.dotSpatialGrid.get(cellKeys.cellKeyName);
 
       if (!bucket) {
