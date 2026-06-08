@@ -54,7 +54,7 @@ export default function TextScramble({
   return (
     <span className="relative inline-block">
       {/* The invisible text is used to prevent layout shifts during scrambling */}
-      <span className="invisible">{text}</span>
+      <span className={`invisible font-mono tracking-wide ${className}`}>{text}</span>
       <motion.span
         className={`absolute inset-0 font-mono tracking-wide ${className}`}
         initial={{ opacity: 0 }}

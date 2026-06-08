@@ -102,10 +102,12 @@ function WindowContent({
   return (
     <div
       ref={windowRef}
-      className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
+      className="absolute inset-0 flex items-center justify-center pointer-events-none"
     >
       <motion.div
-        className="z-10 pointer-events-auto select-none"
+        className="z-10 pointer-events-auto select-none flex flex-col 
+          justify-center w-[100vw] h-[100vh] 
+          sm:justify-normal sm:w-auto sm:h-auto sm:max-w-[90vw] sm:max-h-[min(90vh,900px)]"
         drag
         dragListener={false}
         dragControls={dragControls}
@@ -115,7 +117,7 @@ function WindowContent({
       >
         <motion.div
           layout
-          className="popup-window shadow-2xl backdrop-blur-md overflow-hidden rounded-xl border border-white/10"
+          className="popup-window"
           variants={windowVariants}
           initial="initial"
           animate="enter"
@@ -123,39 +125,45 @@ function WindowContent({
         >
           <motion.div whileDrag={{ cursor: "grabbing" }} >
             <div
-              className="cursor-grab active:cursor-grabbing flex items-center gap-4 p-4 pb-2"
+              className="cursor-grab active:cursor-grabbing flex gap-4"
               onPointerDown={(e) => dragControls.start(e)}
             >
-              {windowIcon}
-              <div className="flex flex-col text-left">
-                <h3 className="text-sm font-semibold text-white font-mono flex items-center gap-1">
-                  <Typewriter text={windowTitle} />
-                </h3>
-                <TextScramble
-                  text={windowTitleDescription}
-                  className="text-xs text-white/50 mt-0.5"
-                />
+              <div className="flex self-center mt-3 ml-4 gap-4">
+                <div className="flex items-center">
+                  {windowIcon}
+                </div>
+                <div className="flex flex-col flex-1 text-left justify-center">
+                  <h3 className="text-sm font-semibold text-white font-mono">
+                    <Typewriter text={windowTitle} />
+                  </h3>
+                  <TextScramble
+                    text={windowTitleDescription}
+                    className="text-xs text-white/50 mt-0.5"
+                  />
+                </div>
+              </div>
+              <div className="flex self-stretch ml-auto">
+                <motion.button
+                  whileHover="hover"
+                  whileTap="hover"
+                  onClick={onClose}
+                  className="popup-button-red !rounded-none !rounded-tr-xl !rounded-bl-xl !m-0 !p-3 h-full max-h-[80px] flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+                >
+                  <ExitIcon />
+                  <span>Exit</span>
+                </motion.button>
               </div>
             </div>
           </motion.div>
           <DashedSeparator />
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.3 }}
-          >
-            {children}
-          </motion.div>
-          <div className="p-2">
-            <motion.button
-              whileHover="hover"
-              whileTap="hover"
-              onClick={onClose}
-              className="popup-button-red w-full flex items-center justify-center gap-2 cursor-pointer transition-transform"
+          <div className="flex-1 overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.3 }}
             >
-              <ExitIcon />
-              <span>Exit Window</span>
-            </motion.button>
+              {children}
+            </motion.div>
           </div>
         </motion.div>
       </motion.div>

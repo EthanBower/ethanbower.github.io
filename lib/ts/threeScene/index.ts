@@ -68,6 +68,10 @@ export class SceneController {
     lights?.light4?.color.set(colors[3]);
   }
 
+  public setPerformance(performanceNumber: number) {
+    this.frontPage?.frontPageRenderer.setPixelRatio(performanceNumber);
+  }
+
   public async dispose(): Promise<void> {
     await this.frontPage!.dispose();
     SceneController.instance = null;
@@ -490,17 +494,15 @@ class Canvas {
     this.width = this.canvasElm!.clientWidth;
     this.height = this.canvasElm!.clientHeight;
 
-    this.frontPage.frontPageRenderer.resetRendererWindowSize(
-      this.width,
-      this.height,
-    );
+    this.frontPage.frontPageRenderer.renderer.setSize(this.width, this.height);
+    this.frontPage.frontPageRenderer.setPixelRatio();
     this.frontPage.mainCamera.resetCameraAspectRatio(this.width, this.height);
   };
 
   public getViewableRectangle(distanceFromCamera: number): Array<number> {
     const verticalFOV = THREE.MathUtils.degToRad(
       this.frontPage.mainCamera.camera.fov,
-    ); //Vertical FOV
+    );
     const vHeight =
       2 * Math.tan(verticalFOV / 2) * Math.abs(distanceFromCamera); //Visible height, old 75
     const vWidth = vHeight * this.frontPage.mainCamera.camera.aspect; //Visible width
@@ -520,9 +522,8 @@ class FrontPageRenderer {
     this.renderer.setClearColor(globals.threeJsBackgroundColor, 1);
   }
 
-  public resetRendererWindowSize(width: number, height: number) {
-    this.frontPage.frontPageRenderer.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  public setPixelRatio(pixelRatio = 0.8) {
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatio));
   }
 
   public render() {
@@ -538,7 +539,6 @@ class FrontPageRenderer {
     this.renderer.domElement.remove();
     const gl = this.renderer.getContext();
 
-    // 4. HARD context kill (this is what you're missing)
     if (gl) {
       const ext = gl.getExtension("WEBGL_lose_context");
       if (ext) {
@@ -551,26 +551,39 @@ class FrontPageRenderer {
 class DotsScene extends Animatable {
   private frontPage: FrontPageAnimation;
   public dotCount: number;
-  private maxLineCount: number;
+  private maxLineCount = 150;
   private activeLineCount = 0;
   private linePool: THREE.Line[] = [];
   public dots: Array<Dot> = [];
   public mouseDot!: MouseDot;
+  private nextDotId = 0;
+  private dotSpatialGrid = new Map<string, Dot[]>();
+  private readonly dotCellSize = 25;
+  private readonly dotCellSizeSquared = this.dotCellSize * this.dotCellSize;
 
   constructor(frontPage: FrontPageAnimation) {
     super();
     this.frontPage = frontPage;
-    this.maxLineCount = 200;
     this.dotCount = this.calcDotCount();
     this.spawnDots(this.dotCount);
     this.initMouseDot();
     this.initLinePool();
-    this.registerTick(20, () => {
+
+    // Compute how far apart each dot is relative to each other.
+    // This is done at a slow pace as it is not necessary for slow moving objects.
+    this.registerTick(250, () => {
+      this.rebuildSpatialGrid();
+    });
+
+    // Clear lines and then draw them based on current spatial grid.
+    this.registerTick(45, () => {
       this.resetLines();
       for (const dot of this.dots) {
         this.connectDotsWithLines(dot);
       }
     });
+
+    // Connect lines with mouse, meant to be fast and responsive.
     this.registerTick(10, () => {
       this.connectDotsWithLines(this.mouseDot);
     });
@@ -591,17 +604,16 @@ class DotsScene extends Animatable {
   }
 
   public connectDotsWithLines(dot: Dot): void {
-    for (const dotToMaybeConnect of this.dots) {
-      if (dot.id == dotToMaybeConnect.id) {
+    for (const nearbyDot of this.getNearbyDots(dot)) {
+      if (dot.id >= nearbyDot.id) {
         continue;
       }
 
       const distanceSq = dot.dotMesh.position.distanceToSquared(
-        dotToMaybeConnect.dotMesh.position,
+        nearbyDot.dotMesh.position,
       );
-      const maxDistanceSq = dot.connectableRadius * dot.connectableRadius;
 
-      if (distanceSq > maxDistanceSq) {
+      if (distanceSq > this.dotCellSizeSquared) {
         continue;
       }
 
@@ -620,16 +632,16 @@ class DotsScene extends Animatable {
       positions[0] = dot.dotMesh.position.x;
       positions[1] = dot.dotMesh.position.y;
       positions[2] = dot.dotMesh.position.z;
-      positions[3] = dotToMaybeConnect.dotMesh.position.x;
-      positions[4] = dotToMaybeConnect.dotMesh.position.y;
-      positions[5] = dotToMaybeConnect.dotMesh.position.z;
+      positions[3] = nearbyDot.dotMesh.position.x;
+      positions[4] = nearbyDot.dotMesh.position.y;
+      positions[5] = nearbyDot.dotMesh.position.z;
       line.geometry.attributes.position.needsUpdate = true;
 
       // Update opacity
-      const distanceAlpha = 1 - Math.sqrt(distanceSq) / dot.connectableRadius;
+      const distanceAlpha = 1 - Math.sqrt(distanceSq) / this.dotCellSize;
       const dotOpacityAlpha = Math.min(
         dot.material.opacity,
-        dotToMaybeConnect.material.opacity,
+        nearbyDot.material.opacity,
       );
 
       (line.material as THREE.LineBasicMaterial).opacity =
@@ -660,6 +672,64 @@ class DotsScene extends Animatable {
     }
 
     this.dotCount = targetCount;
+  }
+
+  private getNearbyDots(dot: Dot): Dot[] {
+    const pos = dot.dotMesh.position;
+    const cellKeys = this.getSpatialGridCellKey(pos.x, pos.y, pos.z);
+    const nearby: Dot[] = [];
+
+    for (let x = cellKeys.x - 1; x <= cellKeys.x + 1; x++) {
+      for (let y = cellKeys.y - 1; y <= cellKeys.y + 1; y++) {
+        for (let z = cellKeys.z - 1; z <= cellKeys.z + 1; z++) {
+          const bucket = this.dotSpatialGrid.get(`${x},${y},${z}`);
+
+          if (!bucket) {
+            continue;
+          }
+
+          nearby.push(...bucket);
+        }
+      }
+    }
+
+    return nearby;
+  }
+
+  private rebuildSpatialGrid(): void {
+    this.dotSpatialGrid.clear();
+
+    for (const dot of this.dots) {
+      const pos = dot.dotMesh.position;
+      const cellKeys = this.getSpatialGridCellKey(pos.x, pos.y, pos.z);
+      let bucket = this.dotSpatialGrid.get(cellKeys.cellKeyName);
+
+      if (!bucket) {
+        bucket = [];
+        this.dotSpatialGrid.set(cellKeys.cellKeyName, bucket);
+      }
+
+      bucket.push(dot);
+    }
+  }
+
+  private getSpatialGridCellKey(
+    x: number,
+    y: number,
+    z: number,
+  ): { cellKeyName: string; x: number; y: number; z: number } {
+    const [xCell, yCell, zCell] = [
+      Math.floor(x / this.dotCellSize),
+      Math.floor(y / this.dotCellSize),
+      Math.floor(z / this.dotCellSize),
+    ];
+
+    return {
+      x: xCell,
+      y: yCell,
+      z: zCell,
+      cellKeyName: `${xCell},${yCell},${zCell}`,
+    };
   }
 
   private calcDotCount(): number {
@@ -710,7 +780,7 @@ class DotsScene extends Animatable {
         Utils.getRandomBetween(-dims.halfHeight, dims.halfHeight),
         z,
       );
-      const dot = new Dot(dotPosition, this.frontPage);
+      const dot = new Dot(dotPosition, this.nextDotId++, this.frontPage);
 
       this.dots.push(dot);
       this.frontPage.frontPageScene.dotsGroup.add(dot.dotMesh);
@@ -732,8 +802,7 @@ class DotsScene extends Animatable {
 
 class Dot extends Disposable {
   public dotRadius: number;
-  public connectableRadius: number;
-  public id: string;
+  public id: number;
   public dotMesh: THREE.Mesh;
   public velocity: THREE.Vector3;
   public material: THREE.MeshBasicMaterial;
@@ -751,11 +820,14 @@ class Dot extends Disposable {
   };
   protected frontPage: FrontPageAnimation;
 
-  constructor(dotPos: THREE.Vector3, frontPage: FrontPageAnimation) {
+  constructor(
+    dotPos: THREE.Vector3,
+    indexId: number,
+    frontPage: FrontPageAnimation,
+  ) {
     super();
     this.dotRadius = 0.35;
-    this.connectableRadius = 25;
-    this.id = crypto.randomUUID();
+    this.id = indexId;
 
     this.material = new THREE.MeshBasicMaterial({
       color: globals.dotSettings.dotColorGradient.near,
@@ -979,17 +1051,18 @@ class WavesScene extends Animatable {
     this.simplexNoise = SimplexNoise.createNoise4D();
     this.initLighting();
     this.initPlane();
+    this.registerTick(35, () => {
+      this.updatePlane();
+      this.updateLights(
+        this.lights.light1!,
+        this.lights.light2!,
+        this.lights.light3!,
+        this.lights.light4!,
+      );
+    });
   }
 
-  override update(): void {
-    this.updatePlane();
-    this.updateLights(
-      this.lights.light1!,
-      this.lights.light2!,
-      this.lights.light3!,
-      this.lights.light4!,
-    );
-  }
+  override update(): void {}
 
   override onDispose(): void {
     Utils.disposeMesh(this.planeMesh, this.frontPage.frontPageScene.scene);
@@ -1105,7 +1178,6 @@ class WavesScene extends Animatable {
     );
     this.planeMesh.rotation.x = -Math.PI / 2 - 0.2;
     this.planeMesh.position.y = -25;
-
     this.frontPage.frontPageScene.wavesGroup.add(this.planeMesh);
   }
 
@@ -1147,9 +1219,8 @@ class MouseDot extends Dot {
   private rendererDom: HTMLCanvasElement;
 
   constructor(frontPage: FrontPageAnimation, zBuffer = -70) {
-    super(new THREE.Vector3(0, 0, zBuffer), frontPage);
+    super(new THREE.Vector3(0, 0, zBuffer), 1, frontPage);
     this.zBuffer = zBuffer;
-    this.connectableRadius = 35;
     (this.dotMesh.material as THREE.Material).opacity = 1;
     (this.dotMesh.material as THREE.Material).transparent = true;
     this.dotMesh.visible = false;
