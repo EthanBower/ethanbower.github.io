@@ -697,20 +697,22 @@ class DotsScene extends Animatable {
   }
 
   private rebuildSpatialGrid(): void {
-    this.dotSpatialGrid.clear();
+    const newSpatialGrid = new Map<string, Dot[]>();
 
     for (const dot of this.dots) {
       const pos = dot.dotMesh.position;
       const cellKeys = this.getSpatialGridCellKey(pos.x, pos.y, pos.z);
-      let bucket = this.dotSpatialGrid.get(cellKeys.cellKeyName);
+      let bucket = newSpatialGrid.get(cellKeys.cellKeyName);
 
       if (!bucket) {
         bucket = [];
-        this.dotSpatialGrid.set(cellKeys.cellKeyName, bucket);
+        newSpatialGrid.set(cellKeys.cellKeyName, bucket);
       }
 
       bucket.push(dot);
     }
+
+    this.dotSpatialGrid = newSpatialGrid;
   }
 
   private getSpatialGridCellKey(

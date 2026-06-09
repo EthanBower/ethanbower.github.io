@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Space_Grotesk } from "next/font/google";
 import { SettingsProvider } from "@/lib/components/global/settingsProvider";
 import "./globals.css";
-import Script from "next/script";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],

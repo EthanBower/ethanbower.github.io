@@ -28,10 +28,11 @@ export default function ExitIcon() {
         strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
+        initial={{ opacity: 1 }}
         variants={{
           hover: {
-            scale: 0.97,
-            opacity: 0.8,
+            scale: 0.93,
+            opacity: 0.6,
           },
         }}
         transition={{
@@ -50,12 +51,12 @@ export default function ExitIcon() {
         strokeLinecap="round"
         variants={{
           hover: {
-            x: 2,
+            x: 4,
           },
         }}
         transition={{
           type: "spring",
-          stiffness: 400,
+          stiffness: 600,
           damping: 18,
         }}
       />
@@ -67,7 +68,6 @@ export default function ExitIcon() {
         strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
-        filter="url(#glow)"
         variants={{
           hover: {
             x: 4,
@@ -78,33 +78,6 @@ export default function ExitIcon() {
           type: "spring",
           stiffness: 500,
           damping: 16,
-        }}
-      />
-
-      {/* Exit trail */}
-      <motion.line
-        x1="16"
-        y1="12"
-        x2="21"
-        y2="12"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        initial={{
-          opacity: 0,
-          scaleX: 0,
-        }}
-        variants={{
-          hover: {
-            opacity: [0, 1, 0],
-            scaleX: [0, 1, 1.3],
-          },
-        }}
-        transition={{
-          duration: 0.4,
-        }}
-        style={{
-          transformOrigin: "left center",
         }}
       />
     </svg>

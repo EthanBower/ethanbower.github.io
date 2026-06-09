@@ -102,11 +102,11 @@ function WindowContent({
   return (
     <div
       ref={windowRef}
-      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+      className="absolute inset-0 flex items-center justify-center pointer-events-none w-[100dvw] h-[100dvh]"
     >
       <motion.div
         className="z-10 pointer-events-auto select-none flex flex-col 
-          justify-center w-[100vw] h-[100vh] 
+          justify-center w-[inherit] h-[inherit]
           sm:justify-normal sm:w-auto sm:h-auto sm:max-w-[90vw] sm:max-h-[min(90vh,900px)]"
         drag
         dragListener={false}
@@ -147,7 +147,7 @@ function WindowContent({
                   whileHover="hover"
                   whileTap="hover"
                   onClick={onClose}
-                  className="popup-button-red !rounded-none !rounded-tr-xl !rounded-bl-xl !m-0 !p-3 h-full max-h-[80px] flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+                  className="popup-button-red !rounded-none !rounded-tr-xl !rounded-bl-xl !m-0 !p-1.5 h-full max-h-[80px] leading-none flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
                 >
                   <ExitIcon />
                   <span>Exit</span>
