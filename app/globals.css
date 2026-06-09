@@ -44,8 +44,7 @@ body {
 }
 
 .popup-window {
-  @apply pointer-events-auto border rounded-xl text-white select-none blur-[5px] backdrop-blur-[3px] shadow-2xl flex flex-col overflow-hidden;
-  border-color: rgba(255, 255, 255, 0.12);
+  @apply pointer-events-auto border !border-1 !border-white/10 rounded-2xl text-white select-none shadow-2xl flex flex-col overflow-hidden;
   background:
     radial-gradient(120% 120% at 50% 0, #ff00000d, #ff00000f),
     linear-gradient(
@@ -56,6 +55,10 @@ body {
       #3903804a 82.77%,
       #4b007ed6
     );
+}
+
+.glass {
+  @apply backdrop-blur-[6px] backdrop-saturate-180 bg-white/20 dark:bg-black/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.15),inset_0_1px_1px_0_rgba(255,255,255,0.3)];
 }
 
 .popup-button-red,

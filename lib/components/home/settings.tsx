@@ -75,7 +75,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
   // todo - in dot density section, make a 'warning' banner with yellow/orange background that has slanted stripes (like a construction sign) that says "Increasing dot density may impact performance on some devices" or something like that. Make it so that the warning only appears if the user has set the dot density above a certain number (maybe 1500 or 2000?).
   return (
     <PopupWindow
-      windowIcon={<GearIcon />}
+      windowIcon={<GearIcon className="cursor-pointer text-gray-300" />}
       windowTitle="SETTINGS"
       windowTitleDescription={`App Version: ${Version()}`}
       isEnabled={isEnabled}

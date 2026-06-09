@@ -117,7 +117,7 @@ function WindowContent({
       >
         <motion.div
           layout
-          className="popup-window"
+          className="popup-window glass"
           variants={windowVariants}
           initial="initial"
           animate="enter"

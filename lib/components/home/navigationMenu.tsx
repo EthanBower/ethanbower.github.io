@@ -101,7 +101,7 @@ function NavbarHandler({ items }: { items: NavItem[] }) {
       >
         <motion.div
           variants={containerVariants}
-          className="flex items-center gap-8 px-8 py-4 rounded-full backdrop-blur-[8px] backdrop-saturate-180 shadow-[0_8px_32px_0_rgba(0,0,0,0.15),inset_0_1px_1px_0_rgba(255,255,255,0.3)] backdrop-blur-2xl bg-white/5 border-white/10"
+          className="flex items-center gap-8 px-8 py-4 rounded-full glass"
         >
           {items.map((item) => (
             <NavItem
@@ -133,7 +133,7 @@ function NavItem({ label, icon, onClick }: NavItem) {
         exit="exit"
         className="absolute"
       >
-        <div className="bg-black/60 text-white text-[10px] p-[5px] px-2.5 py-1 rounded-md border border-white/10 backdrop-blur-md whitespace-nowrap shadow-lg">
+        <div className="glass text-white text-[10px] p-[5px] px-2.5 py-1 rounded-md whitespace-nowrap">
           <span className="text-xs tracking-wide">{label}</span>
         </div>
       </motion.div>

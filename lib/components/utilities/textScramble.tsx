@@ -56,7 +56,7 @@ export default function TextScramble({
       {/* The invisible text is used to prevent layout shifts during scrambling */}
       <span className={`invisible font-mono tracking-wide ${className}`}>{text}</span>
       <motion.span
-        className={`absolute inset-0 font-mono tracking-wide ${className}`}
+        className={`absolute inset-0 font-mono tracking-wide truncate ${className}`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
