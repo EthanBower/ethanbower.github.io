@@ -1084,7 +1084,7 @@ class WavesScene extends Animatable {
     this.planeMesh.worldToLocal(localPos);
     const waveZ = this.getWaveHeight(localPos.x, localPos.y, time); // Sample wave height in LOCAL plane coordinates
     const distToSurface = localPos.z - waveZ; // Distance from particle to wave surface
-    const radius = dot.dotRadius; // Radius padding
+    const radius = globals.dotSettings.dotRadius; // Radius padding
 
     // If collision occurs (dot is within radius of surface), push dot out and reflect velocity
     if (distToSurface <= radius) {
