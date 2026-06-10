@@ -22,24 +22,30 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
     if (!threeJsRef.current || isInstantiated) return;
 
     const pageScene = SceneController.getInstance();
-    const darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleSystemTheme = (e: MediaQueryListEvent) => setSystemTheme(pageScene, e.matches);
     const initLoading = async () => {
       await pageScene.init(threeJsRef.current!);
       setIsInstantiated(true);
-      setSystemTheme(pageScene, darkModeMediaQuery.matches);
+      determineBackgroundColor(settings.backgroundColor);
       pageScene.runAnimationLoop();
       onLoadingComplete();
     };
 
     initLoading();
 
+    return () => { };
+  }, []);
+
+  // Handle dark mode listener - remount whenever the background color changes
+  useEffect(() => {
+    const handleSystemTheme = (e: MediaQueryListEvent) => determineBackgroundColor(settings.backgroundColor, e.matches);
+    const darkModeMediaQuery = getDarkModeQuery();
+
     darkModeMediaQuery.addEventListener("change", handleSystemTheme);
 
     return () => {
       darkModeMediaQuery.removeEventListener("change", handleSystemTheme);
     };
-  }, []);
+  }, [settings.backgroundColor])
 
   // Configure custom settings once localSettings is parsed/read
   useEffect(() => {
@@ -69,11 +75,30 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
     SceneController.getInstance().setPerformance(settings.performance);
   }, [isInstantiated, settings.performance]);
 
+  useEffect(() => {
+    if (!isInstantiated) return;
+    determineBackgroundColor(settings.backgroundColor);
+  }, [isInstantiated, settings.backgroundColor]);
+
+
+
   return <div ref={threeJsRef} id="three-root" className="w-full h-full z-0" />;
 }
 
-function setSystemTheme(pageScene: SceneController, darkModeEnabled: boolean) {
-  pageScene.setBackgroundColor(
-    darkModeEnabled ? DARK_MODE_COLOR : LIGHT_MODE_COLOR
-  );
+function determineBackgroundColor(backgroundColor: number | null, mediaQueryRan: boolean | null = null) {
+  const sceneController = SceneController.getInstance();
+
+  // Auto - mode enable
+  if (backgroundColor == null) {
+    const darkModeEnabled = mediaQueryRan ?? getDarkModeQuery().matches;
+    sceneController.setBackgroundColor(darkModeEnabled ? DARK_MODE_COLOR : LIGHT_MODE_COLOR);
+    return;
+  }
+
+  // Custom background
+  sceneController.setBackgroundColor(backgroundColor);
+}
+
+function getDarkModeQuery(): MediaQueryList {
+  return window.matchMedia("(prefers-color-scheme: dark)");
 }
