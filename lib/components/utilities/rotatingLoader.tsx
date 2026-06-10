@@ -21,7 +21,9 @@ export default function RotatingLoader({ textMessages }: RotatingLoaderProps) {
     return (
         <motion.div
             layout
-            className="flex items-center gap-3 rounded-full border-2 border-gray-300 bg-white px-4 py-2 text-black"
+            className="flex items-center gap-3 rounded-full px-4 py-2 border-2 
+                border-gray-300 bg-white text-black
+                dark:border-gray-700 dark:bg-gray-800 dark:text-white"
             transition={{
                 layout: { type: "spring", stiffness: 500, damping: 16 },
             }}

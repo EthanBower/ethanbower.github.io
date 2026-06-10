@@ -16,6 +16,15 @@ import SatelliteIcon from "../icons/satellite";
 import TelescopeIcon from "../icons/telescope";
 import Version from "../utilities/version";
 
+export const BACKGROUND_COLOR_PRESETS = [
+  { presetName: "Cosmic Night Walk", colors: [0x0b1020] },
+  { presetName: "Nebula Puppy Glow", colors: [0x120b1f] },
+  { presetName: "Galaxy Collar Blue", colors: [0x0b1b2b] },
+  { presetName: "Deep Space Kennel Void", colors: [0x000000], },
+  { presetName: "Comfy Space Blanket", colors: [0x111827] },
+  { presetName: "Golden Retriever Starlight", colors: [0x0f0f0f] }
+];
+
 const WAVE_COLOR_PRESETS = [
   { presetName: "Default Bark Space", colors: defaultSettings.waveColors },
   { presetName: "Milky Bone Nebula", colors: [0xB22222, 0x3B0764, 0xF2A900, 0x111111] },
@@ -72,10 +81,17 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
     }));
   }
 
+  function setBackgroundColor(backgroundColor: number | null) {
+    setSettings((s) => ({
+      ...s,
+      backgroundColor: backgroundColor,
+    }));
+  }
+
   // todo - in dot density section, make a 'warning' banner with yellow/orange background that has slanted stripes (like a construction sign) that says "Increasing dot density may impact performance on some devices" or something like that. Make it so that the warning only appears if the user has set the dot density above a certain number (maybe 1500 or 2000?).
   return (
     <PopupWindow
-      windowIcon={<GearIcon />}
+      windowIcon={<GearIcon className="cursor-pointer text-gray-300" />}
       windowTitle="SETTINGS"
       windowTitleDescription={`App Version: ${Version()}`}
       isEnabled={isEnabled}
@@ -84,13 +100,25 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
       <div className="m-[5px] bg-black/25 p-3 rounded-xl">
         <div className="pb-[10px] text-center">
           <p>
-            DOT DENSITY: <b>{currentDotCount}</b> PARTICLES
-          </p>
-          <p className="text-sm">
-            Resizing window will set it back to auto-mode.
+            BACKGROUND COLORS
           </p>
         </div>
-        <Slider onChange={changeDotCount} value={currentDotCount} />
+        <div className="flex self-container justify-between items-center">
+          <div className="flex flex-col flex-1 text-left justify-center">
+            <span>Auto (System Theme): {settings.backgroundColor ? "OFF" : "ON"}</span>
+            <span className="text-sm text-white/50">Turn this button off by selecting a below box.</span>
+          </div>
+          <ButtonToggle
+            enabled={settings.backgroundColor === null}
+            onChange={(toggleVal) => { toggleVal ? setBackgroundColor(null) : setBackgroundColor(settings.backgroundColor) }}
+          />
+        </div>
+        <div className="w-full h-[1px] rounded-xl bg-gray-300/30 my-3" />
+        <div className="grid grid-cols-3 gap-4 text-center disable">
+          {BACKGROUND_COLOR_PRESETS.map((item) => (
+            <SquareGradient key={item.presetName} presetName={item.presetName} colors={item.colors} onClick={(c) => setBackgroundColor(c[0])} />
+          ))}
+        </div>
       </div>
       <div className="m-[5px] bg-black/25 p-3 rounded-xl">
         <div className="pb-[10px] text-center">
@@ -103,6 +131,17 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
             <SquareGradient key={item.presetName} presetName={item.presetName} colors={item.colors} onClick={setWaveColor} />
           ))}
         </div>
+      </div>
+      <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+        <div className="pb-[10px] text-center">
+          <p>
+            DOT DENSITY: <b>{currentDotCount}</b> PARTICLES
+          </p>
+          <p className="text-sm text-white/50">
+            Resizing window will set it back to auto-mode.
+          </p>
+        </div>
+        <Slider onChange={changeDotCount} value={currentDotCount} />
       </div>
       <div className="m-[5px] bg-black/25 p-3 rounded-xl">
         <div className="pb-[10px] text-center">

@@ -68,8 +68,14 @@ export class SceneController {
     lights?.light4?.color.set(colors[3]);
   }
 
+  public setBackgroundColor(colorHex: number): void {
+    this.frontPage?.frontPageScene.scene.fog?.color.set(colorHex);
+    this.frontPage?.frontPageRenderer.renderer.setClearColor(colorHex, 1);
+  }
+
   public setPerformance(performanceNumber: number) {
-    this.frontPage?.frontPageRenderer.setPixelRatio(performanceNumber);
+    this.frontPage!.frontPageRenderer.pixelRatio = performanceNumber;
+    this.frontPage!.frontPageRenderer.setPixelRatio();
   }
 
   public async dispose(): Promise<void> {
@@ -286,6 +292,7 @@ class AstroidScene extends Animatable {
     this.isAnimating = false;
     this.gltLoader = new GLTFLoader();
     this.frontPage = frontPage;
+    this.initLighting();
   }
 
   public loadObjects(): Promise<void> {
@@ -297,7 +304,6 @@ class AstroidScene extends Animatable {
           this.asteroidModel.position.set(0, 0, -180);
           this.asteroidModel.scale.set(1, 1, 1);
           this.frontPage.frontPageScene.astroidGroup.add(this.asteroidModel);
-          this.initLighting();
           resolve();
         },
         undefined,
@@ -379,13 +385,6 @@ class MainCamera extends Animatable {
     targetRotation: new THREE.Vector2(),
     currentRotation: new THREE.Vector2(),
   };
-  private renderSettings: {
-    renderDistanceMin: number;
-    renderDistanceMax: number;
-  } = {
-    renderDistanceMin: 0.1,
-    renderDistanceMax: 135,
-  };
   private mouse: THREE.Vector2 = new THREE.Vector2();
   private frontPage: FrontPageAnimation;
 
@@ -394,8 +393,8 @@ class MainCamera extends Animatable {
     this.camera = new THREE.PerspectiveCamera(
       75,
       canvasElm.clientWidth / canvasElm!.clientHeight,
-      this.renderSettings.renderDistanceMin,
-      this.renderSettings.renderDistanceMax,
+      globals.mainCameraSettings.renderDistanceMin,
+      globals.mainCameraSettings.renderDistanceMax,
     );
     this.asteroidAnimation = new AsteroidAnimation(frontPage);
     this.introAnimation = new IntroAnimation(frontPage);
@@ -512,6 +511,7 @@ class Canvas {
 
 class FrontPageRenderer {
   public renderer: THREE.WebGLRenderer;
+  public pixelRatio = globals.frontPageRendererSettings.rendererPixelRatio;
   public preventWheel = (e: WheelEvent) => e.preventDefault();
   public preventTouch = (e: TouchEvent) => e.preventDefault();
   private frontPage: FrontPageAnimation;
@@ -522,8 +522,10 @@ class FrontPageRenderer {
     this.renderer.setClearColor(globals.threeJsBackgroundColor, 1);
   }
 
-  public setPixelRatio(pixelRatio = 0.8) {
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatio));
+  public setPixelRatio() {
+    this.renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio, this.pixelRatio),
+    );
   }
 
   public render() {
@@ -551,15 +553,14 @@ class FrontPageRenderer {
 class DotsScene extends Animatable {
   private frontPage: FrontPageAnimation;
   public dotCount: number;
-  private maxLineCount = 150;
   private activeLineCount = 0;
   private linePool: THREE.Line[] = [];
   public dots: Array<Dot> = [];
   public mouseDot!: MouseDot;
   private nextDotId = 0;
   private dotSpatialGrid = new Map<string, Dot[]>();
-  private readonly dotCellSize = 25;
-  private readonly dotCellSizeSquared = this.dotCellSize * this.dotCellSize;
+  private readonly dotCellSizeSquared =
+    globals.dotSceneSettings.dotCellSize * globals.dotSceneSettings.dotCellSize;
 
   constructor(frontPage: FrontPageAnimation) {
     super();
@@ -638,7 +639,8 @@ class DotsScene extends Animatable {
       line.geometry.attributes.position.needsUpdate = true;
 
       // Update opacity
-      const distanceAlpha = 1 - Math.sqrt(distanceSq) / this.dotCellSize;
+      const distanceAlpha =
+        1 - Math.sqrt(distanceSq) / globals.dotSceneSettings.dotCellSize;
       const dotOpacityAlpha = Math.min(
         dot.material.opacity,
         nearbyDot.material.opacity,
@@ -721,9 +723,9 @@ class DotsScene extends Animatable {
     z: number,
   ): { cellKeyName: string; x: number; y: number; z: number } {
     const [xCell, yCell, zCell] = [
-      Math.floor(x / this.dotCellSize),
-      Math.floor(y / this.dotCellSize),
-      Math.floor(z / this.dotCellSize),
+      Math.floor(x / globals.dotSceneSettings.dotCellSize),
+      Math.floor(y / globals.dotSceneSettings.dotCellSize),
+      Math.floor(z / globals.dotSceneSettings.dotCellSize),
     ];
 
     return {
@@ -743,7 +745,7 @@ class DotsScene extends Animatable {
   }
 
   private initLinePool(): void {
-    for (let i = 0; i < this.maxLineCount; i++) {
+    for (let i = 0; i < globals.dotSceneSettings.maxLineCount; i++) {
       const positions = new Float32Array(6);
       const geometry = new THREE.BufferGeometry();
       const material = new THREE.LineBasicMaterial({
@@ -803,7 +805,6 @@ class DotsScene extends Animatable {
 }
 
 class Dot extends Disposable {
-  public dotRadius: number;
   public id: number;
   public dotMesh: THREE.Mesh;
   public velocity: THREE.Vector3;
@@ -828,7 +829,6 @@ class Dot extends Disposable {
     frontPage: FrontPageAnimation,
   ) {
     super();
-    this.dotRadius = 0.35;
     this.id = indexId;
 
     this.material = new THREE.MeshBasicMaterial({
@@ -838,7 +838,7 @@ class Dot extends Disposable {
       fog: true,
     });
     this.dotMesh = new THREE.Mesh(
-      new THREE.CircleGeometry(this.dotRadius, 6),
+      new THREE.CircleGeometry(globals.dotSettings.dotRadius, 6),
       this.material,
     );
     this.dotMesh.position.copy(dotPos);
@@ -1084,7 +1084,7 @@ class WavesScene extends Animatable {
     this.planeMesh.worldToLocal(localPos);
     const waveZ = this.getWaveHeight(localPos.x, localPos.y, time); // Sample wave height in LOCAL plane coordinates
     const distToSurface = localPos.z - waveZ; // Distance from particle to wave surface
-    const radius = dot.dotRadius; // Radius padding
+    const radius = globals.dotSettings.dotRadius; // Radius padding
 
     // If collision occurs (dot is within radius of surface), push dot out and reflect velocity
     if (distToSurface <= radius) {
@@ -1126,7 +1126,7 @@ class WavesScene extends Animatable {
     const decay: number = 1;
     // Blue
     this.lights.light1 = new THREE.PointLight(
-      0x0e09dc,
+      globals.waveSceneSettings.lightColors[0],
       lightIntensity,
       lightDistance,
       decay,
@@ -1135,7 +1135,7 @@ class WavesScene extends Animatable {
     this.frontPage.frontPageScene.wavesGroup.add(this.lights.light1);
     // Cyan
     this.lights.light2 = new THREE.PointLight(
-      0x8c2700,
+      globals.waveSceneSettings.lightColors[1],
       lightIntensity,
       lightDistance,
       decay,
@@ -1144,7 +1144,7 @@ class WavesScene extends Animatable {
     this.frontPage.frontPageScene.wavesGroup.add(this.lights.light2);
     // Red
     this.lights.light3 = new THREE.PointLight(
-      0x00786e,
+      globals.waveSceneSettings.lightColors[2],
       lightIntensity,
       lightDistance,
       decay,
@@ -1153,7 +1153,7 @@ class WavesScene extends Animatable {
     this.frontPage.frontPageScene.wavesGroup.add(this.lights.light3);
     // Purple
     this.lights.light4 = new THREE.PointLight(
-      0xee3bcf,
+      globals.waveSceneSettings.lightColors[3],
       lightIntensity,
       lightDistance,
       decay,
@@ -1196,9 +1196,14 @@ class WavesScene extends Animatable {
   }
 
   private getWaveHeight(x: number, y: number, time: number): number {
-    const xyCoef = 50;
-    const zCoef = 8;
-    return this.simplexNoise(x / xyCoef, y / xyCoef, time, 0) * zCoef;
+    return (
+      this.simplexNoise(
+        x / globals.waveSceneSettings.waveHeight.xCoef,
+        y / globals.waveSceneSettings.waveHeight.yCoef,
+        time,
+        0,
+      ) * globals.waveSceneSettings.waveHeight.zCoef
+    );
   }
 
   private updateLights(...lights: THREE.PointLight[]): void {
@@ -1366,14 +1371,38 @@ export class Utils {
   }
 }
 
+// todo - externalize this, look in every class and ID constants to put in here
 export const globals = {
   timeTracker: new TimeTracker(),
   threeJsBackgroundColor: 0x1a1a1a,
+  mainCameraSettings: {
+    renderDistanceMin: 0.1,
+    renderDistanceMax: 135,
+  },
+  frontPageRendererSettings: {
+    rendererPixelRatio: 0.65,
+  },
+  waveSceneSettings: {
+    lightColors: [
+      0x0e09dc, // Blue
+      0x8c2700, // Cyan
+      0x00786e, // Red
+      0xee3bcf, // Purple
+    ],
+    waveHeight: {
+      xCoef: 50,
+      yCoef: 50,
+      zCoef: 8,
+    },
+  },
   dotSceneSettings: {
     pixelsPerDot: 12000,
+    maxLineCount: 150,
+    dotCellSize: 25,
     dotCountMax: 65,
   },
   dotSettings: {
+    dotRadius: 0.35,
     dotCameraDistanceSettings: {
       maxZCameraDistance: 130,
       minZCameraDistance: 30,

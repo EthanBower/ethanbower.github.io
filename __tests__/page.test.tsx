@@ -36,6 +36,22 @@ jest.mock("three/examples/jsm/libs/stats.module.js", () => {
   };
 });
 
+beforeAll(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: (query: string) => ({
+      matches: false, // Set to true if you want to mock dark mode by default
+      media: query,
+      onchange: null,
+      addListener: jest.fn(), // Use vi.fn() if using Vitest
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }),
+  });
+});
+
 describe("Home Page", () => {
   it("renders the hello world heading", () => {
     // ARRANGE: Render the component

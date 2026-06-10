@@ -8,12 +8,14 @@ export const defaultSettings: {
   statsEnabled: boolean;
   dotCount: number | null;
   performance: number;
+  backgroundColor: number | null;
   waveColors: number[];
 } = {
   motionEnabled: false,
   statsEnabled: false,
   dotCount: null,
-  performance: 0.55,
+  performance: 0.65,
+  backgroundColor: null,
   waveColors: [
     0x0e09dc,
     0x8c2700,
