@@ -13,7 +13,7 @@ export const defaultSettings: {
   motionEnabled: false,
   statsEnabled: false,
   dotCount: null,
-  performance: 0.55,
+  performance: 0.65,
   waveColors: [
     0x0e09dc,
     0x8c2700,

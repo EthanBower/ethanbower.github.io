@@ -1,9 +1,12 @@
 "use client";
 
 import { SceneController } from "@/lib/ts/threeScene";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSettings } from "../global/settingsProvider";
 import { AppPermissions } from "@/lib/ts/appPermissions";
+
+const LIGHT_MODE_COLOR = 0x1a1a1a;
+const DARK_MODE_COLOR = 0x0a0a0a;
 
 type SpaceSceneProps = Readonly<{
   onLoadingComplete: () => void;
@@ -12,51 +15,65 @@ type SpaceSceneProps = Readonly<{
 export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
   const { settings } = useSettings();
   const threeJsRef = useRef<HTMLDivElement | null>(null);
-  const assetsLoadedRef = useRef(false);
-  const instantiatedRef = useRef(false);
+  const [isInstantiated, setIsInstantiated] = useState(false);
 
   // Handle initialization and asset loading
   useEffect(() => {
-    if (!threeJsRef.current || instantiatedRef.current == true) return;
-    instantiatedRef.current = true;
+    if (!threeJsRef.current || isInstantiated) return;
 
     const pageScene = SceneController.getInstance();
+    const darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleSystemTheme = (e: MediaQueryListEvent) => setSystemTheme(pageScene, e.matches);
     const initLoading = async () => {
       await pageScene.init(threeJsRef.current!);
+      setIsInstantiated(true);
+      setSystemTheme(pageScene, darkModeMediaQuery.matches);
       pageScene.runAnimationLoop();
-      assetsLoadedRef.current = true;
       onLoadingComplete();
     };
 
     initLoading();
 
+    darkModeMediaQuery.addEventListener("change", handleSystemTheme);
+
     return () => {
-      // todo - dispose
+      darkModeMediaQuery.removeEventListener("change", handleSystemTheme);
     };
   }, []);
 
   // Configure custom settings once localSettings is parsed/read
   useEffect(() => {
+    if (!isInstantiated) return;
     SceneController.getInstance().setStatsEnable(settings.statsEnabled);
-  }, [settings.statsEnabled]);
+  }, [isInstantiated, settings.statsEnabled]);
 
   useEffect(() => {
-    if (!settings.motionEnabled !== true && AppPermissions.gyroPermissions.gyroCompatible) return;
+    if (!isInstantiated) return;
+    if (!settings.motionEnabled || !AppPermissions.gyroPermissions.gyroCompatible) return;
     SceneController.getInstance().initGyro();
-  }, [settings.motionEnabled]);
+  }, [isInstantiated, settings.motionEnabled]);
 
   useEffect(() => {
+    if (!isInstantiated) return;
     if (settings.dotCount === null) return;
     SceneController.getInstance().changeDotSpawnCount(settings.dotCount);
-  }, [settings.dotCount]);
+  }, [isInstantiated, settings.dotCount]);
 
   useEffect(() => {
+    if (!isInstantiated) return;
     SceneController.getInstance().setWaveLighting(settings.waveColors);
-  }, [settings.waveColors]);
+  }, [isInstantiated, settings.waveColors]);
 
   useEffect(() => {
+    if (!isInstantiated) return;
     SceneController.getInstance().setPerformance(settings.performance);
-  }, [settings.performance]);
+  }, [isInstantiated, settings.performance]);
 
   return <div ref={threeJsRef} id="three-root" className="w-full h-full z-0" />;
+}
+
+function setSystemTheme(pageScene: SceneController, darkModeEnabled: boolean) {
+  pageScene.setBackgroundColor(
+    darkModeEnabled ? DARK_MODE_COLOR : LIGHT_MODE_COLOR
+  );
 }
