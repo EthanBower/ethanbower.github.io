@@ -166,7 +166,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
           </div>
           <div className="flex gap-2 items-center justify-center">
             <div className="flex-1">
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-between gap-2">
                 <span>Statistics {settings.statsEnabled ? "ON" : "OFF"}</span>
                 <ButtonToggle
                   enabled={settings.statsEnabled}

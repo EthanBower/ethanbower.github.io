@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, useDragControls, Variants } from "framer-motion";
 import ExitIcon from "../icons/exit";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import WarningIcon from "../icons/warning";
 
 const windowVariants: Variants = {
@@ -42,6 +42,7 @@ type WarningWindowProps = Readonly<{
 export default function WarningWindow({ error, enable, onClose }: WarningWindowProps) {
     const dragControls = useDragControls();
     const windowRef = useRef<HTMLDivElement>(null);
+    const [introDone, setIntroDone] = useState(false);
     const errorTitle = error ? error.message : "";
     const errorSubtitle = error?.cause instanceof Error ? error.cause.message : "";
 
@@ -83,12 +84,21 @@ export default function WarningWindow({ error, enable, onClose }: WarningWindowP
                                     bg-[repeating-linear-gradient(-45deg,rgba(255,204,0,0.4)_0px,rgba(255,204,0,0.4)_36px,transparent_36px,transparent_72px)] 
                                     dark:bg-[repeating-linear-gradient(-45deg,rgba(255,204,0,0.2)_0px,rgba(255,204,0,0.2)_36px,transparent_36px,transparent_72px)]"
                                 animate={{
-                                    backgroundPositionX: ["0px", "101.82px"],
+                                    backgroundPositionX: introDone ? ["0px", "101.82px"] : ["0px", "203.64px"],
                                 }}
-                                transition={{
-                                    duration: 8,
-                                    ease: "linear",
-                                    repeat: Infinity,
+                                transition={
+                                    introDone ?
+                                        {
+                                            duration: 8,
+                                            ease: "linear",
+                                            repeat: Infinity,
+                                        } : {
+                                            duration: 1.5,
+                                            ease: "easeOut",
+                                        }
+                                }
+                                onAnimationComplete={() => {
+                                    if (!introDone) setIntroDone(true);
                                 }}
                             />
                             <div className="relative z-1">
@@ -127,12 +137,12 @@ export default function WarningWindow({ error, enable, onClose }: WarningWindowP
                                     </p>
                                     <div className="mt-6 flex gap-3">
                                         <motion.button
-                                            className="popup-button-red flex items-center justify-center gap-2" onClick={() => onClose?.()}
+                                            className="popup-button-red flex items-center justify-center gap-2" onClick={() => { setIntroDone(false); onClose?.() }}
                                             whileHover="hover"
                                             whileTap="hover"
                                         >
                                             <ExitIcon />
-                                            <span>ABORT</span>
+                                            <span>Exit</span>
                                         </motion.button>
                                     </div>
                                 </div>
