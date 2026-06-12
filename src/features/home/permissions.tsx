@@ -8,18 +8,13 @@ import ChevronIcon from "../../components/icons/chevron";
 import { AppPermissions } from "@/src/components/utils/appPermissions";
 import WarningWindow from "@/src/components/ui/warningWindow";
 
-type ErrorState = Readonly<{
-  errorMessage: string;
-  errorCause?: string;
-}>;
-
 type PermissionsProps = Readonly<{
   isEnabled: boolean;
   onClose: () => void;
 }>;
 
 export default function Permissions({ isEnabled, onClose }: PermissionsProps) {
-  const [error, setError] = useState<ErrorState | null>();
+  const [error, setError] = useState<Error | null>(null);
   const [isPending, startTransition] = useTransition();
   const { settings, setSettings } = useSettings();
 
@@ -36,7 +31,7 @@ export default function Permissions({ isEnabled, onClose }: PermissionsProps) {
         }));
       } catch (err) {
         if (err instanceof Error) {
-          setError({ errorMessage: err.message, errorCause: err.cause ? String(err.cause) : "" });
+          setError(err);
         }
 
         console.error("An error occurred setting motion controls.", err);
@@ -61,7 +56,7 @@ export default function Permissions({ isEnabled, onClose }: PermissionsProps) {
           />
         </div>
       </PopupWindow>
-      <WarningWindow title={error ? error.errorMessage : ""} subTitle={error?.errorCause ? error.errorCause : ""} enable={error != null} onClose={() => setError(null)} />
+      <WarningWindow error={error} enable={error != null} onClose={() => setError(null)} />
     </div>
   );
 }

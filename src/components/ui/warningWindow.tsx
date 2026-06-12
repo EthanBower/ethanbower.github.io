@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, useDragControls, Variants } from "framer-motion";
 import ExitIcon from "../icons/exit";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import WarningIcon from "../icons/warning";
 
 const windowVariants: Variants = {
@@ -34,15 +34,16 @@ const windowVariants: Variants = {
 } as const;
 
 type WarningWindowProps = Readonly<{
-    title: string;
-    subTitle: string;
+    error?: Error | null;
     enable: boolean;
     onClose?: () => void;
 }>;
 
-export default function WarningWindow({ title, subTitle, enable, onClose }: WarningWindowProps) {
+export default function WarningWindow({ error, enable, onClose }: WarningWindowProps) {
     const dragControls = useDragControls();
     const windowRef = useRef<HTMLDivElement>(null);
+    const errorTitle = error ? error.message : "";
+    const errorSubtitle = error?.cause instanceof Error ? error.cause.message : "";
 
     return (
         <AnimatePresence>
@@ -119,10 +120,10 @@ export default function WarningWindow({ title, subTitle, enable, onClose }: Warn
                                 </div>
                                 <div className="py-6 px-3 text-left">
                                     <p className="text-yellow-100">
-                                        {title}
+                                        {errorTitle}
                                     </p>
                                     <p className="mt-3 text-yellow-100/60 text-sm">
-                                        {subTitle}
+                                        {errorSubtitle}
                                     </p>
                                     <div className="mt-6 flex gap-3">
                                         <motion.button
