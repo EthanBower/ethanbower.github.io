@@ -1,20 +1,19 @@
 "use client";
 
-import { defaultSettings, useSettings } from "../global/settingsProvider";
-import PopupWindow from "../global/popupWindow";
-import Slider from "../utilities/slider";
+import { defaultSettings, useSettings } from "../../providers/settingsProvider";
+import PopupWindow from "../../components/ui/popupWindow";
+import Slider from "../../components/ui/slider";
 import { useState } from "react";
-import { SceneController } from "@/lib/ts/threeScene";
-import ButtonToggle from "../utilities/buttonToggle";
-import GearIcon from "../icons/gear";
-import ResetArrowsIcon from "../icons/resetArrows";
+import ButtonToggle from "../../components/ui/buttonToggle";
+import GearIcon from "../../components/icons/gear";
+import ResetArrowsIcon from "../../components/icons/resetArrows";
 import { motion } from "framer-motion";
-import SquareGradient from "../utilities/squareGradient";
-import PerformanceButton from "../utilities/performanceButton";
-import RocketIcon from "../icons/rocket";
-import SatelliteIcon from "../icons/satellite";
-import TelescopeIcon from "../icons/telescope";
-import Version from "../utilities/version";
+import SquareGradient from "./squareGradient";
+import PerformanceButton from "./performanceButton";
+import RocketIcon from "../../components/icons/rocket";
+import SatelliteIcon from "../../components/icons/satellite";
+import TelescopeIcon from "../../components/icons/telescope";
+import { SceneController } from "@/src/three";
 
 export const BACKGROUND_COLOR_PRESETS = [
   { presetName: "Cosmic Night Walk", colors: [0x0b1020] },
@@ -93,7 +92,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
     <PopupWindow
       windowIcon={<GearIcon className="cursor-pointer text-gray-300" />}
       windowTitle="SETTINGS"
-      windowTitleDescription={`App Version: ${Version()}`}
+      windowTitleDescription={`App Version: ${process.env.NEXT_PUBLIC_SITE_APP_VERSION || "dev-local"}`}
       isEnabled={isEnabled}
       onClose={onClose}
     >

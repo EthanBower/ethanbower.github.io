@@ -19,7 +19,7 @@ export class AppPermissions {
   public static async askGyroPermissionsAsync(): Promise<void> {
     try {
       if (!this.gyroPermissions.gyroCompatible) {
-        return;
+        throw new Error("This device is not motion compatible.");
       }
 
       const permission =
@@ -27,12 +27,12 @@ export class AppPermissions {
         (DeviceOrientationEvent as any).requestPermission();
       if (permission !== "granted") {
         AppPermissions.gyroPermissions.gyroscopeEnabled = false;
-        return;
+        throw new Error("This device rejected motion permissions.");
       }
 
       AppPermissions.gyroPermissions.gyroscopeEnabled = true;
     } catch (err) {
-      console.error("Gyroscope permission failed", err);
+      throw new Error("Could not enable motion capabilities.", { cause: err });
     }
   }
 }

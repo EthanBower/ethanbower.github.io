@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import RotatingLoader from "../utilities/rotatingLoader";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import RotatingLoader from "@/src/components/ui/rotatingLoader";
 
 const MINIMUM_LOAD_SCREEN_TIME = 2200;
 const LOADING_TEXTS: string[] = [
