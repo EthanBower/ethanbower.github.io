@@ -13,6 +13,7 @@ import Gear from "@/lib/components/icons/gear";
 import HomeIcon from "@/lib/components/icons/home";
 import LoadingScreen from "@/lib/components/home/loadingScreen";
 import PlanetIcon from "@/lib/components/icons/planet";
+import WarningWindow from "@/lib/components/utilities/warningWindow";
 
 export default function Home() {
   const { settings } = useSettings();
@@ -88,6 +89,7 @@ export default function Home() {
           setIsSceneLoaded(true);
         }}
       />
+      <WarningWindow />
       {isSceneLoaded && (
         <div>
           <Header />
