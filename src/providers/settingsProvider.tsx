@@ -37,8 +37,7 @@ const SettingsContext = createContext<SettingsContextType | null>(null);
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState(defaultSettings);
 
-  // Intentionally set to ignore this rule as this is only run once on mount to hydrate localstorage,
-  // which needs to run client side.
+  // Intentionally set to ignore this rule as this is only run once on mount to hydrate localstorage, which needs to run client side.
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
 

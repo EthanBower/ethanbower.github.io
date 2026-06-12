@@ -7,9 +7,9 @@ import {
   Variants,
   AnimatePresence,
 } from "framer-motion";
-import DashedSeparator from "../utilities/dashedSeperator";
-import Typewriter from "../utilities/typewriter";
-import TextScramble from "../utilities/textScramble";
+import DashedSeparator from "./dashedSeperator";
+import Typewriter from "./typewriter";
+import TextScramble from "./textScramble";
 import ExitIcon from "../icons/exit";
 
 const windowVariants: Variants = {

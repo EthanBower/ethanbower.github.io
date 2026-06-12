@@ -1,19 +1,19 @@
 "use client";
 
-import { SceneController } from "@/lib/ts/threeScene";
-import Permissions from "../../lib/components/home/permissions";
-import SpaceScene from "@/lib/components/home/spaceScene";
+import Gear from "@/src/components/icons/gear";
+import HomeIcon from "@/src/components/icons/home";
+import PlanetIcon from "@/src/components/icons/planet";
+import WarningWindow from "@/src/components/ui/warningWindow";
+import { AppPermissions } from "@/src/components/utils/appPermissions";
+import LoadingScreen from "@/src/features/home/loadingScreen";
+import Permissions from "@/src/features/home/permissions";
+import SpaceScene from "@/src/features/home/spaceScene";
+import Header from "@/src/features/layout/header";
+import NavigationMenu from "@/src/features/layout/navigationMenu";
+import Settings from "@/src/features/settings/settings";
+import { useSettings } from "@/src/providers/settingsProvider";
+import { SceneController } from "@/src/three";
 import { useState } from "react";
-import { AppPermissions } from "@/lib/ts/appPermissions";
-import NavigationMenu from "@/lib/components/home/navigationMenu";
-import Settings from "@/lib/components/home/settings";
-import { useSettings } from "@/lib/components/global/settingsProvider";
-import Header from "@/lib/components/home/header";
-import Gear from "@/lib/components/icons/gear";
-import HomeIcon from "@/lib/components/icons/home";
-import LoadingScreen from "@/lib/components/home/loadingScreen";
-import PlanetIcon from "@/lib/components/icons/planet";
-import WarningWindow from "@/lib/components/utilities/warningWindow";
 
 export default function Home() {
   const { settings } = useSettings();
@@ -68,7 +68,7 @@ export default function Home() {
 
   function runAfterLoad() {
     const permissionsNeeded =
-      AppPermissions.gyroPermissions.gyroCompatible && !settings.motionEnabled;
+      !AppPermissions.gyroPermissions.gyroCompatible && !settings.motionEnabled;
     if (permissionsNeeded) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPermissionsDisplayEnabled(true);
@@ -89,7 +89,6 @@ export default function Home() {
           setIsSceneLoaded(true);
         }}
       />
-      <WarningWindow />
       {isSceneLoaded && (
         <div>
           <Header />

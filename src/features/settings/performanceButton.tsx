@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import React from "react";
-import { useSettings } from "../global/settingsProvider";
+import { useSettings } from "../../providers/settingsProvider";
 
 interface PerformanceButtonProps {
     presetName: string,

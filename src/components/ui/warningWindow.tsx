@@ -33,14 +33,20 @@ const windowVariants: Variants = {
     },
 } as const;
 
-export default function WarningWindow() {
+type WarningWindowProps = Readonly<{
+    title: string;
+    subTitle: string;
+    enable: boolean;
+    onClose?: () => void;
+}>;
+
+export default function WarningWindow({ title, subTitle, enable, onClose }: WarningWindowProps) {
     const dragControls = useDragControls();
     const windowRef = useRef<HTMLDivElement>(null);
-    const [isEnabled, setIsEnabled] = useState(true);
 
     return (
         <AnimatePresence>
-            {isEnabled && (
+            {enable && (
                 <div className="absolute inset-0 flex items-center justify-center w-[100dvw] h-[100dvh] select-none z-99" ref={windowRef}>
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -113,14 +119,14 @@ export default function WarningWindow() {
                                 </div>
                                 <div className="py-6 px-3 text-left">
                                     <p className="text-yellow-100">
-                                        Unable to establish uplink with orbital relay.
+                                        {title}
                                     </p>
                                     <p className="mt-3 text-yellow-100/60 text-sm">
-                                        Error Code: AST-404
+                                        {subTitle}
                                     </p>
                                     <div className="mt-6 flex gap-3">
                                         <motion.button
-                                            className="popup-button-red flex items-center justify-center gap-2" onClick={() => setIsEnabled(false)}
+                                            className="popup-button-red flex items-center justify-center gap-2" onClick={() => onClose?.()}
                                             whileHover="hover"
                                             whileTap="hover"
                                         >

@@ -1,9 +1,9 @@
 "use client";
 
-import { SceneController } from "@/lib/ts/threeScene";
 import { useEffect, useRef, useState } from "react";
-import { useSettings } from "../global/settingsProvider";
-import { AppPermissions } from "@/lib/ts/appPermissions";
+import { useSettings } from "../../providers/settingsProvider";
+import { SceneController } from "@/src/three";
+import { AppPermissions } from "@/src/components/utils/appPermissions";
 
 const LIGHT_MODE_COLOR = 0x1a1a1a;
 const DARK_MODE_COLOR = 0x0a0a0a;
@@ -79,8 +79,6 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
     if (!isInstantiated) return;
     determineBackgroundColor(settings.backgroundColor);
   }, [isInstantiated, settings.backgroundColor]);
-
-
 
   return <div ref={threeJsRef} id="three-root" className="w-full h-full z-0" />;
 }

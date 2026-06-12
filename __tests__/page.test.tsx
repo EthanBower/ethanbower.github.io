@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import Home from "../app/home/page";
 import "@testing-library/jest-dom";
-import { SettingsProvider } from "@/lib/components/global/settingsProvider";
+import { SettingsProvider } from "@/src/providers/settingsProvider";
 
 jest.mock("three", () => {
   const originalThree = jest.requireActual("three");

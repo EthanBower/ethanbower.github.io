@@ -21,7 +21,7 @@ jobs:
         run: npm ci
       - name: 🏗️ Build production
         env:
-          SITE_APP_VERSION: "v0.0.${{ github.run_number }}"
+          NEXT_PUBLIC_SITE_APP_VERSION: "v0.0.${{ github.run_number }}"
         run: npm run build
       - name: 📤 Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
