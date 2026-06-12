@@ -14,6 +14,7 @@ import RocketIcon from "../../components/icons/rocket";
 import SatelliteIcon from "../../components/icons/satellite";
 import TelescopeIcon from "../../components/icons/telescope";
 import { SceneController } from "@/src/three";
+import WarningWindow from "@/src/components/ui/warningWindow";
 
 export const BACKGROUND_COLOR_PRESETS = [
   { presetName: "Cosmic Night Walk", colors: [0x0b1020] },
@@ -46,6 +47,7 @@ type SettingsProps = Readonly<{
 
 export default function Settings({ isEnabled, onClose }: SettingsProps) {
   const { settings, setSettings, resetSettings } = useSettings();
+  const [error, setError] = useState<Error | null>(null);
   const [currentDotCount, setCurrentDotCount] = useState(
     SceneController.getInstance().frontPage!.dotScene.dots.length,
   );
@@ -89,101 +91,104 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
 
   // todo - in dot density section, make a 'warning' banner with yellow/orange background that has slanted stripes (like a construction sign) that says "Increasing dot density may impact performance on some devices" or something like that. Make it so that the warning only appears if the user has set the dot density above a certain number (maybe 1500 or 2000?).
   return (
-    <PopupWindow
-      windowIcon={<GearIcon className="cursor-pointer text-gray-300" />}
-      windowTitle="SETTINGS"
-      windowTitleDescription={`App Version: ${process.env.NEXT_PUBLIC_SITE_APP_VERSION || "dev-local"}`}
-      isEnabled={isEnabled}
-      onClose={onClose}
-    >
-      <div className="m-[5px] bg-black/25 p-3 rounded-xl">
-        <div className="pb-[10px] text-center">
-          <p>
-            BACKGROUND COLORS
-          </p>
-        </div>
-        <div className="flex self-container justify-between items-center">
-          <div className="flex flex-col flex-1 text-left justify-center">
-            <span>Auto (System Theme): {settings.backgroundColor ? "OFF" : "ON"}</span>
-            <span className="text-sm text-white/50">Turn this button off by selecting a below box.</span>
+    <div>
+      <WarningWindow enable={error != null} error={error} onClose={() => setError(null)} />
+      <PopupWindow
+        windowIcon={<GearIcon className="cursor-pointer text-gray-300" />}
+        windowTitle="SETTINGS"
+        windowTitleDescription={`App Version: ${process.env.NEXT_PUBLIC_SITE_APP_VERSION || "dev-local"}`}
+        isEnabled={isEnabled}
+        onClose={onClose}
+      >
+        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+          <div className="pb-[10px] text-center">
+            <p>
+              BACKGROUND COLORS
+            </p>
           </div>
-          <ButtonToggle
-            enabled={settings.backgroundColor === null}
-            onChange={(toggleVal) => { toggleVal ? setBackgroundColor(null) : setBackgroundColor(settings.backgroundColor) }}
-          />
-        </div>
-        <div className="w-full h-[1px] rounded-xl bg-gray-300/30 my-3" />
-        <div className="grid grid-cols-3 gap-4 text-center disable">
-          {BACKGROUND_COLOR_PRESETS.map((item) => (
-            <SquareGradient key={item.presetName} presetName={item.presetName} colors={item.colors} onClick={(c) => setBackgroundColor(c[0])} />
-          ))}
-        </div>
-      </div>
-      <div className="m-[5px] bg-black/25 p-3 rounded-xl">
-        <div className="pb-[10px] text-center">
-          <p>
-            WAVE COLORS
-          </p>
-        </div>
-        <div className="grid grid-cols-3 gap-4 text-center">
-          {WAVE_COLOR_PRESETS.map((item) => (
-            <SquareGradient key={item.presetName} presetName={item.presetName} colors={item.colors} onClick={setWaveColor} />
-          ))}
-        </div>
-      </div>
-      <div className="m-[5px] bg-black/25 p-3 rounded-xl">
-        <div className="pb-[10px] text-center">
-          <p>
-            DOT DENSITY: <b>{currentDotCount}</b> PARTICLES
-          </p>
-          <p className="text-sm text-white/50">
-            Resizing window will set it back to auto-mode.
-          </p>
-        </div>
-        <Slider onChange={changeDotCount} value={currentDotCount} />
-      </div>
-      <div className="m-[5px] bg-black/25 p-3 rounded-xl">
-        <div className="pb-[10px] text-center">
-          <p>
-            GRAPHICS
-          </p>
-        </div>
-        <div className="flex gap-4 justify-center">
-          {PERFORMANCE_SETTINGS_PRESETS.map((item) => (
-            <PerformanceButton key={item.presetName} presetName={item.presetName} performanceNumber={item.performance} icon={item.icon} onClick={setPerformance} />
-          ))}
-        </div>
-      </div>
-      <div className="m-[5px] bg-black/25 p-3 rounded-xl">
-        <div className="pb-[10px] text-center">
-          <p>
-            DEBUG
-          </p>
-        </div>
-        <div className="flex gap-2 items-center justify-center">
-          <div className="flex-1">
-            <div className="flex items-center justify-center gap-2">
-              <span>Statistics {settings.statsEnabled ? "ON" : "OFF"}</span>
-              <ButtonToggle
-                enabled={settings.statsEnabled}
-                onChange={toggleStats}
-              />
+          <div className="flex self-container justify-between items-center">
+            <div className="flex flex-col flex-1 text-left justify-center">
+              <span>Auto (System Theme): {settings.backgroundColor ? "OFF" : "ON"}</span>
+              <span className="text-sm text-white/50">Turn this button off by selecting a below box.</span>
             </div>
+            <ButtonToggle
+              enabled={settings.backgroundColor === null}
+              onChange={(toggleVal) => { toggleVal ? setBackgroundColor(null) : setError(new Error("Please select a background to disable.")) }}
+            />
           </div>
-          <div className="self-stretch w-[1px] rounded-xl bg-gray-300/30" />
-          <motion.button
-            whileHover="hover"
-            whileTap="hover"
-            onClick={resetSettings}
-            className="popup-button-blue m-[4px] flex-1"
-          >
-            <div className="flex items-center justify-center gap-2">
-              <ResetArrowsIcon />
-              <span>Reset Cache</span>
-            </div>
-          </motion.button>
+          <div className="w-full h-[1px] rounded-xl bg-gray-300/30 my-3" />
+          <div className="grid grid-cols-3 gap-4 text-center disable">
+            {BACKGROUND_COLOR_PRESETS.map((item) => (
+              <SquareGradient key={item.presetName} presetName={item.presetName} colors={item.colors} onClick={(c) => setBackgroundColor(c[0])} />
+            ))}
+          </div>
         </div>
-      </div>
-    </PopupWindow>
+        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+          <div className="pb-[10px] text-center">
+            <p>
+              WAVE COLORS
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            {WAVE_COLOR_PRESETS.map((item) => (
+              <SquareGradient key={item.presetName} presetName={item.presetName} colors={item.colors} onClick={setWaveColor} />
+            ))}
+          </div>
+        </div>
+        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+          <div className="pb-[10px] text-center">
+            <p>
+              DOT DENSITY: <b>{currentDotCount}</b> PARTICLES
+            </p>
+            <p className="text-sm text-white/50">
+              Resizing window will set it back to auto-mode.
+            </p>
+          </div>
+          <Slider onChange={changeDotCount} value={currentDotCount} />
+        </div>
+        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+          <div className="pb-[10px] text-center">
+            <p>
+              GRAPHICS
+            </p>
+          </div>
+          <div className="flex gap-4 justify-center">
+            {PERFORMANCE_SETTINGS_PRESETS.map((item) => (
+              <PerformanceButton key={item.presetName} presetName={item.presetName} performanceNumber={item.performance} icon={item.icon} onClick={setPerformance} />
+            ))}
+          </div>
+        </div>
+        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+          <div className="pb-[10px] text-center">
+            <p>
+              DEBUG
+            </p>
+          </div>
+          <div className="flex gap-2 items-center justify-center">
+            <div className="flex-1">
+              <div className="flex items-center justify-center gap-2">
+                <span>Statistics {settings.statsEnabled ? "ON" : "OFF"}</span>
+                <ButtonToggle
+                  enabled={settings.statsEnabled}
+                  onChange={toggleStats}
+                />
+              </div>
+            </div>
+            <div className="self-stretch w-[1px] rounded-xl bg-gray-300/30" />
+            <motion.button
+              whileHover="hover"
+              whileTap="hover"
+              onClick={resetSettings}
+              className="popup-button-blue m-[4px] flex-1"
+            >
+              <div className="flex items-center justify-center gap-2">
+                <ResetArrowsIcon />
+                <span>Reset Cache</span>
+              </div>
+            </motion.button>
+          </div>
+        </div>
+      </PopupWindow>
+    </div>
   );
 }
