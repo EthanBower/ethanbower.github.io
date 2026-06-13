@@ -109,7 +109,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
           </div>
           <div className="flex self-container justify-between items-center">
             <div className="flex flex-col flex-1 text-left justify-center">
-              <span>Auto (System Theme): {settings.backgroundColor ? "OFF" : "ON"}</span>
+              <span>Auto (System Theme): {settings.backgroundColor === null ? "ON" : "OFF"}</span>
               <span className="text-sm text-white/50">Turn this button off by selecting a below box.</span>
             </div>
             <ButtonToggle
