@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSettings } from "../../providers/settingsProvider";
 import { SceneController } from "@/src/three";
 import { AppPermissions } from "@/src/components/utils/appPermissions";
+import WarningWindow from "@/src/components/ui/warningWindow";
 
 const LIGHT_MODE_COLOR = 0x1a1a1a;
 const DARK_MODE_COLOR = 0x0a0a0a;
@@ -14,8 +15,10 @@ type SpaceSceneProps = Readonly<{
 
 export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
   const { settings } = useSettings();
+  const errorOccurred = useRef<boolean>(false);
   const threeJsRef = useRef<HTMLDivElement | null>(null);
   const [isInstantiated, setIsInstantiated] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   // Handle initialization and asset loading
   useEffect(() => {
@@ -23,19 +26,32 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
     const pageScene = SceneController.getInstance();
     const initLoading = async () => {
-      await pageScene.init(threeJsRef.current!);
-      setIsInstantiated(true);
-      determineBackgroundColor(settings.backgroundColor);
-      pageScene.runAnimationLoop();
-      onLoadingComplete();
+      try {
+        await pageScene.init(threeJsRef.current!);
+        setIsInstantiated(true);
+        determineBackgroundColor(settings.backgroundColor);
+        pageScene.runAnimationLoop((error) => {
+          setError(new Error("Space animation loop crashed. Please consider refreshing the page.", { cause: error }));
+        });
+      } catch (error) {
+        throw new Error("Failed to initialize the scene, please try refreshing. Will otherwise attempt to continue on with page if window is exited.", {
+          cause: error instanceof Error ? error : new Error(String(error)),
+        });
+      } finally {
+        onLoadingComplete();
+      }
     };
 
-    initLoading();
+    initLoading().catch((error) => {
+      errorOccurred.current = true;
+      setError(error instanceof Error ? error : new Error(String(error)));
+    });
 
     return () => { };
   }, []);
 
-  // Handle dark mode listener - remount whenever the background color changes
+  // todo - when background changes, also change the HTML background to better blend in with mobile
+  // Handle dark mode listener
   useEffect(() => {
     const handleSystemTheme = (e: MediaQueryListEvent) => determineBackgroundColor(settings.backgroundColor, e.matches);
     const darkModeMediaQuery = getDarkModeQuery();
@@ -80,7 +96,13 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
     determineBackgroundColor(settings.backgroundColor);
   }, [isInstantiated, settings.backgroundColor]);
 
-  return <div ref={threeJsRef} id="three-root" className="w-full h-full z-0" />;
+  return (
+    <div>
+      {!errorOccurred.current && <div ref={threeJsRef} id="three-root" className="fixed inset-0 w-screen h-full z-0 w-full h-full z-0" />}
+      {errorOccurred.current && <p className="absolute flex justify-center items-center w-full h-full text-white">An error occurred loading the 3D scene. Please consider refreshing the page.</p>}
+      <WarningWindow enable={error != null} error={error} onClose={() => setError(null)} />
+    </div>
+  );
 }
 
 function determineBackgroundColor(backgroundColor: number | null, mediaQueryRan: boolean | null = null) {

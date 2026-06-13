@@ -11,6 +11,9 @@ import DashedSeparator from "./dashedSeperator";
 import Typewriter from "./typewriter";
 import TextScramble from "./textScramble";
 import ExitIcon from "../icons/exit";
+import { buttonStyles } from "@/src/styles/buttonStyles";
+import { popupWindow } from "@/src/styles/windows";
+import { glass } from "@/src/styles/surfaces";
 
 const windowVariants: Variants = {
   initial: {
@@ -82,7 +85,7 @@ export default function PopupWindow({
           >
             <motion.div
               layout
-              className="popup-window glass"
+              className={`${popupWindow} ${glass}`}
               variants={windowVariants}
               initial="initial"
               animate="enter"
@@ -112,7 +115,7 @@ export default function PopupWindow({
                       whileHover="hover"
                       whileTap="hover"
                       onClick={() => onClose?.()}
-                      className="popup-button-red !rounded-none !rounded-tr-xl !rounded-bl-xl !m-0 !p-1.5 h-full max-h-[80px] leading-none flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+                      className={`${buttonStyles.red} !rounded-none !rounded-tr-xl !rounded-bl-xl !m-0 !p-1.5 h-full max-h-[80px] leading-none flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap`}
                     >
                       <ExitIcon />
                       <span>Exit</span>

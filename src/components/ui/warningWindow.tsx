@@ -1,7 +1,8 @@
 import { AnimatePresence, motion, useDragControls, Variants } from "framer-motion";
 import ExitIcon from "../icons/exit";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import WarningIcon from "../icons/warning";
+import { buttonStyles } from "@/src/styles/buttonStyles";
 
 const windowVariants: Variants = {
     initial: {
@@ -36,15 +37,22 @@ const windowVariants: Variants = {
 type WarningWindowProps = Readonly<{
     error?: Error | null;
     enable: boolean;
+    consoleLogError?: boolean;
     onClose?: () => void;
 }>;
 
-export default function WarningWindow({ error, enable, onClose }: WarningWindowProps) {
+export default function WarningWindow({ error, enable, consoleLogError = true, onClose }: WarningWindowProps) {
     const dragControls = useDragControls();
     const windowRef = useRef<HTMLDivElement>(null);
     const [introDone, setIntroDone] = useState(false);
     const errorTitle = error ? error.message : "";
     const errorSubtitle = error?.cause instanceof Error ? error.cause.message : "";
+
+    useEffect(() => {
+        if (consoleLogError && enable) {
+            console.error("An error has occurred.", error);
+        }
+    }, [consoleLogError, enable, error]);
 
     return (
         <AnimatePresence>
@@ -137,7 +145,7 @@ export default function WarningWindow({ error, enable, onClose }: WarningWindowP
                                     </p>
                                     <div className="mt-6 flex gap-3">
                                         <motion.button
-                                            className="popup-button-red flex items-center justify-center gap-2" onClick={() => { setIntroDone(false); onClose?.() }}
+                                            className={`${buttonStyles.red} flex items-center justify-center gap-2`} onClick={() => { setIntroDone(false); onClose?.() }}
                                             whileHover="hover"
                                             whileTap="hover"
                                         >

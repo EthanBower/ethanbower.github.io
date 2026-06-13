@@ -1,5 +1,10 @@
 "use client";
 
+import Gear from "@/src/components/icons/gear";
+import HomeIcon from "@/src/components/icons/home";
+import PlanetIcon from "@/src/components/icons/planet";
+import { glass } from "@/src/styles/surfaces";
+import { SceneController } from "@/src/three";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import { useState } from "react";
 
@@ -76,44 +81,40 @@ interface NavbarProp {
 export default function Navbar({ items, isNavbarClosed }: NavbarProp) {
   return (
     <AnimatePresence>
-      {!isNavbarClosed && <NavbarHandler items={items} />}
-    </AnimatePresence>
-  );
-}
-
-function NavbarHandler({ items }: { items: NavItem[] }) {
-  return (
-    <motion.nav
-      variants={navbarVariants}
-      initial="initial"
-      animate="enter"
-      exit="exit"
-      className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 transform-gpu will-change-transform"
-    >
-      <motion.div
-        transition={{
-          duration: 6,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 5,
-        }}
-        animate={{ y: [0, -3, -2, -4, 0] }}
-      >
-        <motion.div
-          variants={containerVariants}
-          className="flex items-center gap-8 px-8 py-4 rounded-full glass"
+      {!isNavbarClosed && (
+        <motion.nav
+          variants={navbarVariants}
+          initial="initial"
+          animate="enter"
+          exit="exit"
+          className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 transform-gpu will-change-transform"
         >
-          {items.map((item) => (
-            <NavItem
-              key={item.label}
-              label={item.label}
-              icon={item.icon}
-              onClick={item.onClick}
-            />
-          ))}
-        </motion.div>
-      </motion.div>
-    </motion.nav>
+          <motion.div
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 5,
+            }}
+            animate={{ y: [0, -3, -2, -4, 0] }}
+          >
+            <motion.div
+              variants={containerVariants}
+              className={`flex items-center gap-8 px-8 py-4 rounded-full ${glass}`}
+            >
+              {items.map((item) => (
+                <NavItem
+                  key={item.label}
+                  label={item.label}
+                  icon={item.icon}
+                  onClick={item.onClick}
+                />
+              ))}
+            </motion.div>
+          </motion.div>
+        </motion.nav>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -133,7 +134,7 @@ function NavItem({ label, icon, onClick }: NavItem) {
         exit="exit"
         className="absolute"
       >
-        <div className="glass text-white text-[10px] p-[5px] px-2.5 py-1 rounded-md whitespace-nowrap">
+        <div className={`${glass} text-white text-[10px] p-[5px] px-2.5 py-1 rounded-md whitespace-nowrap`}>
           <span className="text-xs tracking-wide">{label}</span>
         </div>
       </motion.div>

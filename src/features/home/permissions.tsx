@@ -34,7 +34,7 @@ export default function Permissions({ isEnabled, onClose }: PermissionsProps) {
           setError(err);
         }
 
-        console.error("An error occurred setting motion controls.", err);
+        setError(new Error("An error occurred setting motion controls.", { cause: err }));
       }
     });
   };

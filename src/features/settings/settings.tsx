@@ -15,6 +15,7 @@ import SatelliteIcon from "../../components/icons/satellite";
 import TelescopeIcon from "../../components/icons/telescope";
 import { SceneController } from "@/src/three";
 import WarningWindow from "@/src/components/ui/warningWindow";
+import { buttonStyles } from "@/src/styles/buttonStyles";
 
 export const BACKGROUND_COLOR_PRESETS = [
   { presetName: "Cosmic Night Walk", colors: [0x0b1020] },
@@ -92,7 +93,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
   // todo - in dot density section, make a 'warning' banner with yellow/orange background that has slanted stripes (like a construction sign) that says "Increasing dot density may impact performance on some devices" or something like that. Make it so that the warning only appears if the user has set the dot density above a certain number (maybe 1500 or 2000?).
   return (
     <div>
-      <WarningWindow enable={error != null} error={error} onClose={() => setError(null)} />
+      <WarningWindow enable={error != null} error={error} onClose={() => setError(null)} consoleLogError={false} />
       <PopupWindow
         windowIcon={<GearIcon className="cursor-pointer text-gray-300" />}
         windowTitle="SETTINGS"
@@ -100,7 +101,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
         isEnabled={isEnabled}
         onClose={onClose}
       >
-        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
           <div className="pb-[10px] text-center">
             <p>
               BACKGROUND COLORS
@@ -123,7 +124,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
             ))}
           </div>
         </div>
-        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
           <div className="pb-[10px] text-center">
             <p>
               WAVE COLORS
@@ -135,7 +136,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
             ))}
           </div>
         </div>
-        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
           <div className="pb-[10px] text-center">
             <p>
               DOT DENSITY: <b>{currentDotCount}</b> PARTICLES
@@ -146,7 +147,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
           </div>
           <Slider onChange={changeDotCount} value={currentDotCount} />
         </div>
-        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
           <div className="pb-[10px] text-center">
             <p>
               GRAPHICS
@@ -158,7 +159,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
             ))}
           </div>
         </div>
-        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
           <div className="pb-[10px] text-center">
             <p>
               DEBUG
@@ -179,7 +180,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
               whileHover="hover"
               whileTap="hover"
               onClick={resetSettings}
-              className="popup-button-blue m-[4px] flex-1"
+              className={`${buttonStyles.blue} m-[4px] flex-1`}
             >
               <div className="flex items-center justify-center gap-2">
                 <ResetArrowsIcon />
