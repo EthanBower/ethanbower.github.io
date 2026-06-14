@@ -15,6 +15,9 @@ import SatelliteIcon from "../../components/icons/satellite";
 import TelescopeIcon from "../../components/icons/telescope";
 import { SceneController } from "@/src/three";
 import WarningWindow from "@/src/components/ui/warningWindow";
+import LoadingSpinner from "@/src/components/ui/loadingSpinner";
+import StatefulButton from "@/src/components/ui/statefulButton";
+import CheckMark from "@/src/components/icons/checkMark";
 
 export const BACKGROUND_COLOR_PRESETS = [
   { presetName: "Cosmic Night Walk", colors: [0x0b1020] },
@@ -92,7 +95,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
   // todo - in dot density section, make a 'warning' banner with yellow/orange background that has slanted stripes (like a construction sign) that says "Increasing dot density may impact performance on some devices" or something like that. Make it so that the warning only appears if the user has set the dot density above a certain number (maybe 1500 or 2000?).
   return (
     <div>
-      <WarningWindow enable={error != null} error={error} onClose={() => setError(null)} />
+      <WarningWindow enable={error != null} error={error} onClose={() => setError(null)} consoleLogError={false} />
       <PopupWindow
         windowIcon={<GearIcon className="cursor-pointer text-gray-300" />}
         windowTitle="SETTINGS"
@@ -100,7 +103,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
         isEnabled={isEnabled}
         onClose={onClose}
       >
-        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
           <div className="pb-[10px] text-center">
             <p>
               BACKGROUND COLORS
@@ -108,7 +111,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
           </div>
           <div className="flex self-container justify-between items-center">
             <div className="flex flex-col flex-1 text-left justify-center">
-              <span>Auto (System Theme): {settings.backgroundColor ? "OFF" : "ON"}</span>
+              <span>Auto (System Theme): {settings.backgroundColor === null ? "ON" : "OFF"}</span>
               <span className="text-sm text-white/50">Turn this button off by selecting a below box.</span>
             </div>
             <ButtonToggle
@@ -123,7 +126,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
             ))}
           </div>
         </div>
-        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
           <div className="pb-[10px] text-center">
             <p>
               WAVE COLORS
@@ -135,7 +138,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
             ))}
           </div>
         </div>
-        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
           <div className="pb-[10px] text-center">
             <p>
               DOT DENSITY: <b>{currentDotCount}</b> PARTICLES
@@ -146,7 +149,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
           </div>
           <Slider onChange={changeDotCount} value={currentDotCount} />
         </div>
-        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
           <div className="pb-[10px] text-center">
             <p>
               GRAPHICS
@@ -158,7 +161,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
             ))}
           </div>
         </div>
-        <div className="m-[5px] bg-black/25 p-3 rounded-xl">
+        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
           <div className="pb-[10px] text-center">
             <p>
               DEBUG
@@ -166,7 +169,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
           </div>
           <div className="flex gap-2 items-center justify-center">
             <div className="flex-1">
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-between gap-2">
                 <span>Statistics {settings.statsEnabled ? "ON" : "OFF"}</span>
                 <ButtonToggle
                   enabled={settings.statsEnabled}
@@ -175,17 +178,30 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
               </div>
             </div>
             <div className="self-stretch w-[1px] rounded-xl bg-gray-300/30" />
-            <motion.button
-              whileHover="hover"
-              whileTap="hover"
-              onClick={resetSettings}
-              className="popup-button-blue m-[4px] flex-1"
-            >
-              <div className="flex items-center justify-center gap-2">
-                <ResetArrowsIcon />
-                <span>Reset Cache</span>
-              </div>
-            </motion.button>
+            <div className="flex-1">
+              <StatefulButton
+                buttonStates={{
+                  init: (
+                    <motion.div animate="rotate" className="flex gap-2 items-center">
+                      <ResetArrowsIcon />
+                      <span>Reset Cache</span>
+                    </motion.div>
+                  ),
+                  loading: (
+                    <div className="flex items-center justify-center gap-2">
+                      <LoadingSpinner />
+                      <span>Resetting Cache...</span>
+                    </div>
+                  ),
+                  complete: (
+                    <motion.div animate="rotate" className="flex gap-2 items-center">
+                      <CheckMark />
+                      <span>Success!</span>
+                    </motion.div>
+                  )
+                }}
+                onClick={resetSettings} />
+            </div>
           </div>
         </div>
       </PopupWindow>

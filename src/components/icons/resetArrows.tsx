@@ -6,12 +6,12 @@ const resetIconVariants = {
   initial: {
     rotate: 0,
   },
-  hover: {
+  rotate: {
     rotate: 180,
     transition: {
       type: "spring",
       stiffness: 300,
-      damping: 18,
+      damping: 10,
     },
   },
 } as const;

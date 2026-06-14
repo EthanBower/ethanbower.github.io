@@ -3,7 +3,6 @@
 import Gear from "@/src/components/icons/gear";
 import HomeIcon from "@/src/components/icons/home";
 import PlanetIcon from "@/src/components/icons/planet";
-import WarningWindow from "@/src/components/ui/warningWindow";
 import { AppPermissions } from "@/src/components/utils/appPermissions";
 import LoadingScreen from "@/src/features/home/loadingScreen";
 import Permissions from "@/src/features/home/permissions";
@@ -51,9 +50,7 @@ export default function Home() {
       setNavDisplayEnabled(true);
     }, 1000);
 
-    return () => {
-      clearTimeout(timer);
-    };
+    return () => { clearTimeout(timer); };
   }
 
   function openSettingsWindow() {

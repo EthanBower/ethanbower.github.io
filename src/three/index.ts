@@ -12,11 +12,9 @@ import { Disposable } from "./abstracts/disposable";
 export class SceneController {
   private static instance?: SceneController | null;
   public frontPage?: FrontPageAnimation;
-  public ready: boolean = false;
 
   static getInstance(): SceneController {
     if (!SceneController.instance) {
-      console.log("Creating space scene instance...");
       SceneController.instance = new SceneController();
     }
     return SceneController.instance;
@@ -25,11 +23,10 @@ export class SceneController {
   public async init(canvasElm: HTMLDivElement): Promise<void> {
     this.frontPage = new FrontPageAnimation(canvasElm);
     await this.frontPage.loadAssets();
-    this.ready = true;
   }
 
-  public runAnimationLoop(): void {
-    this.frontPage!.animatePage();
+  public runAnimationLoop(onError: (error: Error) => void): void {
+    this.frontPage!.animatePage(onError);
   }
 
   public initGyro(): void {
@@ -223,7 +220,7 @@ export class FrontPageAnimation {
   public dotScene: DotsScene;
   public eventListeners: AnimationEventListeners;
   public stats?: Stats;
-  private animationId?: number;
+  private animationId?: number | null;
 
   public constructor(canvasElm: HTMLDivElement) {
     this.frontPageScene = new FrontPageSceneManager();
@@ -236,20 +233,24 @@ export class FrontPageAnimation {
     this.eventListeners = new AnimationEventListeners(this);
   }
 
-  public loadAssets(): Promise<void> {
-    return this.astroidScene.loadObjects();
+  public async loadAssets(): Promise<void> {
+    return await this.astroidScene.loadObjects();
   }
 
-  // todo - find a way to break this loop on error...
-  public animatePage(): void {
-    this.animationId = requestAnimationFrame(() => this.animatePage());
+  public animatePage(onError?: (error: Error) => void): void {
+    try {
+      globals.timeTracker!.updateTime();
 
-    globals.timeTracker!.updateTime();
+      this.stats?.begin();
+      Animatable.updateAll();
+      this.frontPageRenderer.render();
+      this.stats?.end();
 
-    this.stats?.begin();
-    Animatable.updateAll();
-    this.frontPageRenderer.render();
-    this.stats?.end();
+      this.animationId = requestAnimationFrame(() => this.animatePage(onError));
+    } catch (err) {
+      this.animationId = null;
+      onError?.(err instanceof Error ? err : new Error(String(err)));
+    }
   }
 
   public setStatsEnable(showStats: boolean): void {
