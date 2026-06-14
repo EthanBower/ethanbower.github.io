@@ -15,7 +15,7 @@ type SpaceSceneProps = Readonly<{
 
 export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
   const { settings } = useSettings();
-  const errorOccurred = useRef<boolean>(false);
+  const [errorOccurred, setErrorOccurred] = useState(false);
   const threeJsRef = useRef<HTMLDivElement | null>(null);
   const [isInstantiated, setIsInstantiated] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -43,7 +43,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
     };
 
     initLoading().catch((error) => {
-      errorOccurred.current = true;
+      setErrorOccurred(true);
       setError(error instanceof Error ? error : new Error(String(error)));
     });
 
@@ -98,8 +98,8 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
   return (
     <div>
-      {!errorOccurred.current && <div ref={threeJsRef} id="three-root" className="fixed inset-0 w-screen h-full z-0 w-full h-full z-0" />}
-      {errorOccurred.current && <p className="absolute flex justify-center items-center w-full h-full text-white">An error occurred loading the 3D scene. Please consider refreshing the page.</p>}
+      {!errorOccurred && <div ref={threeJsRef} id="three-root" className="fixed inset-0 w-screen h-full z-0 w-full h-full z-0" />}
+      {errorOccurred && <p className="absolute flex justify-center items-center w-full h-full text-white">An error occurred loading the 3D scene. Please consider refreshing the page.</p>}
       <WarningWindow enable={error != null} error={error} onClose={() => setError(null)} />
     </div>
   );

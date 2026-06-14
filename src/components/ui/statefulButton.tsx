@@ -33,11 +33,11 @@ type Status = "init" | "loading" | "complete";
 
 type StatefulButtonProps = {
     buttonStates: Record<Status, React.ReactNode>;
-    buttonClassStates?: Record<Status, String>;
+    buttonClassStates?: Record<Status, string>;
     onClick: () => void | Promise<void>;
 }
 
-const buttonClassDefaultStates: Record<Status, String> = {
+const buttonClassDefaultStates: Record<Status, string> = {
     init: buttonStyles.glass,
     loading: buttonStyles.glass,
     complete: buttonStyles.glassGreen
