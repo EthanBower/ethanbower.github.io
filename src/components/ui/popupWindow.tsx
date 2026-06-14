@@ -54,6 +54,7 @@ type PopupWindowProps = Readonly<{
   children: React.ReactNode;
 }>;
 
+// todo - scrollbar customizations
 export default function PopupWindow({
   windowTitle,
   windowTitleDescription,

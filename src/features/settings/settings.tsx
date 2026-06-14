@@ -15,7 +15,9 @@ import SatelliteIcon from "../../components/icons/satellite";
 import TelescopeIcon from "../../components/icons/telescope";
 import { SceneController } from "@/src/three";
 import WarningWindow from "@/src/components/ui/warningWindow";
-import { buttonStyles } from "@/src/styles/buttonStyles";
+import LoadingSpinner from "@/src/components/ui/loadingSpinner";
+import StatefulButton from "@/src/components/ui/statefulButton";
+import CheckMark from "@/src/components/icons/checkMark";
 
 export const BACKGROUND_COLOR_PRESETS = [
   { presetName: "Cosmic Night Walk", colors: [0x0b1020] },
@@ -176,17 +178,30 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
               </div>
             </div>
             <div className="self-stretch w-[1px] rounded-xl bg-gray-300/30" />
-            <motion.button
-              whileHover="hover"
-              whileTap="hover"
-              onClick={resetSettings}
-              className={`${buttonStyles.blue} m-[4px] flex-1`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <ResetArrowsIcon />
-                <span>Reset Cache</span>
-              </div>
-            </motion.button>
+            <div className="flex-1">
+              <StatefulButton
+                buttonStates={{
+                  init: (
+                    <motion.div animate="rotate" className="flex gap-2 items-center">
+                      <ResetArrowsIcon />
+                      <span>Reset Cache</span>
+                    </motion.div>
+                  ),
+                  loading: (
+                    <div className="flex items-center justify-center gap-2">
+                      <LoadingSpinner />
+                      <span>Resetting Cache...</span>
+                    </div>
+                  ),
+                  complete: (
+                    <motion.div animate="rotate" className="flex gap-2 items-center">
+                      <CheckMark />
+                      <span>Success!</span>
+                    </motion.div>
+                  )
+                }}
+                onClick={resetSettings} />
+            </div>
           </div>
         </div>
       </PopupWindow>
