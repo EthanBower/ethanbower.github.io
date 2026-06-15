@@ -107,6 +107,18 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
         <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
           <div className="pb-[10px] text-center">
             <p>
+              GRAPHICS
+            </p>
+          </div>
+          <div className="flex gap-4 justify-center">
+            {PERFORMANCE_SETTINGS_PRESETS.map((item) => (
+              <PerformanceButton key={item.presetName} presetName={item.presetName} performanceNumber={item.performance} icon={item.icon} onClick={setPerformance} />
+            ))}
+          </div>
+        </div>
+        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
+          <div className="pb-[10px] text-center">
+            <p>
               BACKGROUND COLORS
             </p>
           </div>
@@ -159,18 +171,6 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
             </div>
           </div>
           <Slider onChange={changeDotCount} value={currentDotCount} />
-        </div>
-        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
-          <div className="pb-[10px] text-center">
-            <p>
-              GRAPHICS
-            </p>
-          </div>
-          <div className="flex gap-4 justify-center">
-            {PERFORMANCE_SETTINGS_PRESETS.map((item) => (
-              <PerformanceButton key={item.presetName} presetName={item.presetName} performanceNumber={item.performance} icon={item.icon} onClick={setPerformance} />
-            ))}
-          </div>
         </div>
         <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
           <div className="pb-[10px] text-center">
