@@ -1372,7 +1372,6 @@ export class Utils {
   }
 }
 
-// todo - externalize this, look in every class and ID constants to put in here
 export const globals = {
   timeTracker: new TimeTracker(),
   threeJsBackgroundColor: 0x1a1a1a,

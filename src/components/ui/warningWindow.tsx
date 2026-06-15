@@ -1,8 +1,10 @@
 import { AnimatePresence, motion, useDragControls, Variants } from "framer-motion";
 import ExitIcon from "../icons/exit";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import WarningIcon from "../icons/warning";
 import { buttonStyles } from "@/src/styles/buttonStyles";
+import WarningBackground from "./warningBackground";
+import { yellowWindowGlow } from "@/src/styles/windows";
 
 const windowVariants: Variants = {
     initial: {
@@ -44,7 +46,6 @@ type WarningWindowProps = Readonly<{
 export default function WarningWindow({ error, enable, consoleLogError = true, onClose }: WarningWindowProps) {
     const dragControls = useDragControls();
     const windowRef = useRef<HTMLDivElement>(null);
-    const [introDone, setIntroDone] = useState(false);
     const errorTitle = error ? error.message : "";
     const errorSubtitle = error?.cause instanceof Error ? error.cause.message : "";
 
@@ -79,82 +80,63 @@ export default function WarningWindow({ error, enable, consoleLogError = true, o
                     >
                         <motion.div
                             layout
-                            className="relative w-[inherit] h-auto max-h-full overflow-hidden rounded-xl border border-yellow-500/40 backdrop-blur-[3px] 
-                                bg-black/0 dark:bg-black/40
-                                shadow-[0_0_20px_rgba(234,179,8,.4),inset_0_0_15px_rgba(234,179,8,0.3)]"
+                            className={`
+                                ${yellowWindowGlow}
+                                relative w-[inherit] h-auto max-h-full overflow-hidden rounded-xl backdrop-blur-[3px] 
+                                bg-black/0 dark:bg-black/40`}
                             variants={windowVariants}
                             initial="initial"
                             animate="enter"
                             exit="exit"
                         >
-                            <motion.div
-                                className="absolute inset-0 z-0 bg-[length:101.82px_101.82px]
-                                    bg-[repeating-linear-gradient(-45deg,rgba(255,204,0,0.4)_0px,rgba(255,204,0,0.4)_36px,transparent_36px,transparent_72px)] 
-                                    dark:bg-[repeating-linear-gradient(-45deg,rgba(255,204,0,0.2)_0px,rgba(255,204,0,0.2)_36px,transparent_36px,transparent_72px)]"
-                                animate={{
-                                    backgroundPositionX: introDone ? ["0px", "101.82px"] : ["0px", "203.64px"],
-                                }}
-                                transition={
-                                    introDone ?
-                                        {
-                                            duration: 8,
-                                            ease: "linear",
-                                            repeat: Infinity,
-                                        } : {
-                                            duration: 1.5,
-                                            ease: "easeOut",
-                                        }
-                                }
-                                onAnimationComplete={() => {
-                                    if (!introDone) setIntroDone(true);
-                                }}
-                            />
-                            <div className="relative z-1">
-                                <div className="flex self-center gap-4 pt-4 px-3 cursor-grab active:cursor-grabbing" onPointerDown={(e) => dragControls.start(e)}>
-                                    <div className="flex items-center">
-                                        <WarningIcon />
+                            <WarningBackground>
+                                <div className="relative">
+                                    <div className="flex self-center gap-4 pt-4 px-3 cursor-grab active:cursor-grabbing" onPointerDown={(e) => dragControls.start(e)}>
+                                        <div className="flex items-center">
+                                            <WarningIcon />
+                                        </div>
+                                        <div className="flex flex-col flex-1 text-left justify-center">
+                                            <h3 className="text-yellow-300 tracking-widest font-mono font-bold">
+                                                SYSTEM ALERT
+                                            </h3>
+                                            <div className="relative w-full h-6 overflow-hidden border-y border-yellow-500/20 my-1">
+                                                <motion.div
+                                                    className="absolute inset-y-0 left-0 flex items-center whitespace-nowrap text-[10px] font-mono tracking-[0.3em] text-yellow-300/60"
+                                                    animate={{
+                                                        x: ["0%", "-50%"],
+                                                    }}
+                                                    transition={{
+                                                        duration: 25,
+                                                        ease: "linear",
+                                                        repeat: Infinity,
+                                                    }}
+                                                >
+                                                    SYSTEM FAILURE • SYSTEM FAILURE • SYSTEM FAILURE • SYSTEM FAILURE •
+                                                    SYSTEM FAILURE • SYSTEM FAILURE • SYSTEM FAILURE • SYSTEM FAILURE •
+                                                </motion.div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col flex-1 text-left justify-center">
-                                        <h3 className="text-yellow-300 tracking-widest font-mono font-bold">
-                                            SYSTEM ALERT
-                                        </h3>
-                                        <div className="relative w-full h-6 overflow-hidden border-y border-yellow-500/20 my-1">
-                                            <motion.div
-                                                className="absolute inset-y-0 left-0 flex items-center whitespace-nowrap text-[10px] font-mono tracking-[0.3em] text-yellow-300/60"
-                                                animate={{
-                                                    x: ["0%", "-50%"],
-                                                }}
-                                                transition={{
-                                                    duration: 25,
-                                                    ease: "linear",
-                                                    repeat: Infinity,
-                                                }}
+                                    <div className="py-6 px-3 text-left">
+                                        <p className="text-yellow-100">
+                                            {errorTitle}
+                                        </p>
+                                        <p className="mt-3 text-yellow-100/60 text-sm">
+                                            {errorSubtitle}
+                                        </p>
+                                        <div className="mt-6 flex gap-3">
+                                            <motion.button
+                                                className={`${buttonStyles.red} flex items-center justify-center gap-2`} onClick={() => onClose?.()}
+                                                whileHover="hover"
+                                                whileTap="hover"
                                             >
-                                                SYSTEM FAILURE • SYSTEM FAILURE • SYSTEM FAILURE • SYSTEM FAILURE •
-                                                SYSTEM FAILURE • SYSTEM FAILURE • SYSTEM FAILURE • SYSTEM FAILURE •
-                                            </motion.div>
+                                                <ExitIcon />
+                                                <span>Exit</span>
+                                            </motion.button>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="py-6 px-3 text-left">
-                                    <p className="text-yellow-100">
-                                        {errorTitle}
-                                    </p>
-                                    <p className="mt-3 text-yellow-100/60 text-sm">
-                                        {errorSubtitle}
-                                    </p>
-                                    <div className="mt-6 flex gap-3">
-                                        <motion.button
-                                            className={`${buttonStyles.red} flex items-center justify-center gap-2`} onClick={() => { setIntroDone(false); onClose?.() }}
-                                            whileHover="hover"
-                                            whileTap="hover"
-                                        >
-                                            <ExitIcon />
-                                            <span>Exit</span>
-                                        </motion.button>
-                                    </div>
-                                </div>
-                            </div>
+                            </WarningBackground>
                         </motion.div>
                     </motion.div>
                 </div>

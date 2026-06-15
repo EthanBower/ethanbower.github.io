@@ -18,6 +18,8 @@ import WarningWindow from "@/src/components/ui/warningWindow";
 import LoadingSpinner from "@/src/components/ui/loadingSpinner";
 import StatefulButton from "@/src/components/ui/statefulButton";
 import CheckMark from "@/src/components/icons/checkMark";
+import WarningBackground from "@/src/components/ui/warningBackground";
+import { yellowWindowGlow } from "@/src/styles/windows";
 
 export const BACKGROUND_COLOR_PRESETS = [
   { presetName: "Cosmic Night Walk", colors: [0x0b1020] },
@@ -92,7 +94,6 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
     }));
   }
 
-  // todo - in dot density section, make a 'warning' banner with yellow/orange background that has slanted stripes (like a construction sign) that says "Increasing dot density may impact performance on some devices" or something like that. Make it so that the warning only appears if the user has set the dot density above a certain number (maybe 1500 or 2000?).
   return (
     <div>
       <WarningWindow enable={error != null} error={error} onClose={() => setError(null)} consoleLogError={false} />
@@ -116,7 +117,13 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
             </div>
             <ButtonToggle
               enabled={settings.backgroundColor === null}
-              onChange={(toggleVal) => { toggleVal ? setBackgroundColor(null) : setError(new Error("Please select a background to disable.")) }}
+              onChange={(toggleVal) => {
+                if (toggleVal) {
+                  setBackgroundColor(null);
+                } else {
+                  setError(new Error("Please select a background to disable."));
+                }
+              }}
             />
           </div>
           <div className="w-full h-[1px] rounded-xl bg-gray-300/30 my-3" />
@@ -143,9 +150,13 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
             <p>
               DOT DENSITY: <b>{currentDotCount}</b> PARTICLES
             </p>
-            <p className="text-sm text-white/50">
-              Resizing window will set it back to auto-mode.
-            </p>
+            <div className="flex items-center justify-center">
+              <WarningBackground className={`p-2 rounded-xl ${yellowWindowGlow}`} runIntro={false}>
+                <p className="text-sm text-white/60 text-shadow-sm">
+                  Resizing window will set it back to auto-mode.
+                </p>
+              </WarningBackground>
+            </div>
           </div>
           <Slider onChange={changeDotCount} value={currentDotCount} />
         </div>
