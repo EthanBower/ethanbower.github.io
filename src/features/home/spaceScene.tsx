@@ -17,18 +17,18 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
   const { settings } = useSettings();
   const [errorOccurred, setErrorOccurred] = useState(false);
   const threeJsRef = useRef<HTMLDivElement | null>(null);
-  const [isInstantiated, setIsInstantiated] = useState(false);
+  const isInstantiated = useRef<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Handle initialization and asset loading
+  // Handle initialization and asset loading.
   useEffect(() => {
-    if (!threeJsRef.current || isInstantiated) return;
+    if (!threeJsRef.current || isInstantiated.current) return;
 
     const pageScene = SceneController.getInstance();
     const initLoading = async () => {
       try {
         await pageScene.init(threeJsRef.current!);
-        setIsInstantiated(true);
+        isInstantiated.current = true;
         determineBackgroundColor(settings.backgroundColor);
         pageScene.runAnimationLoop((error) => {
           setError(new Error("Space animation loop crashed. Please consider refreshing the page.", { cause: error }));
@@ -48,9 +48,10 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
     });
 
     return () => { };
+    // eslint rule disabled because this is meant to run exactly once, as this space scene is a singleton instance.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // todo - when background changes, also change the HTML background to better blend in with mobile
   // Handle dark mode listener
   useEffect(() => {
     const handleSystemTheme = (e: MediaQueryListEvent) => determineBackgroundColor(settings.backgroundColor, e.matches);
@@ -65,34 +66,34 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
   // Configure custom settings once localSettings is parsed/read
   useEffect(() => {
-    if (!isInstantiated) return;
+    if (!isInstantiated.current) return;
     SceneController.getInstance().setStatsEnable(settings.statsEnabled);
   }, [isInstantiated, settings.statsEnabled]);
 
   useEffect(() => {
-    if (!isInstantiated) return;
+    if (!isInstantiated.current) return;
     if (!settings.motionEnabled || !AppPermissions.gyroPermissions.gyroCompatible) return;
     SceneController.getInstance().initGyro();
   }, [isInstantiated, settings.motionEnabled]);
 
   useEffect(() => {
-    if (!isInstantiated) return;
+    if (!isInstantiated.current) return;
     if (settings.dotCount === null) return;
     SceneController.getInstance().changeDotSpawnCount(settings.dotCount);
   }, [isInstantiated, settings.dotCount]);
 
   useEffect(() => {
-    if (!isInstantiated) return;
+    if (!isInstantiated.current) return;
     SceneController.getInstance().setWaveLighting(settings.waveColors);
   }, [isInstantiated, settings.waveColors]);
 
   useEffect(() => {
-    if (!isInstantiated) return;
+    if (!isInstantiated.current) return;
     SceneController.getInstance().setPerformance(settings.performance);
   }, [isInstantiated, settings.performance]);
 
   useEffect(() => {
-    if (!isInstantiated) return;
+    if (!isInstantiated.current) return;
     determineBackgroundColor(settings.backgroundColor);
   }, [isInstantiated, settings.backgroundColor]);
 
@@ -111,12 +112,11 @@ function determineBackgroundColor(backgroundColor: number | null, mediaQueryRan:
   // Auto - mode enable
   if (backgroundColor == null) {
     const darkModeEnabled = mediaQueryRan ?? getDarkModeQuery().matches;
-    sceneController.setBackgroundColor(darkModeEnabled ? DARK_MODE_COLOR : LIGHT_MODE_COLOR);
-    return;
+    backgroundColor = darkModeEnabled ? DARK_MODE_COLOR : LIGHT_MODE_COLOR;
   }
 
-  // Custom background
   sceneController.setBackgroundColor(backgroundColor);
+  document.documentElement.style.setProperty("--background", `#${backgroundColor.toString(16).padStart(6, "0")}`);
 }
 
 function getDarkModeQuery(): MediaQueryList {

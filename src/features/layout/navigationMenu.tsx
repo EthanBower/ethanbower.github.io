@@ -1,10 +1,6 @@
 "use client";
 
-import Gear from "@/src/components/icons/gear";
-import HomeIcon from "@/src/components/icons/home";
-import PlanetIcon from "@/src/components/icons/planet";
 import { glass } from "@/src/styles/surfaces";
-import { SceneController } from "@/src/three";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import { useState } from "react";
 
