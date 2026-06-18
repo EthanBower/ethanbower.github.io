@@ -12,6 +12,16 @@ jobs:
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
+      - name: 🗒️ Generate release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p public
+          gh pr list \
+            --state merged \
+            --limit 20 \
+            --json title,mergedAt \
+            > public/release-notes.json
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -24,32 +34,11 @@ jobs:
           NEXT_PUBLIC_SITE_APP_VERSION: "v0.0.${{ github.run_number }}"
         run: npm run build
       - name: 📤 Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./out
-  release_notes:
-    runs-on: ubuntu-latest
-    outputs:
-      artifact_path: dist/artifacts
-    steps:
-      - uses: actions/checkout@v4
-      - name: 🗒️ Generating release notes
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          mkdir -p dist/artifacts
-          gh pr list \
-            --state merged \
-            --limit 20 \
-            --json title,mergedAt \
-            > dist/artifacts/release-notes.json
-      - name: ⬆️ Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-notes
-          path: dist/artifacts
   deploy:
-    needs: [build, release_notes]
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
