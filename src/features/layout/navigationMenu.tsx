@@ -42,9 +42,9 @@ const containerVariants: Variants = {
 } as const;
 
 const toolTipVariants: Variants = {
-  initial: { opacity: 0, y: 0, scale: 0.95, filter: "blur(10px)" },
-  enter: { opacity: 1, y: -43, scale: 1, filter: "blur(0px)" },
-  exit: { opacity: 0, y: 0, scale: 0.95, filter: "blur(10px)" },
+  initial: { opacity: 0, y: -20, scale: 0.95, filter: "blur(6px)" },
+  enter: { opacity: 1, y: -45, scale: 1, filter: "blur(0px)" },
+  exit: { opacity: 0, y: -20, scale: 0.95, filter: "blur(6px)" },
 } as const;
 
 const itemVariants: Variants = {

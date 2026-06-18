@@ -1,6 +1,6 @@
 "use client";
 
-import { FrontPageAnimation, Utils } from "..";
+import { FrontPageAnimation, globals, Utils } from "..";
 import { Animatable } from "../abstracts/animatable";
 
 export class AsteroidAnimation extends Animatable {
@@ -23,7 +23,9 @@ export class AsteroidAnimation extends Animatable {
     }
 
     // Smooth zoom
-    camera.position.z += (this.cameraTargetZ - camera.position.z) * 0.04;
+    camera.position.z +=
+      (this.cameraTargetZ - camera.position.z) *
+      (2.4 * globals.timeTracker.deltaTime);
   }
 
   protected override onDispose(): void {

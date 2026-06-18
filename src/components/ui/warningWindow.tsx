@@ -10,13 +10,11 @@ const windowVariants: Variants = {
     initial: {
         opacity: 0,
         scale: 0.85,
-        filter: "blur(12px)",
         y: 20,
     },
     enter: {
         opacity: 1,
         scale: 1,
-        filter: "blur(0px)",
         y: 0,
         transition: {
             type: "spring",
@@ -27,7 +25,6 @@ const windowVariants: Variants = {
     exit: {
         opacity: 0,
         scale: 0.9,
-        filter: "blur(8px)",
         y: 10,
         transition: {
             duration: 0.2,
@@ -64,7 +61,7 @@ export default function WarningWindow({ error, enable, consoleLogError = true, o
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
-                        className="absolute inset-0 z-0 bg-black/60 backdrop-blur-[3px] pointer-events-auto"
+                        className="absolute inset-0 z-0 bg-black/60 pointer-events-auto"
                     >
                         <div className="absolute inset-0 opacity-[0.2] dark:opacity-[0.08] bg-[linear-gradient(to_right,#eab308_1px,transparent_1px),linear-gradient(to_bottom,#eab308_1px,transparent_1px)] bg-[size:4rem_4rem]" />
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.8)_100%)]" />
@@ -82,8 +79,7 @@ export default function WarningWindow({ error, enable, consoleLogError = true, o
                             layout
                             className={`
                                 ${yellowWindowGlow}
-                                relative w-[inherit] h-auto max-h-full overflow-hidden rounded-xl backdrop-blur-[3px] 
-                                bg-black/0 dark:bg-black/40`}
+                                relative w-[inherit] h-auto max-h-full overflow-hidden rounded-xl bg-black/90`}
                             variants={windowVariants}
                             initial="initial"
                             animate="enter"

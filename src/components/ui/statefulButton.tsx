@@ -84,9 +84,9 @@ export default function StatefulButton({ buttonStates, buttonClassStates = butto
             >
                 <motion.div
                     key={status}
-                    initial={{ opacity: 0, y: 10, filter: "blur(5px)" }}
+                    initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, y: -10, filter: "blur(5px)" }}
+                    exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
                     transition={{ duration: .25 }}
                     className="flex items-center justify-center"
                 >
