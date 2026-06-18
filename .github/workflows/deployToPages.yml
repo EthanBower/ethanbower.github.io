@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: 🗒️ Generate release notes
         env:
           GH_TOKEN: ${{ github.token }}
@@ -23,7 +23,7 @@ jobs:
             --json title,mergedAt \
             > public/release-notes.json
       - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: "npm"
@@ -34,7 +34,7 @@ jobs:
           NEXT_PUBLIC_SITE_APP_VERSION: "v0.0.${{ github.run_number }}"
         run: npm run build
       - name: 📤 Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./out
   deploy:
@@ -44,4 +44,4 @@ jobs:
       name: github-pages
     steps:
       - name: 🚀 Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
