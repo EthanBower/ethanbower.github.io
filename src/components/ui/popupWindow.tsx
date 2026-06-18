@@ -13,19 +13,17 @@ import TextScramble from "./textScramble";
 import ExitIcon from "../icons/exit";
 import { buttonStyles } from "@/src/styles/buttonStyles";
 import { popupWindow } from "@/src/styles/windows";
-import { glass } from "@/src/styles/surfaces";
+import { transparentNoGlass } from "@/src/styles/surfaces";
 
 const windowVariants: Variants = {
   initial: {
     opacity: 0,
     scale: 0.85,
-    filter: "blur(12px)",
     y: 20,
   },
   enter: {
     opacity: 1,
     scale: 1,
-    filter: "blur(0px)",
     y: 0,
     transition: {
       type: "spring",
@@ -36,7 +34,6 @@ const windowVariants: Variants = {
   exit: {
     opacity: 0,
     scale: 0.9,
-    filter: "blur(12px)",
     y: 10,
     transition: {
       duration: 0.2,
@@ -86,7 +83,7 @@ export default function PopupWindow({
           >
             <motion.div
               layout
-              className={`${popupWindow} ${glass}`}
+              className={`${popupWindow} ${transparentNoGlass}`}
               variants={windowVariants}
               initial="initial"
               animate="enter"

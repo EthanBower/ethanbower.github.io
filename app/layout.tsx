@@ -31,13 +31,16 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // todo - implement motion config to reduce motion globally
   return (
     <html
       lang="en"
       className={`${spaceGrotesk.className} ${geistSans.variable} h-full antialiased`}
     >
       <body>
-        <SettingsProvider>{children}</SettingsProvider>
+        <SettingsProvider>
+          {children}
+        </SettingsProvider>
       </body>
     </html>
   );

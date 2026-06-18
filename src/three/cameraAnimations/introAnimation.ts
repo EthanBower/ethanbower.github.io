@@ -1,6 +1,6 @@
 "use client;";
 
-import { FrontPageAnimation, Utils } from "..";
+import { FrontPageAnimation, globals, Utils } from "..";
 import { Animatable } from "../abstracts/animatable";
 
 export class IntroAnimation extends Animatable {
@@ -22,7 +22,9 @@ export class IntroAnimation extends Animatable {
       return;
     }
 
-    camera.position.y += (this.cameraTargetY - camera.position.y) * 0.04;
+    camera.position.y +=
+      (this.cameraTargetY - camera.position.y) *
+      (2.4 * globals.timeTracker.deltaTime);
   }
 
   protected override onDispose(): void {

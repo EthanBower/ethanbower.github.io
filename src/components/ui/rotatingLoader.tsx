@@ -34,9 +34,9 @@ export default function RotatingLoader({ textMessages }: RotatingLoaderProps) {
                 <AnimatePresence mode="popLayout">
                     <motion.div
                         key={index}
-                        initial={{ y: 20, opacity: 0, filter: "blur(5px)" }}
+                        initial={{ y: 20, opacity: 0, filter: "blur(4px)" }}
                         animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-                        exit={{ y: -20, opacity: 0, filter: "blur(5px)" }}
+                        exit={{ y: -20, opacity: 0, filter: "blur(4px)" }}
                         transition={{
                             type: "spring",
                             stiffness: 600,

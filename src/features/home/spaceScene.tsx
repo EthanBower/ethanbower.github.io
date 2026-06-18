@@ -17,18 +17,18 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
   const { settings } = useSettings();
   const [errorOccurred, setErrorOccurred] = useState(false);
   const threeJsRef = useRef<HTMLDivElement | null>(null);
-  const isInstantiated = useRef<boolean>(false);
+  const [isInstantiated, setIsInstantiated] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   // Handle initialization and asset loading.
   useEffect(() => {
-    if (!threeJsRef.current || isInstantiated.current) return;
+    if (!threeJsRef.current || isInstantiated) return;
 
     const pageScene = SceneController.getInstance();
     const initLoading = async () => {
       try {
         await pageScene.init(threeJsRef.current!);
-        isInstantiated.current = true;
+        setIsInstantiated(true);
         determineBackgroundColor(settings.backgroundColor);
         pageScene.runAnimationLoop((error) => {
           setError(new Error("Space animation loop crashed. Please consider refreshing the page.", { cause: error }));
@@ -66,34 +66,34 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
   // Configure custom settings once localSettings is parsed/read
   useEffect(() => {
-    if (!isInstantiated.current) return;
+    if (!isInstantiated) return;
     SceneController.getInstance().setStatsEnable(settings.statsEnabled);
   }, [isInstantiated, settings.statsEnabled]);
 
   useEffect(() => {
-    if (!isInstantiated.current) return;
+    if (!isInstantiated) return;
     if (!settings.motionEnabled || !AppPermissions.gyroPermissions.gyroCompatible) return;
     SceneController.getInstance().initGyro();
   }, [isInstantiated, settings.motionEnabled]);
 
   useEffect(() => {
-    if (!isInstantiated.current) return;
+    if (!isInstantiated) return;
     if (settings.dotCount === null) return;
     SceneController.getInstance().changeDotSpawnCount(settings.dotCount);
   }, [isInstantiated, settings.dotCount]);
 
   useEffect(() => {
-    if (!isInstantiated.current) return;
+    if (!isInstantiated) return;
     SceneController.getInstance().setWaveLighting(settings.waveColors);
   }, [isInstantiated, settings.waveColors]);
 
   useEffect(() => {
-    if (!isInstantiated.current) return;
+    if (!isInstantiated) return;
     SceneController.getInstance().setPerformance(settings.performance);
   }, [isInstantiated, settings.performance]);
 
   useEffect(() => {
-    if (!isInstantiated.current) return;
+    if (!isInstantiated) return;
     determineBackgroundColor(settings.backgroundColor);
   }, [isInstantiated, settings.backgroundColor]);
 

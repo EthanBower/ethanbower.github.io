@@ -27,8 +27,27 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
+  release_notes:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact_path: dist/artifacts
+    steps:
+      - uses: actions/checkout@v4
+      - name: 🗒️ Generating release notes
+        run: |
+          mkdir -p dist/artifacts
+          gh pr list \
+            --state merged \
+            --limit 20 \
+            --json title,mergedAt \
+            > dist/artifacts/release-notes.json
+      - name: ⬆️ Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: dist/artifacts
   deploy:
-    needs: build
+    needs: [build, release_notes]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

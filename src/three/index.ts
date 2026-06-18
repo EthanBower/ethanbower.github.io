@@ -9,6 +9,8 @@ import Stats from "three/examples/jsm/libs/stats.module.js";
 import { Animatable } from "./abstracts/animatable";
 import { Disposable } from "./abstracts/disposable";
 
+// todo - camera time-movement
+
 export class SceneController {
   private static instance?: SceneController | null;
   public frontPage?: FrontPageAnimation;
@@ -189,7 +191,6 @@ class AnimationEventListeners extends Disposable {
 }
 
 class TimeTracker {
-  public time!: number;
   public elapsedTime!: number;
   public deltaTime!: number;
   public lastFrameTime: number;
@@ -203,7 +204,6 @@ class TimeTracker {
     const perfNow = performance.now();
 
     // The 0.001 converts to seconds
-    this.time = Date.now() * 0.001;
     this.elapsedTime = perfNow * 0.001;
     this.deltaTime = (perfNow - this.lastFrameTime) * 0.001;
     this.lastFrameTime = perfNow;
@@ -316,19 +316,20 @@ class AstroidScene extends Animatable {
   }
 
   override update(): void {
-    const time = globals.timeTracker!.time;
+    const dt = globals.timeTracker.deltaTime;
+    const t = globals.timeTracker.elapsedTime;
 
-    // Slow rotation (space drift feel)
-    this.asteroidModel!.rotation.y += 0.002;
-    this.asteroidModel!.rotation.x += 0.001;
+    // rotation (continuous)
+    this.asteroidModel!.rotation.y += 0.2 * dt;
+    this.asteroidModel!.rotation.x += 0.1 * dt;
 
-    // Floating motion with gentle depth wobble
-    this.asteroidModel!.position.y += Math.sin(time) * 0.003;
-    this.asteroidModel!.position.x += Math.cos(time * 0.7) * 0.001;
-    this.asteroidModel!.position.z += Math.sin(time * 0.5) * 0.0005;
+    // floating (procedural, NOT accumulated)
+    this.asteroidModel!.position.y += Math.sin(t) * 0.003;
+    this.asteroidModel!.position.x += Math.cos(t) * 0.002;
+    this.asteroidModel!.position.z += Math.sin(t) * 0.0015;
 
-    this.lights.rimLight!.intensity = Utils.calcFadeInFadeOut(100, 450, time);
-    this.lights.fillLight!.intensity = Utils.calcFadeInFadeOut(150, 500, time);
+    this.lights.rimLight!.intensity = Utils.calcFadeInFadeOut(100, 450, t);
+    this.lights.fillLight!.intensity = Utils.calcFadeInFadeOut(150, 500, t);
   }
 
   override onDispose(): void {
@@ -843,15 +844,16 @@ class Dot extends Disposable {
       this.material,
     );
     this.dotMesh.position.copy(dotPos);
-    this.velocity = new THREE.Vector3(
-      Utils.getRandomBetween(-0.05, 0.05, 0.007),
-      Utils.getRandomBetween(-0.05, 0.05, 0.007),
-      Utils.getRandomBetween(-0.03, 0.03, 0.004),
-    );
+    this.velocity = this.getVelocity();
     this.frontPage = frontPage;
   }
 
   public updateDot(frontPage: FrontPageAnimation): void {
+    this.dotMesh.position.addScaledVector(
+      this.velocity,
+      globals.timeTracker.deltaTime,
+    );
+
     this.runCollisionOpenSpace(frontPage);
     this.runDotDistanceGradient(frontPage);
     this.updateSpawnFadeIn();
@@ -862,8 +864,6 @@ class Dot extends Disposable {
   }
 
   private runCollisionOpenSpace(frontPage: FrontPageAnimation): void {
-    this.dotMesh.position.add(this.velocity);
-
     const cam = frontPage.mainCamera.camera;
     const local = this.tempVecs.collisionVec // Take dot position into camera space to check bounds and collisions
       .copy(this.dotMesh.position)
@@ -939,11 +939,8 @@ class Dot extends Disposable {
     local.copy(spawn);
 
     // Fresh motion
-    this.velocity.set(
-      Utils.getRandomBetween(-0.05, 0.05, 0.007),
-      Utils.getRandomBetween(-0.05, 0.05, 0.007),
-      Utils.getRandomBetween(-0.03, 0.03, 0.004),
-    );
+    const velocity = this.getVelocity();
+    this.velocity.set(velocity.x, velocity.y, velocity.z);
 
     this.material.opacity = 0;
     this.spawnOpacityAlpha = 0;
@@ -1019,6 +1016,14 @@ class Dot extends Disposable {
     this.spawnOpacityAlpha += (spawnTarget - this.spawnOpacityAlpha) * speed;
     this.material.opacity = this.spawnOpacityAlpha;
   }
+
+  private getVelocity(): THREE.Vector3 {
+    return new THREE.Vector3(
+      Utils.getRandomBetween(-3, 3, 0.007),
+      Utils.getRandomBetween(-3, 3, 0.007),
+      Utils.getRandomBetween(-1, 1, 0.004),
+    );
+  }
 }
 
 class WavesScene extends Animatable {
@@ -1077,23 +1082,23 @@ class WavesScene extends Animatable {
   }
 
   public resolveDotCollision(dot: Dot) {
-    const time = globals.timeTracker.time * 0.17;
+    const zHeight = this.getWaveZHeight();
     const nextPos = this.tempVecs.tempVec1
       .copy(dot.dotMesh.position)
       .add(dot.velocity);
     const localPos = this.tempVecs.tempVec2.copy(nextPos);
     this.planeMesh.worldToLocal(localPos);
-    const waveZ = this.getWaveHeight(localPos.x, localPos.y, time); // Sample wave height in LOCAL plane coordinates
+    const waveZ = this.getWaveNoise(localPos.x, localPos.y, zHeight); // Sample wave height in LOCAL plane coordinates
     const distToSurface = localPos.z - waveZ; // Distance from particle to wave surface
     const radius = globals.dotSettings.dotRadius; // Radius padding
 
     // If collision occurs (dot is within radius of surface), push dot out and reflect velocity
     if (distToSurface <= radius) {
       const eps = 0.1;
-      const hL = this.getWaveHeight(localPos.x - eps, localPos.y, time);
-      const hR = this.getWaveHeight(localPos.x + eps, localPos.y, time);
-      const hD = this.getWaveHeight(localPos.x, localPos.y - eps, time);
-      const hU = this.getWaveHeight(localPos.x, localPos.y + eps, time);
+      const hL = this.getWaveNoise(localPos.x - eps, localPos.y, zHeight);
+      const hR = this.getWaveNoise(localPos.x + eps, localPos.y, zHeight);
+      const hD = this.getWaveNoise(localPos.x, localPos.y - eps, zHeight);
+      const hU = this.getWaveNoise(localPos.x, localPos.y + eps, zHeight);
       const dx = (hR - hL) / (2 * eps);
       const dy = (hU - hD) / (2 * eps);
       const normal = this.tempVecs.tempNormalVec4.set(-dx, -dy, 1).normalize();
@@ -1187,28 +1192,28 @@ class WavesScene extends Animatable {
   private updatePlane(): void {
     const gArray: THREE.TypedArray =
       this.planeMesh.geometry.attributes.position.array;
-    const time: number = globals.timeTracker.time * 0.17;
+    const zHeight = this.getWaveZHeight();
 
     for (let i = 0; i < gArray.length; i += 3) {
-      gArray[i + 2] = this.getWaveHeight(gArray[i], gArray[i + 1], time);
+      gArray[i + 2] = this.getWaveNoise(gArray[i], gArray[i + 1], zHeight);
     }
 
     this.planeMesh.geometry.attributes.position.needsUpdate = true;
   }
 
-  private getWaveHeight(x: number, y: number, time: number): number {
+  private getWaveNoise(x: number, y: number, z: number): number {
     return (
       this.simplexNoise(
         x / globals.waveSceneSettings.waveHeight.xCoef,
         y / globals.waveSceneSettings.waveHeight.yCoef,
-        time,
+        z,
         0,
       ) * globals.waveSceneSettings.waveHeight.zCoef
     );
   }
 
   private updateLights(...lights: THREE.PointLight[]): void {
-    const time = globals.timeTracker.time;
+    const time = globals.timeTracker.elapsedTime;
     const d = 50;
     let i = 0;
     for (const light of lights) {
@@ -1216,6 +1221,10 @@ class WavesScene extends Animatable {
       light.position.x = Math.sin(time * i) * d;
       light.position.z = Math.cos(time * i) * d;
     }
+  }
+
+  private getWaveZHeight(): number {
+    return globals.timeTracker.elapsedTime * 0.17;
   }
 }
 

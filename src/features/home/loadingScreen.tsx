@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useScroll } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import RotatingLoader from "@/src/components/ui/rotatingLoader";
 
@@ -74,19 +74,18 @@ export default function LoadingScreen({ isEnabled, onCloseAnimationDone }: Loadi
                 <motion.div
                     className="absolute inset-0 bg-gradient-to-b from-black via-[#050816] to-black overflow-hidden z-1"
                     exit={{
-                        y: ["0%", "60%", "-100%"],
-                        filter: ["blur(0px)", "blur(15px)", "blur(20px)"],
-                        borderTopRightRadius: ["0%", "50%", "50%"],
-                        borderTopLeftRadius: ["0%", "50%", "50%"],
-                        borderBottomLeftRadius: ["0%", "50%", "50%"],
-                        borderBottomRightRadius: ["0%", "50%", "50%"],
-                        scaleX: [1, 0.4, 0.4],
-                        scaleY: [1, 0.7, 0.7]
+                        clipPath: [
+                            "circle(150% at 50% 50%)",
+                            "circle(60% at 50% 50%)",
+                            "circle(0% at 50% 50%)",
+                        ],
+                        opacity: [1, 0.8, 0.5],
+                        scale: [1, 1.15, 0.9],
                     }}
                     transition={{
-                        times: [0, 0.6, 1],
-                        ease: ["easeIn", [0.6, -0.28, 1.735, 10.045]],
-                        duration: 0.55,
+                        duration: 0.9,
+                        times: [0, 0.35, 1],
+                        ease: [0.22, 1, 0.36, 1],
                     }}
                 >
                     {/* nebula */}
