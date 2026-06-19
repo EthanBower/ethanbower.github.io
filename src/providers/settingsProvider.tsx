@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "app-settings";
 export const defaultSettings: {
+  lastSeenVersion: string | null;
   motionEnabled: boolean;
   statsEnabled: boolean;
   dotCount: number | null;
@@ -11,6 +12,7 @@ export const defaultSettings: {
   backgroundColor: number | null;
   waveColors: number[];
 } = {
+  lastSeenVersion: null,
   motionEnabled: false,
   statsEnabled: false,
   dotCount: null,
@@ -28,6 +30,7 @@ type Settings = typeof defaultSettings;
 
 type SettingsContextType = {
   settings: Settings;
+  settingsLoaded: boolean;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
   resetSettings: () => void;
 };
@@ -36,13 +39,14 @@ const SettingsContext = createContext<SettingsContextType | null>(null);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState(defaultSettings);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
-  // Intentionally set to ignore this rule as this is only run once on mount to hydrate localstorage, which needs to run client side.
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
 
     if (stored) {
       try {
+        // Intentionally set to ignore this rule as this is only run once on mount to hydrate localstorage, which needs to run client side.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setSettings({
           ...defaultSettings,
@@ -52,20 +56,22 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem(STORAGE_KEY);
       }
     }
+
+    setSettingsLoaded(true);
   }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
 
-  function resetSettings() {
+  function resetSettings(): void {
     localStorage.removeItem(STORAGE_KEY);
     setSettings(defaultSettings);
   }
 
   const memo = useMemo(
-    () => ({ settings, setSettings, resetSettings }),
-    [settings],
+    () => ({ settings, settingsLoaded, setSettings, resetSettings }),
+    [settings, settingsLoaded],
   );
 
   return (

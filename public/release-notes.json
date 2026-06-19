@@ -1,0 +1,46 @@
+[
+  {
+    "mergedAt": "2026-06-18T02:40:24Z",
+    "title": "Enahanced workflow file versions"
+  },
+  {
+    "mergedAt": "2026-06-18T02:35:10Z",
+    "title": "Enahanced workflow file versions"
+  },
+  { "mergedAt": "2026-06-18T02:05:54Z", "title": "Fixed workflow file" },
+  {
+    "mergedAt": "2026-06-18T01:59:47Z",
+    "title": "Feat/performance UI enhancments"
+  },
+  {
+    "mergedAt": "2026-06-15T04:00:27Z",
+    "title": "Resolved most linting issues"
+  },
+  { "mergedAt": "2026-06-14T17:17:13Z", "title": "Feat/error handling" },
+  {
+    "mergedAt": "2026-06-12T17:15:16Z",
+    "title": "Added error message for settings"
+  },
+  { "mergedAt": "2026-06-12T03:18:42Z", "title": "Feat/error handling" },
+  { "mergedAt": "2026-06-10T04:19:46Z", "title": "Feat/darkmode" },
+  {
+    "mergedAt": "2026-06-09T12:42:55Z",
+    "title": "various bug fixes in UI and spatial mapping"
+  },
+  { "mergedAt": "2026-06-08T02:41:30Z", "title": "Feat/performance" },
+  { "mergedAt": "2026-06-05T20:30:57Z", "title": "Fixed linting issue" },
+  { "mergedAt": "2026-06-05T20:14:44Z", "title": "Fixed local storage issue" },
+  { "mergedAt": "2026-06-05T19:46:11Z", "title": "Feat/hotfix page error" },
+  { "mergedAt": "2026-06-05T18:58:04Z", "title": "added force cache" },
+  { "mergedAt": "2026-06-05T18:48:17Z", "title": "added force cache" },
+  {
+    "mergedAt": "2026-06-05T18:38:31Z",
+    "title": "added feature to prevent chaching html files"
+  },
+  { "mergedAt": "2026-06-05T18:21:42Z", "title": "2" },
+  { "mergedAt": "2026-06-05T18:13:01Z", "title": "hotfix" },
+  {
+    "mergedAt": "2026-06-05T17:06:00Z",
+    "title": "Random fixes, added ability to change wave lighting"
+  }
+]
