@@ -20,6 +20,7 @@ import StatefulButton from "@/src/components/ui/statefulButton";
 import CheckMark from "@/src/components/icons/checkMark";
 import WarningBackground from "@/src/components/ui/warningBackground";
 import { yellowWindowGlow } from "@/src/styles/windows";
+import { appVersion } from "@/src/components/utils/globals";
 
 export const BACKGROUND_COLOR_PRESETS = [
   { presetName: "Cosmic Night Walk", colors: [0x0b1020] },
@@ -51,11 +52,13 @@ type SettingsProps = Readonly<{
 }>;
 
 export default function Settings({ isEnabled, onClose }: SettingsProps) {
-  const { settings, setSettings, resetSettings } = useSettings();
+  const { settings, settingsLoaded, setSettings, resetSettings } = useSettings();
   const [error, setError] = useState<Error | null>(null);
   const [currentDotCount, setCurrentDotCount] = useState(
     SceneController.getInstance().frontPage!.dotScene.dots.length,
   );
+
+  if (!settingsLoaded) return null;
 
   // to-do make a callback on three js app to update the real dot count
   function changeDotCount(dotNumber: number) {
@@ -100,7 +103,7 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
       <PopupWindow
         windowIcon={<GearIcon className="cursor-pointer text-gray-300" />}
         windowTitle="SETTINGS"
-        windowTitleDescription={`App Version: ${process.env.NEXT_PUBLIC_SITE_APP_VERSION || "dev-local"}`}
+        windowTitleDescription={`App Version: ${appVersion}`}
         isEnabled={isEnabled}
         onClose={onClose}
       >
