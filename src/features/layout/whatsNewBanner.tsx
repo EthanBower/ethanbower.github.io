@@ -18,10 +18,9 @@ export default function WhatsNewBanner({ enable }: WhatsNewProps) {
     const { settings, settingsLoaded, setSettings } = useSettings();
     const [data, setData] = useState<WhatsNewJsonItem[] | null>(null);
 
-    if (!settingsLoaded) return null;
-
     useEffect(() => {
         if (!enable) return;
+        if (!settingsLoaded) return;
         if (settings.lastSeenVersion === appVersion) return;
 
         async function loadWhatsNew() {
@@ -37,7 +36,7 @@ export default function WhatsNewBanner({ enable }: WhatsNewProps) {
         loadWhatsNew().catch((reject) => {
             console.log(new Error(`Error loading WhatsNew JSON payload.`, { cause: String(reject) }));
         })
-    }, [enable]);
+    }, [enable, settingsLoaded]);
 
     function closeBanner() {
         setData(null);
