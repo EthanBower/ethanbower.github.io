@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import React from "react";
+import { animationVariants } from "../utils/globals";
 
 const windowVariants: Variants = {
     initial: {
@@ -99,14 +100,9 @@ export default function InfoBanner({ enable, title, flashingTitle, onClose, chil
                                         cursor-pointer
                                     "
                                     onClick={onClose}
-                                    whileHover={{
-                                        scale: 1.08,
-                                        transition: {
-                                            type: "spring",
-                                            stiffness: 600,
-                                            damping: 12,
-                                        }
-                                    }}
+                                    variants={animationVariants.buttonVariant}
+                                    whileTap="tap"
+                                    whileHover="hover"
                                 >
                                     Acknowledge
                                 </motion.button>

@@ -3,7 +3,7 @@ import { motion, Variants } from "framer-motion";
 const dynamicSquareVariants: Variants = {
     hover: {
         scale: 1.1,
-        boxShadow: "0px 0px 20px rgba(157, 157, 157, 0.5)",
+        boxShadow: "0px 0px 20px rgba(37, 37, 37, 0.5)",
         transition: {
             type: "spring",
             stiffness: 400,
@@ -13,7 +13,7 @@ const dynamicSquareVariants: Variants = {
     },
     tap: {
         scale: 1.05,
-        boxShadow: "0px 0px 20px rgba(157, 157, 157, 0.2)"
+        boxShadow: "0px 0px 20px rgba(66, 66, 66, 0.2)",
     }
 } as const;
 
@@ -29,24 +29,21 @@ export default function SquareGradient({ presetName, colors, onClick }: SquareGr
     });
 
     return (
-        <motion.div
-            className="rounded-lg rounded-2xl border-white/40 border-1 cursor-pointer"
-            variants={dynamicSquareVariants}
-            whileHover="hover"
-            whileTap="tap"
-            style={{
-                background: `linear-gradient(150deg, ${cssColors.join(", ")})`
-            }}
-            onClick={() => { onClick(colors) }}
-        >
-            <div className="
-                p-1 bg-black/20 rounded-md break-words
-                m-2
-                sm:m-4">
-                <span>
+        <div className="flex flex-col gap-2">
+            <span className="text-sm text-white/70 font-medium">
+                <p className="inline-block rounded-full p-1 bg-black/35 dark:bg-black/80">
                     {presetName}
-                </span>
-            </div>
-        </motion.div>
+                </p>
+            </span>
+            <motion.div
+                className="h-24 rounded-2xl border border-white/40 cursor-pointer rounded-lg rounded-2xl border-white/40 border-1 cursor-pointer"
+                variants={dynamicSquareVariants}
+                whileHover="hover"
+                whileTap="tap"
+                style={{
+                    background: `linear-gradient(150deg, ${cssColors.join(", ")})`
+                }}
+                onClick={() => { onClick(colors) }} />
+        </div>
     );
 }

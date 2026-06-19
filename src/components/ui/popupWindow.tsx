@@ -1,12 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import {
-  motion,
-  useDragControls,
-  Variants,
-  AnimatePresence,
-} from "framer-motion";
+import { motion, useDragControls, AnimatePresence, } from "framer-motion";
 import DashedSeparator from "./dashedSeperator";
 import Typewriter from "./typewriter";
 import TextScramble from "./textScramble";
@@ -14,33 +9,7 @@ import ExitIcon from "../icons/exit";
 import { buttonStyles } from "@/src/styles/buttonStyles";
 import { popupWindow } from "@/src/styles/windows";
 import { transparentNoGlass } from "@/src/styles/surfaces";
-
-const windowVariants: Variants = {
-  initial: {
-    opacity: 0,
-    scale: 0.85,
-    y: 20,
-  },
-  enter: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 25,
-    },
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.9,
-    y: 10,
-    transition: {
-      duration: 0.2,
-      ease: "easeIn",
-    },
-  },
-} as const;
+import { animationVariants } from "../utils/globals";
 
 type PopupWindowProps = Readonly<{
   windowTitle: string;
@@ -51,7 +20,6 @@ type PopupWindowProps = Readonly<{
   children: React.ReactNode;
 }>;
 
-// todo - scrollbar customizations
 export default function PopupWindow({
   windowTitle,
   windowTitleDescription,
@@ -84,7 +52,7 @@ export default function PopupWindow({
             <motion.div
               layout
               className={`${popupWindow} ${transparentNoGlass}`}
-              variants={windowVariants}
+              variants={animationVariants.popupWindowVariant}
               initial="initial"
               animate="enter"
               exit="exit"

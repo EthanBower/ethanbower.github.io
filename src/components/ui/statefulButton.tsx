@@ -1,33 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { motion, Variants } from "framer-motion";
+import { motion } from "framer-motion";
 import { buttonStyles } from "@/src/styles/buttonStyles";
-
-const buttonVariants: Variants = {
-    hover: {
-        scale: 1.05,
-        boxShadow: "0px 0px 20px rgba(37, 37, 37, 0.5)",
-        transition: {
-            type: "spring",
-            stiffness: 400,
-            damping: 12,
-            mass: 0.6,
-            layout: { type: "spring", stiffness: 300, damping: 25 }
-        }
-    },
-    tap: {
-        scale: 0.95,
-        boxShadow: "0px 0px 20px rgba(66, 66, 66, 0.2)",
-        transition: {
-            type: "spring",
-            stiffness: 400,
-            damping: 12,
-            mass: 0.6,
-            layout: { type: "spring", stiffness: 300, damping: 25 }
-        }
-    }
-};
+import { animationVariants } from "../utils/globals";
 
 type Status = "init" | "loading" | "complete";
 
@@ -74,7 +50,7 @@ export default function StatefulButton({ buttonStates, buttonClassStates = butto
             <motion.button
                 layout
                 onClick={handleClick}
-                variants={buttonVariants}
+                variants={animationVariants.buttonVariant}
                 whileTap="tap"
                 whileHover="hover"
                 className={`overflow-hidden ${buttonClassStates[status]}`}

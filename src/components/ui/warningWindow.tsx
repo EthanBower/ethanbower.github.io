@@ -1,37 +1,11 @@
-import { AnimatePresence, motion, useDragControls, Variants } from "framer-motion";
+import { AnimatePresence, motion, useDragControls } from "framer-motion";
 import ExitIcon from "../icons/exit";
 import { useEffect, useRef } from "react";
 import WarningIcon from "../icons/warning";
 import { buttonStyles } from "@/src/styles/buttonStyles";
 import WarningBackground from "./warningBackground";
 import { yellowWindowGlow } from "@/src/styles/windows";
-
-const windowVariants: Variants = {
-    initial: {
-        opacity: 0,
-        scale: 0.85,
-        y: 20,
-    },
-    enter: {
-        opacity: 1,
-        scale: 1,
-        y: 0,
-        transition: {
-            type: "spring",
-            stiffness: 300,
-            damping: 25,
-        },
-    },
-    exit: {
-        opacity: 0,
-        scale: 0.9,
-        y: 10,
-        transition: {
-            duration: 0.2,
-            ease: "easeIn",
-        },
-    },
-} as const;
+import { animationVariants } from "../utils/globals";
 
 type WarningWindowProps = Readonly<{
     error?: Error | null;
@@ -80,7 +54,7 @@ export default function WarningWindow({ error, enable, consoleLogError = true, o
                             className={`
                                 ${yellowWindowGlow}
                                 relative w-[inherit] h-auto max-h-full overflow-hidden rounded-xl bg-black/90`}
-                            variants={windowVariants}
+                            variants={animationVariants.popupWindowVariant}
                             initial="initial"
                             animate="enter"
                             exit="exit"
