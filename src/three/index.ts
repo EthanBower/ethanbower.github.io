@@ -8,6 +8,8 @@ import { IntroAnimation } from "./cameraAnimations/introAnimation";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { Animatable } from "./abstracts/animatable";
 import { Disposable } from "./abstracts/disposable";
+import { error } from "console";
+import { scale } from "framer-motion";
 
 // todo - camera time-movement
 
@@ -217,6 +219,7 @@ export class FrontPageAnimation {
   public frontPageScene: FrontPageSceneManager;
   public astroidScene: AstroidScene;
   public wavesScene: WavesScene;
+  public ufoScene: UfoScene;
   public dotScene: DotsScene;
   public eventListeners: AnimationEventListeners;
   public stats?: Stats;
@@ -229,12 +232,16 @@ export class FrontPageAnimation {
     this.canvas = new Canvas(canvasElm, this);
     this.astroidScene = new AstroidScene(this);
     this.wavesScene = new WavesScene(this);
+    this.ufoScene = new UfoScene(this);
     this.dotScene = new DotsScene(this);
     this.eventListeners = new AnimationEventListeners(this);
   }
 
   public async loadAssets(): Promise<void> {
-    return await this.astroidScene.loadObjects();
+    await Promise.all([
+      this.ufoScene.loadObjects(),
+      this.astroidScene.loadObjects(),
+    ]);
   }
 
   public animatePage(onError?: (error: Error) => void): void {
@@ -275,9 +282,110 @@ export class FrontPageAnimation {
   }
 }
 
+class UfoScene extends Animatable {
+  public ufoModel?: THREE.Sprite;
+  private frontPage: FrontPageAnimation;
+  private isFlying = false;
+  private nextSpawnTime = 0;
+
+  constructor(frontPage: FrontPageAnimation) {
+    super();
+    this.frontPage = frontPage;
+    this.setNextSpawnTime();
+  }
+
+  public async loadObjects(): Promise<void> {
+    const textureLoader = new THREE.TextureLoader();
+
+    try {
+      const texture = await textureLoader.loadAsync("/ufo.svg");
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.needsUpdate = true;
+
+      this.ufoModel = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+        }),
+      );
+
+      this.ufoModel.scale.set(15, 8, 1);
+      this.ufoModel.position.set(0, 0, -50);
+      this.frontPage.frontPageScene.scene.add(this.ufoModel);
+    } catch (error) {
+      throw new Error("Could not load UFO Image.", { cause: error });
+    }
+  }
+
+  protected override update(): void {
+    if (!this.isFlying) {
+      if (globals.timeTracker.elapsedTime >= this.nextSpawnTime) {
+        this.spawnUfo();
+      }
+
+      return;
+    }
+
+    this.animateUfo();
+  }
+
+  private spawnUfo(): void {
+    const z = -Utils.getRandomBetween(0, 50);
+    const dims = this.frontPage.mainCamera.getVisibleDimensionsAtDepth(z);
+    const x = -dims.halfWidth - 20;
+    const y = Utils.getRandomBetween(5, dims.halfHeight - 10);
+
+    this.ufoModel!.position.set(x, y, z);
+    this.ufoModel!.visible = true;
+    this.isFlying = true;
+  }
+
+  private animateUfo(): void {
+    const t = globals.timeTracker.elapsedTime;
+    const yVelocity = Math.cos(t) * 0.05;
+
+    this.ufoModel!.material.rotation = yVelocity * 2;
+    this.ufoModel!.scale.x = 15 + Math.sin(t) * 0.9;
+    this.ufoModel!.position.x += 12 * globals.timeTracker.deltaTime;
+    this.ufoModel!.position.y += yVelocity;
+
+    if (this.isOutsideView()) {
+      this.isFlying = false;
+      this.ufoModel!.visible = false;
+      this.setNextSpawnTime();
+    }
+  }
+
+  private isOutsideView(): boolean {
+    const buffer = 80;
+    const cam = this.frontPage.mainCamera.camera;
+    const localPos = this.ufoModel!.position.clone().applyMatrix4(
+      cam.matrixWorldInverse,
+    );
+    const dims = this.frontPage.mainCamera.getVisibleDimensionsAtDepth(
+      cam.position.z + localPos.z,
+    );
+
+    return (
+      localPos.x > dims.halfWidth + buffer ||
+      localPos.x < -dims.halfWidth - buffer ||
+      localPos.y > dims.halfHeight + buffer ||
+      localPos.y < -dims.halfHeight - buffer
+    );
+  }
+
+  private setNextSpawnTime(): void {
+    this.nextSpawnTime =
+      globals.timeTracker.elapsedTime + Utils.getRandomBetween(2, 5);
+  }
+
+  protected override onDispose(): void {
+    // todo
+  }
+}
+
 class AstroidScene extends Animatable {
   public asteroidModel?: THREE.Group<THREE.Object3DEventMap>;
-  private gltLoader: GLTFLoader;
   private frontPage: FrontPageAnimation;
   private lights: {
     rimLight: THREE.PointLight | null;
@@ -291,28 +399,22 @@ class AstroidScene extends Animatable {
   constructor(frontPage: FrontPageAnimation) {
     super();
     this.isAnimating = false;
-    this.gltLoader = new GLTFLoader();
     this.frontPage = frontPage;
     this.initLighting();
   }
 
-  public loadObjects(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.gltLoader.load(
-        "/asteroid.glb",
-        (gltf) => {
-          this.asteroidModel = gltf.scene;
-          this.asteroidModel.position.set(0, 0, -180);
-          this.asteroidModel.scale.set(1, 1, 1);
-          this.frontPage.frontPageScene.astroidGroup.add(this.asteroidModel);
-          resolve();
-        },
-        undefined,
-        (error) => {
-          reject(error);
-        },
-      );
-    });
+  public async loadObjects(): Promise<void> {
+    const gltLoader = new GLTFLoader();
+
+    try {
+      const gltfModel = await gltLoader.loadAsync("/asteroid.glb");
+      this.asteroidModel = gltfModel.scene;
+      this.asteroidModel.position.set(0, 0, -180);
+      this.asteroidModel.scale.set(1, 1, 1);
+      this.frontPage.frontPageScene.astroidGroup.add(this.asteroidModel);
+    } catch (error) {
+      throw new Error("Could not load Asteroid GLB.", { cause: error });
+    }
   }
 
   override update(): void {
