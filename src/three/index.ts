@@ -40,11 +40,13 @@ export class SceneController {
   public moveToMoon(): void {
     this.frontPage!.wavesScene.isAnimating = false;
     this.frontPage!.astroidScene.isAnimating = true;
+    this.frontPage!.ufoScene.isAnimating = false;
     this.frontPage!.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
   }
 
   public moveAwayFromMoon(): void {
     this.frontPage!.wavesScene.isAnimating = true;
+    this.frontPage!.ufoScene.isAnimating = true;
     this.frontPage!.astroidScene.isAnimating = false;
     this.frontPage!.mainCamera.asteroidAnimation.startZoomOutAsteroid();
   }
@@ -302,7 +304,7 @@ class UfoScene extends Animatable {
     const textureLoader = new THREE.TextureLoader();
 
     try {
-      const texture = await textureLoader.loadAsync("/ufo.svg");
+      const texture = await textureLoader.loadAsync("/three/ufo.svg");
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.needsUpdate = true;
 
@@ -523,7 +525,7 @@ class AstroidScene extends Animatable {
     const gltLoader = new GLTFLoader();
 
     try {
-      const gltfModel = await gltLoader.loadAsync("/asteroid.glb");
+      const gltfModel = await gltLoader.loadAsync("/three/asteroid.glb");
       this.asteroidModel = gltfModel.scene;
       this.asteroidModel.position.set(0, 0, -180);
       this.asteroidModel.scale.set(1, 1, 1);
