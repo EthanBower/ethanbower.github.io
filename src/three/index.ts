@@ -9,8 +9,6 @@ import Stats from "three/examples/jsm/libs/stats.module.js";
 import { Animatable } from "./abstracts/animatable";
 import { Disposable } from "./abstracts/disposable";
 
-// todo - camera time-movement
-
 export class SceneController {
   private static instance?: SceneController | null;
   public frontPage?: FrontPageAnimation;
@@ -42,11 +40,13 @@ export class SceneController {
   public moveToMoon(): void {
     this.frontPage!.wavesScene.isAnimating = false;
     this.frontPage!.astroidScene.isAnimating = true;
+    this.frontPage!.ufoScene.isAnimating = false;
     this.frontPage!.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
   }
 
   public moveAwayFromMoon(): void {
     this.frontPage!.wavesScene.isAnimating = true;
+    this.frontPage!.ufoScene.isAnimating = true;
     this.frontPage!.astroidScene.isAnimating = false;
     this.frontPage!.mainCamera.asteroidAnimation.startZoomOutAsteroid();
   }
@@ -217,6 +217,7 @@ export class FrontPageAnimation {
   public frontPageScene: FrontPageSceneManager;
   public astroidScene: AstroidScene;
   public wavesScene: WavesScene;
+  public ufoScene: UfoScene;
   public dotScene: DotsScene;
   public eventListeners: AnimationEventListeners;
   public stats?: Stats;
@@ -229,12 +230,16 @@ export class FrontPageAnimation {
     this.canvas = new Canvas(canvasElm, this);
     this.astroidScene = new AstroidScene(this);
     this.wavesScene = new WavesScene(this);
+    this.ufoScene = new UfoScene(this);
     this.dotScene = new DotsScene(this);
     this.eventListeners = new AnimationEventListeners(this);
   }
 
   public async loadAssets(): Promise<void> {
-    return await this.astroidScene.loadObjects();
+    await Promise.all([
+      this.ufoScene.loadObjects(),
+      this.astroidScene.loadObjects(),
+    ]);
   }
 
   public animatePage(onError?: (error: Error) => void): void {
@@ -275,9 +280,230 @@ export class FrontPageAnimation {
   }
 }
 
+class UfoScene extends Animatable {
+  public ufoModel?: THREE.Sprite;
+  public ufoGlow?: THREE.Sprite;
+  public ufoBeam?: THREE.Mesh;
+  private frontPage: FrontPageAnimation;
+  private isFlying = false;
+  private speed = 12;
+  private direction = 1; // 1 = right, -1 = left
+  private nextSpawnTime = 0;
+  private spriteScale = {
+    ufoModel: { x: 12, y: 14, z: 12 },
+    glowModel: { x: 4, y: 4, z: 1 },
+  };
+
+  constructor(frontPage: FrontPageAnimation) {
+    super();
+    this.frontPage = frontPage;
+    this.setNextSpawnTime();
+  }
+
+  public async loadObjects(): Promise<void> {
+    const textureLoader = new THREE.TextureLoader();
+
+    try {
+      const texture = await textureLoader.loadAsync("/three/ufo.svg");
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.needsUpdate = true;
+
+      this.ufoModel = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+        }),
+      );
+
+      this.ufoGlow = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: this.createGlowTexture(),
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+          opacity: 0.6,
+        }),
+      );
+
+      this.ufoBeam = new THREE.Mesh(
+        new THREE.ConeGeometry(3, 19, 16, 1, true),
+        new THREE.MeshBasicMaterial({
+          color: 0x3cd070,
+          transparent: true,
+          opacity: 0.2,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        }),
+      );
+
+      this.ufoModel.add(this.ufoGlow);
+      this.ufoModel.add(this.ufoBeam);
+
+      this.ufoModel.position.set(0, 0, -50);
+      this.ufoBeam.position.set(0, -9.2, 0);
+
+      this.ufoBeam.scale.set(1, 1, 1);
+      this.ufoModel.scale.set(
+        this.spriteScale.ufoModel.x,
+        this.spriteScale.ufoModel.y,
+        this.spriteScale.ufoModel.z,
+      );
+      this.ufoGlow.scale.set(
+        this.spriteScale.glowModel.x,
+        this.spriteScale.glowModel.y,
+        this.spriteScale.glowModel.z,
+      );
+
+      this.ufoGlow.renderOrder = 0;
+      this.ufoBeam.renderOrder = 1;
+      this.ufoModel.renderOrder = 2;
+
+      this.ufoModel.visible = false;
+      this.frontPage.frontPageScene.scene.add(this.ufoModel);
+    } catch (error) {
+      throw new Error("Could not load UFO Image.", { cause: error });
+    }
+  }
+
+  protected override update(): void {
+    if (!this.isFlying) {
+      if (globals.timeTracker.elapsedTime >= this.nextSpawnTime) {
+        this.spawnUfo();
+      }
+
+      return;
+    }
+
+    this.animate();
+  }
+
+  private spawnUfo(): void {
+    this.direction = Math.random() < 0.5 ? 1 : -1;
+    this.speed = Utils.getRandomBetween(10, 30);
+
+    const z = -Utils.getRandomBetween(20, 65);
+    const dims = this.frontPage.mainCamera.getVisibleDimensionsAtDepth(z);
+    const x =
+      this.direction === 1
+        ? -dims.halfWidth - 20 // spawn left
+        : dims.halfWidth + 20; // spawn right
+    const y = Utils.getRandomBetween(5, dims.halfHeight - 8);
+
+    this.ufoModel!.position.set(x, y, z);
+    this.ufoModel!.visible = true;
+    this.isFlying = true;
+  }
+
+  private animate(): void {
+    if (this.isOutsideView()) {
+      this.isFlying = false;
+      this.ufoModel!.visible = false;
+      this.setNextSpawnTime();
+    }
+
+    this.animateUfo();
+    this.animateGlow();
+    this.animateBeam();
+  }
+
+  private animateUfo(): void {
+    const t = globals.timeTracker.elapsedTime;
+    const yVelocity = Math.cos(t * 3.5) * 0.05;
+
+    this.ufoModel!.material.rotation = yVelocity * this.direction;
+    this.ufoModel!.scale.x = 15 + Math.sin(t) * 0.9;
+    this.ufoModel!.position.x +=
+      this.speed * this.direction * globals.timeTracker.deltaTime;
+    this.ufoModel!.position.y += yVelocity;
+  }
+
+  private animateBeam(): void {
+    const t = globals.timeTracker.elapsedTime;
+    const beamPulse = 1 + Math.sin(t * 6) * 0.08;
+
+    this.ufoBeam!.scale.x = beamPulse;
+    this.ufoBeam!.scale.z = beamPulse;
+
+    (this.ufoBeam?.material as THREE.MeshBasicMaterial).opacity =
+      0.15 + Math.sin(t * 5) * Math.sin(t) * 0.03;
+  }
+
+  private animateGlow(): void {
+    const pulse = 1 + Math.sin(globals.timeTracker.elapsedTime * 4) * 0.1;
+    this.ufoGlow!.scale.set(
+      this.spriteScale.glowModel.x * pulse,
+      this.spriteScale.glowModel.y * pulse,
+      this.spriteScale.glowModel.z,
+    );
+  }
+
+  private isOutsideView(): boolean {
+    const buffer = 70;
+    const cam = this.frontPage.mainCamera.camera;
+    const localPos = this.ufoModel!.position.clone().applyMatrix4(
+      cam.matrixWorldInverse,
+    );
+    const dims = this.frontPage.mainCamera.getVisibleDimensionsAtDepth(
+      cam.position.z + localPos.z,
+    );
+
+    return (
+      localPos.x > dims.halfWidth + buffer ||
+      localPos.x < -dims.halfWidth - buffer ||
+      localPos.y > dims.halfHeight + buffer ||
+      localPos.y < -dims.halfHeight - buffer
+    );
+  }
+
+  private setNextSpawnTime(): void {
+    this.nextSpawnTime =
+      globals.timeTracker.elapsedTime + Utils.getRandomBetween(5, 20);
+  }
+
+  private createGlowTexture(): THREE.CanvasTexture {
+    const size = 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+
+    const ctx = canvas.getContext("2d")!;
+    const gradient = ctx.createRadialGradient(
+      size / 2,
+      size / 2,
+      0,
+      size / 2,
+      size / 2,
+      size / 2,
+    );
+
+    gradient.addColorStop(0, "rgba(102,204,255,0.6)");
+    gradient.addColorStop(0.2, "rgba(102,204,255,0.4)");
+    gradient.addColorStop(0.6, "rgba(102,204,255,0.15)");
+    gradient.addColorStop(1, "rgba(102,204,255,0)");
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+
+    return new THREE.CanvasTexture(canvas);
+  }
+
+  protected override onDispose(): void {
+    if (this.ufoGlow) {
+      Utils.disposeSprite(this.ufoGlow);
+    }
+
+    if (this.ufoBeam) {
+      Utils.disposeMesh(this.ufoBeam, this.frontPage.frontPageScene.scene);
+    }
+
+    if (this.ufoModel) {
+      Utils.disposeSprite(this.ufoModel);
+    }
+  }
+}
+
 class AstroidScene extends Animatable {
   public asteroidModel?: THREE.Group<THREE.Object3DEventMap>;
-  private gltLoader: GLTFLoader;
   private frontPage: FrontPageAnimation;
   private lights: {
     rimLight: THREE.PointLight | null;
@@ -291,28 +517,22 @@ class AstroidScene extends Animatable {
   constructor(frontPage: FrontPageAnimation) {
     super();
     this.isAnimating = false;
-    this.gltLoader = new GLTFLoader();
     this.frontPage = frontPage;
     this.initLighting();
   }
 
-  public loadObjects(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.gltLoader.load(
-        "/asteroid.glb",
-        (gltf) => {
-          this.asteroidModel = gltf.scene;
-          this.asteroidModel.position.set(0, 0, -180);
-          this.asteroidModel.scale.set(1, 1, 1);
-          this.frontPage.frontPageScene.astroidGroup.add(this.asteroidModel);
-          resolve();
-        },
-        undefined,
-        (error) => {
-          reject(error);
-        },
-      );
-    });
+  public async loadObjects(): Promise<void> {
+    const gltLoader = new GLTFLoader();
+
+    try {
+      const gltfModel = await gltLoader.loadAsync("/three/asteroid.glb");
+      this.asteroidModel = gltfModel.scene;
+      this.asteroidModel.position.set(0, 0, -180);
+      this.asteroidModel.scale.set(1, 1, 1);
+      this.frontPage.frontPageScene.astroidGroup.add(this.asteroidModel);
+    } catch (error) {
+      throw new Error("Could not load Asteroid GLB.", { cause: error });
+    }
   }
 
   override update(): void {
@@ -1309,6 +1529,16 @@ export class Utils {
 
   public static calcFadeInFadeOut(min: number, max: number, time: number) {
     return min + (Math.sin(time * 0.5) * 0.5 + 0.5) * (max - min);
+  }
+
+  public static disposeSprite(sprite: THREE.Sprite) {
+    sprite.removeFromParent();
+
+    if (Array.isArray(sprite.material)) {
+      sprite.material.forEach((mat) => Utils.disposeMaterial(mat));
+    } else {
+      Utils.disposeMaterial(sprite.material);
+    }
   }
 
   public static disposeLine(line: THREE.Line, scene: THREE.Scene) {
