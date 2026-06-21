@@ -8,10 +8,6 @@ import { IntroAnimation } from "./cameraAnimations/introAnimation";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { Animatable } from "./abstracts/animatable";
 import { Disposable } from "./abstracts/disposable";
-import { error } from "console";
-import { scale } from "framer-motion";
-
-// todo - camera time-movement
 
 export class SceneController {
   private static instance?: SceneController | null;
