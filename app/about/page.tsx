@@ -12,13 +12,20 @@ export default function About() {
         if (animationInitialized.current) return;
         animationInitialized.current = true;
 
-        SceneController.getInstance().moveCameraDownToHomePage(() => {
-            SceneController.getInstance().moveToMoon();
-            setMenuOpen(true);
+        const sceneController = SceneController.getInstance();
+
+        sceneController.moveCameraDownToHomePage(() => {
+            sceneController.moveToMoon(() => {
+                setMenuOpen(true);
+            }, .8);
         }, .8);
     }, []);
 
     return (
-        <div className="bg-red">This is a test</div>
+        <section
+            className="pointer-events-none relative z-100 inset-0 flex justify-center"
+        >
+            <p className="text-white">This is a test</p>
+        </section>
     );
 }

@@ -4,7 +4,7 @@ import { FrontPageAnimation, globals, Utils } from "..";
 import { Animatable } from "../abstracts/animatable";
 
 export class IntroAnimation extends Animatable {
-  public cameraStartPosition: number = 0;
+  public cameraYStartPosition: number = 0;
   public cameraTargetY: number = 0;
   public distance: number = 0;
   private frontPage: FrontPageAnimation;
@@ -17,10 +17,14 @@ export class IntroAnimation extends Animatable {
 
   override update(): void {
     const camera = this.frontPage.mainCamera.camera;
-    const traveled = Math.abs(camera.position.y - this.cameraStartPosition);
-    const progress = this.distance === 0 ? 1 : traveled / this.distance;
 
-    this.animationProgressCallback?.(Math.min(progress, 1));
+    this.animationProgressCallback?.(
+      this.calculate1DProgress(
+        camera.position.y,
+        this.cameraYStartPosition,
+        this.distance,
+      ),
+    );
 
     if (Utils.differentialBelow(this.cameraTargetY, camera.position.y, 0.1)) {
       camera.position.y = this.cameraTargetY;
@@ -41,9 +45,9 @@ export class IntroAnimation extends Animatable {
     const camera = this.frontPage.mainCamera.camera;
     const animationPromise = this.getAnimationPromise(onProgress);
 
-    this.cameraStartPosition = camera.position.y;
+    this.cameraYStartPosition = camera.position.y;
     this.cameraTargetY = 0;
-    this.distance = Math.abs(this.cameraTargetY - this.cameraStartPosition);
+    this.distance = Math.abs(this.cameraTargetY - this.cameraYStartPosition);
     this.isAnimating = true;
 
     return animationPromise;

@@ -35,31 +35,44 @@ export class SceneController {
 
   public moveCameraDownToHomePage(
     onProgressReachedThreshold?: () => void,
-    percentThreshold?: number,
+    percentThreshold: number = 0,
   ): Promise<void> | void {
-    percentThreshold = percentThreshold ?? 0;
-    let thresholdReached = false;
-
-    return this.frontPage?.mainCamera.introAnimation.startCameraIntro((p) => {
-      if (!thresholdReached && p >= percentThreshold) {
-        thresholdReached = true;
-        onProgressReachedThreshold?.();
-      }
-    });
+    return this.frontPage?.mainCamera.introAnimation.startCameraIntro(
+      this.createThresholdCallback(
+        percentThreshold,
+        onProgressReachedThreshold,
+      ),
+    );
   }
 
-  public moveToMoon(): void {
+  public moveToMoon(
+    onProgressReachedThreshold?: () => void,
+    percentThreshold: number = 0,
+  ): Promise<void> | void {
     this.frontPage!.wavesScene.isAnimating = false;
     this.frontPage!.astroidScene.isAnimating = true;
     this.frontPage!.ufoScene.isAnimating = false;
-    this.frontPage!.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
+    this.frontPage!.mainCamera.asteroidAnimation.startZoomIntoAsteroid(
+      this.createThresholdCallback(
+        percentThreshold,
+        onProgressReachedThreshold,
+      ),
+    );
   }
 
-  public moveAwayFromMoon(): void {
+  public moveAwayFromMoon(
+    onProgressReachedThreshold?: () => void,
+    percentThreshold: number = 0,
+  ): Promise<void> | void {
     this.frontPage!.wavesScene.isAnimating = true;
     this.frontPage!.ufoScene.isAnimating = true;
     this.frontPage!.astroidScene.isAnimating = false;
-    this.frontPage!.mainCamera.asteroidAnimation.startZoomOutAsteroid();
+    this.frontPage!.mainCamera.asteroidAnimation.startZoomOutAsteroid(
+      this.createThresholdCallback(
+        percentThreshold,
+        onProgressReachedThreshold,
+      ),
+    );
   }
 
   public changeDotSpawnCount(dotCount: number): void {
@@ -91,6 +104,20 @@ export class SceneController {
   public async dispose(): Promise<void> {
     await this.frontPage!.dispose();
     SceneController.instance = null;
+  }
+
+  private createThresholdCallback(
+    threshold: number,
+    callback?: () => void,
+  ): (progress: number) => void {
+    let thresholdReached = false;
+
+    return (progress: number) => {
+      if (!thresholdReached && progress >= threshold) {
+        thresholdReached = true;
+        callback?.();
+      }
+    };
   }
 }
 

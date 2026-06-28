@@ -41,6 +41,7 @@ export abstract class Animatable extends Disposable {
   protected resolveAnimationPromise(): void {
     this.animationResolver?.();
     this.animationResolver = null;
+    this.animationProgressCallback = null;
   }
 
   protected getAnimationPromise(
@@ -60,6 +61,15 @@ export abstract class Animatable extends Disposable {
       lastRun: globals.timeTracker.lastFrameTime,
       onTickExecution,
     });
+  }
+
+  protected calculate1DProgress(
+    currentPos: number,
+    startPos: number,
+    distance: number,
+  ) {
+    const traveled = Math.abs(currentPos - startPos);
+    return Math.min(distance === 0 ? 1 : traveled / distance, 1);
   }
 
   private runTicks(): void {

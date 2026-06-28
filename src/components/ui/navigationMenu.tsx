@@ -137,7 +137,7 @@ function NavItem({ label, icon, onClick }: NavItem) {
       <motion.div variants={itemVariants}>
         <motion.button
           onClick={onClick}
-          whileHover={{ y: -4, scale: 1.08 }}
+          animate={isHovered ? { y: -4, scale: 1.08 } : { y: 0, scale: 1 }}
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 400, damping: 18 }}
           style={{ transform: "translateZ(0)" }}

@@ -16,16 +16,15 @@ export default function Home() {
     if (animationInitialized.current) return;
     animationInitialized.current = true;
 
-    async function runIntro() {
-      SceneController.getInstance().moveAwayFromMoon();
-      await SceneController.getInstance().moveCameraDownToHomePage(() => {
+    const sceneController = SceneController.getInstance();
+
+    sceneController.moveAwayFromMoon(() => {
+      sceneController.moveCameraDownToHomePage(() => {
         setMenuOpen(true);
         setHomeDisplayEnabled(true);
         setInitialized(true);
       }, .8);
-    }
-
-    runIntro();
+    }, .8);
   }, []);
 
   useEffect(() => {
@@ -47,11 +46,9 @@ export default function Home() {
   }, [menuFocusRequested, initialized]);
 
   return (
-    <>
-      <HomeTitle enable={homeDisplay} onExitAnimationComplete={() => {
-        exitResolver.current?.();
-        exitResolver.current = null;
-      }} />
-    </>
+    <HomeTitle enable={homeDisplay} onExitAnimationComplete={() => {
+      exitResolver.current?.();
+      exitResolver.current = null;
+    }} />
   );
 }

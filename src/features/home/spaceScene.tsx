@@ -98,11 +98,11 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
   }, [isInstantiated, settings.backgroundColor]);
 
   return (
-    <div>
+    <>
       {!errorOccurred && <div ref={threeJsRef} id="three-root" className="fixed inset-0 w-screen h-full z-0 w-full h-full z-0" />}
       {errorOccurred && <p className="absolute flex justify-center items-center w-full h-full text-white">An error occurred loading the 3D scene. Please consider refreshing the page.</p>}
       <WarningWindow enable={error != null} error={error} onClose={() => setError(null)} />
-    </div>
+    </>
   );
 }
 

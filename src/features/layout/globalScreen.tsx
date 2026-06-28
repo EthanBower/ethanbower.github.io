@@ -4,8 +4,8 @@ import { ReactNode, useState } from "react";
 import SpaceScene from "../home/spaceScene";
 import LoadingScreen from "./loadingScreen";
 import Permissions from "@/src/features/home/permissions";
-import MainNavigationMenu from "./mainNavigationMenu";
 import WhatsNewBanner from "./whatsNewBanner";
+import DynamicNavigationMenu from "./dynamicNavigationMenu";
 
 type GlobalScreenProps = {
     children: ReactNode;
@@ -24,7 +24,7 @@ export default function GlobalScreen({ children }: GlobalScreenProps) {
             {showPermissions && <Permissions onClose={() => setShowChildren(true)} />}
             {showChildren && (
                 <>
-                    <MainNavigationMenu />
+                    <DynamicNavigationMenu />
                     <WhatsNewBanner />
                     {children}
                 </>

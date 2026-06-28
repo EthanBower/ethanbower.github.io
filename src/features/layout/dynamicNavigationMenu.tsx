@@ -8,7 +8,7 @@ import Settings from "../settings/settings";
 import { useState } from "react";
 import { useNavigation } from "@/src/providers/navigationProvider";
 
-export default function MainNavigationMenu() {
+export default function DynamicNavigationMenu() {
     const { menuOpen, setMenuOpen, navigate } = useNavigation();
     const [settingsDisplay, setSettingsDisplayEnabled] = useState(false);
     const navbarItems = [
