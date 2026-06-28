@@ -3,7 +3,7 @@
 import { defaultSettings, useSettings } from "../../providers/settingsProvider";
 import PopupWindow from "../../components/ui/popupWindow";
 import Slider from "../../components/ui/slider";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ButtonToggle from "../../components/ui/buttonToggle";
 import GearIcon from "../../components/icons/gear";
 import ResetArrowsIcon from "../../components/icons/resetArrows";
@@ -21,6 +21,8 @@ import CheckMark from "@/src/components/icons/checkMark";
 import WarningBackground from "@/src/components/ui/warningBackground";
 import { yellowWindowGlow } from "@/src/styles/windows";
 import { appVersion } from "@/src/components/utils/globals";
+import PopupItem from "@/src/components/ui/popupItem";
+import { useNavigation } from "@/src/providers/navigationProvider";
 
 export const BACKGROUND_COLOR_PRESETS = [
   { presetName: "Cosmic Night Walk", colors: [0x0b1020] },
@@ -47,11 +49,12 @@ const PERFORMANCE_SETTINGS_PRESETS = [
 ];
 
 type SettingsProps = Readonly<{
-  isEnabled: boolean;
+  enable: boolean;
   onClose: () => void;
 }>;
 
-export default function Settings({ isEnabled, onClose }: SettingsProps) {
+export default function Settings({ enable, onClose }: SettingsProps) {
+  const { setMenuFocusRequested } = useNavigation();
   const { settings, settingsLoaded, setSettings, resetSettings } = useSettings();
   const [error, setError] = useState<Error | null>(null);
   const [currentDotCount, setCurrentDotCount] = useState(
@@ -59,6 +62,10 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
   );
 
   if (!settingsLoaded) return null;
+
+  useEffect(() => {
+    setMenuFocusRequested(enable);
+  }, [setMenuFocusRequested, enable]);
 
   // to-do make a callback on three js app to update the real dot count
   function changeDotCount(dotNumber: number) {
@@ -98,16 +105,16 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
   }
 
   return (
-    <div>
+    <>
       <WarningWindow enable={error != null} error={error} onClose={() => setError(null)} consoleLogError={false} />
       <PopupWindow
         windowIcon={<GearIcon className="cursor-pointer text-gray-300" />}
         windowTitle="SETTINGS"
         windowTitleDescription={`App Version: ${appVersion}`}
-        isEnabled={isEnabled}
+        isEnabled={enable}
         onClose={onClose}
       >
-        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
+        <PopupItem>
           <div className="pb-[10px] text-center">
             <p>
               GRAPHICS
@@ -118,8 +125,8 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
               <PerformanceButton key={item.presetName} presetName={item.presetName} performanceNumber={item.performance} icon={item.icon} onClick={setPerformance} />
             ))}
           </div>
-        </div>
-        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
+        </PopupItem>
+        <PopupItem>
           <div className="pb-[10px] text-center">
             <p>
               BACKGROUND COLORS
@@ -147,20 +154,20 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
               <SquareGradient key={item.presetName} presetName={item.presetName} colors={item.colors} onClick={(c) => setBackgroundColor(c[0])} />
             ))}
           </div>
-        </div>
-        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
+        </PopupItem>
+        <PopupItem>
           <div className="pb-[10px] text-center">
             <p>
               WAVE COLORS
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-3 gap-4 h-full text-center">
             {WAVE_COLOR_PRESETS.map((item) => (
               <SquareGradient key={item.presetName} presetName={item.presetName} colors={item.colors} onClick={setWaveColor} />
             ))}
           </div>
-        </div>
-        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
+        </PopupItem>
+        <PopupItem>
           <div className="pb-[10px] text-center">
             <p>
               DOT DENSITY: <b>{currentDotCount}</b> PARTICLES
@@ -174,8 +181,8 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
             </div>
           </div>
           <Slider onChange={changeDotCount} value={currentDotCount} />
-        </div>
-        <div className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
+        </PopupItem>
+        <PopupItem>
           <div className="pb-[10px] text-center">
             <p>
               DEBUG
@@ -217,8 +224,8 @@ export default function Settings({ isEnabled, onClose }: SettingsProps) {
                 onClick={resetSettings} />
             </div>
           </div>
-        </div>
+        </PopupItem>
       </PopupWindow>
-    </div>
+    </>
   );
 }

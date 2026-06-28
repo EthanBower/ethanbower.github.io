@@ -71,13 +71,13 @@ interface NavItem {
 
 interface NavbarProp {
   items: NavItem[];
-  isNavbarClosed: boolean;
+  enable: boolean;
 }
 
-export default function Navbar({ items, isNavbarClosed }: NavbarProp) {
+export default function Navbar({ items, enable }: NavbarProp) {
   return (
     <AnimatePresence>
-      {!isNavbarClosed && (
+      {enable && (
         <motion.nav
           variants={navbarVariants}
           initial="initial"

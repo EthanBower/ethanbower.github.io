@@ -1,95 +1,57 @@
 "use client";
 
-import Gear from "@/src/components/icons/gear";
-import HomeIcon from "@/src/components/icons/home";
-import PlanetIcon from "@/src/components/icons/planet";
-import { AppPermissions } from "@/src/components/utils/appPermissions";
-import LoadingScreen from "@/src/features/layout/loadingScreen";
-import Permissions from "@/src/features/home/permissions";
-import SpaceScene from "@/src/features/home/spaceScene";
-import Header from "@/src/features/layout/header";
-import NavigationMenu from "@/src/features/layout/navigationMenu";
-import Settings from "@/src/features/settings/settings";
-import { useSettings } from "@/src/providers/settingsProvider";
+import { useEffect, useRef, useState } from "react";
+import HomeTitle from "@/src/features/home/homeTitle";
 import { SceneController } from "@/src/three";
-import { useState } from "react";
-import WhatsNewBanner from "@/src/features/layout/whatsNewBanner";
+import { useNavigation } from "@/src/providers/navigationProvider";
 
 export default function Home() {
-  const { settings } = useSettings();
-  const [isSceneLoaded, setIsSceneLoaded] = useState(false);
-  const [permissionsDisplay, setPermissionsDisplayEnabled] = useState(false);
-  const [navDisplay, setNavDisplayEnabled] = useState(false);
-  const [bannerDisplay, setBannerDisplay] = useState(false);
-  const [settingsDisplay, setSettingsDisplayEnabled] = useState(false);
-  const navbarItems = [
-    {
-      label: "Settings",
-      icon: <Gear />,
-      onClick: () => openSettingsWindow(),
-    },
-    {
-      label: "Home",
-      icon: <HomeIcon />,
-      onClick: () => {
-        SceneController.getInstance().moveAwayFromMoon();
-      },
-    },
-    {
-      label: "Moon",
-      icon: <PlanetIcon />,
-      onClick: () => {
-        SceneController.getInstance().moveToMoon();
-      },
-    },
-  ];
+  const { setMenuOpen, addBeforeNavigate, menuFocusRequested } = useNavigation();
+  const [homeDisplay, setHomeDisplayEnabled] = useState(false);
+  const [initialized, setInitialized] = useState<boolean>(false);
+  const animationInitialized = useRef<boolean>(false);
+  const exitResolver = useRef<() => void | null>(null);
 
-  async function moveSpaceSceneCameraIntro() {
-    setPermissionsDisplayEnabled(false);
-    SceneController.getInstance().moveCameraDownToHomePage();
+  useEffect(() => {
+    if (animationInitialized.current) return;
+    animationInitialized.current = true;
 
-    const timer = setTimeout(() => {
-      setNavDisplayEnabled(true);
-      setBannerDisplay(true);
-    }, 1000);
+    async function runIntro() {
+      SceneController.getInstance().moveAwayFromMoon();
+      await SceneController.getInstance().moveCameraDownToHomePage(() => {
+        setMenuOpen(true);
+        setHomeDisplayEnabled(true);
+        setInitialized(true);
+      }, .8);
+    }
 
-    return () => { clearTimeout(timer); };
-  }
+    runIntro();
+  }, []);
 
-  function openSettingsWindow() {
-    setSettingsDisplayEnabled(true);
-    setNavDisplayEnabled(false);
-  }
+  useEffect(() => {
+    return addBeforeNavigate(() => {
+      setHomeDisplayEnabled(false);
 
-  function closeSettingsWindow() {
-    setSettingsDisplayEnabled(false);
-    setNavDisplayEnabled(true);
-  }
+      return new Promise<void>((resolve) => {
+        exitResolver.current = resolve;
+      });
+    });
+  }, []);
 
-  function runAfterLoad() {
-    const permissionsNeeded =
-      AppPermissions.gyroPermissions.gyroCompatible && !settings.motionEnabled;
-    if (permissionsNeeded) {
-      setPermissionsDisplayEnabled(true);
+  useEffect(() => {
+    if (!initialized) {
       return;
     }
 
-    moveSpaceSceneCameraIntro();
-  }
+    setHomeDisplayEnabled(!menuFocusRequested);
+  }, [menuFocusRequested, initialized]);
 
   return (
-    <main className="relative w-full h-screen">
-      <LoadingScreen isEnabled={isSceneLoaded} onCloseAnimationDone={runAfterLoad} />
-      <SpaceScene onLoadingComplete={() => setIsSceneLoaded(true)} />
-      {isSceneLoaded && (
-        <>
-          <WhatsNewBanner enable={bannerDisplay} />
-          <Header />
-          <NavigationMenu items={navbarItems} isNavbarClosed={!navDisplay} />
-          <Settings isEnabled={settingsDisplay} onClose={closeSettingsWindow} />
-          <Permissions isEnabled={permissionsDisplay} onClose={moveSpaceSceneCameraIntro} />
-        </>
-      )}
-    </main>
+    <>
+      <HomeTitle enable={homeDisplay} onExitAnimationComplete={() => {
+        exitResolver.current?.();
+        exitResolver.current = null;
+      }} />
+    </>
   );
 }

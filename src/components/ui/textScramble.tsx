@@ -52,14 +52,17 @@ export default function TextScramble({
   }, [text, duration]);
 
   return (
-    <span className="relative inline-block">
-      {/* The invisible text is used to prevent layout shifts during scrambling */}
-      <span className={`invisible font-mono tracking-wide ${className}`}>{text}</span>
+    <span className="inline-grid">
+      <span
+        className={`invisible col-start-1 row-start-1 ${className}`}
+        aria-hidden
+      >
+        {text}
+      </span>
       <motion.span
-        className={`absolute inset-0 font-mono tracking-wide truncate ${className}`}
+        className={`col-start-1 row-start-1 ${className}`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
       >
         {displayText}
       </motion.span>

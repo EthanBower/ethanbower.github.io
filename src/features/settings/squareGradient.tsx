@@ -31,12 +31,12 @@ export default function SquareGradient({ presetName, colors, onClick }: SquareGr
     return (
         <div className="flex flex-col gap-2">
             <span className="text-sm text-white/70 font-medium">
-                <p className="inline-block rounded-full p-1 bg-black/35 dark:bg-black/80">
+                <p className="inline-block rounded-full px-2 py-1 bg-black/35 dark:bg-black/80">
                     {presetName}
                 </p>
             </span>
             <motion.div
-                className="h-24 rounded-2xl border border-white/40 cursor-pointer rounded-lg rounded-2xl border-white/40 border-1 cursor-pointer"
+                className="h-24 rounded-2xl border border-white/40 cursor-pointer rounded-lg border-1"
                 variants={dynamicSquareVariants}
                 whileHover="hover"
                 whileTap="tap"

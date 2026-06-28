@@ -33,8 +33,19 @@ export class SceneController {
     this.frontPage!.eventListeners.enableGyroEventListener();
   }
 
-  public moveCameraDownToHomePage(): void {
-    this.frontPage!.mainCamera.introAnimation.isAnimating = true;
+  public moveCameraDownToHomePage(
+    onProgressReachedThreshold?: () => void,
+    percentThreshold?: number,
+  ): Promise<void> | void {
+    percentThreshold = percentThreshold ?? 0;
+    let thresholdReached = false;
+
+    return this.frontPage?.mainCamera.introAnimation.startCameraIntro((p) => {
+      if (!thresholdReached && p >= percentThreshold) {
+        thresholdReached = true;
+        onProgressReachedThreshold?.();
+      }
+    });
   }
 
   public moveToMoon(): void {
@@ -612,18 +623,24 @@ class MainCamera extends Animatable {
 
   constructor(canvasElm: HTMLDivElement, frontPage: FrontPageAnimation) {
     super();
+    const mainCamSettings = globals.mainCameraSettings;
+
     this.camera = new THREE.PerspectiveCamera(
       75,
       canvasElm.clientWidth / canvasElm!.clientHeight,
-      globals.mainCameraSettings.renderDistanceMin,
-      globals.mainCameraSettings.renderDistanceMax,
+      mainCamSettings.renderDistanceMin,
+      mainCamSettings.renderDistanceMax,
     );
     this.asteroidAnimation = new AsteroidAnimation(frontPage);
     this.introAnimation = new IntroAnimation(frontPage);
     this.frontPage = frontPage;
 
     // Initial camera position
-    this.camera.position.set(0, 80, 58);
+    this.camera.position.set(
+      mainCamSettings.initialCameraPosition.x,
+      mainCamSettings.initialCameraPosition.y,
+      mainCamSettings.initialCameraPosition.z,
+    );
   }
 
   override update(): void {
@@ -963,6 +980,7 @@ class DotsScene extends Animatable {
       (window.innerWidth * window.innerHeight) /
         globals.dotSceneSettings.pixelsPerDot,
     );
+
     return Math.min(dotCountRecommended, globals.dotSceneSettings.dotCountMax);
   }
 
@@ -1617,6 +1635,11 @@ export const globals = {
   mainCameraSettings: {
     renderDistanceMin: 0.1,
     renderDistanceMax: 135,
+    initialCameraPosition: {
+      x: 0,
+      y: 80,
+      z: 58,
+    },
   },
   frontPageRendererSettings: {
     rendererPixelRatio: 0.65,
@@ -1635,7 +1658,7 @@ export const globals = {
     },
   },
   dotSceneSettings: {
-    pixelsPerDot: 12000,
+    pixelsPerDot: 17500,
     maxLineCount: 150,
     dotCellSize: 25,
     dotCountMax: 65,

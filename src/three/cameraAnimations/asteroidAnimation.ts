@@ -19,6 +19,8 @@ export class AsteroidAnimation extends Animatable {
     if (Utils.differentialBelow(this.cameraTargetZ, camera.position.z, 0.1)) {
       camera.position.z = this.cameraTargetZ;
       this.isAnimating = false;
+      this.resolveAnimationPromise();
+
       return;
     }
 
@@ -32,13 +34,21 @@ export class AsteroidAnimation extends Animatable {
     return;
   }
 
-  public startZoomIntoAsteroid(): void {
+  public startZoomIntoAsteroid(): Promise<void> {
+    const animationPromise = this.getAnimationPromise();
+
     this.cameraTargetZ = -150;
     this.isAnimating = true;
+
+    return animationPromise;
   }
 
-  public startZoomOutAsteroid(): void {
+  public startZoomOutAsteroid(): Promise<void> {
+    const animationPromise = this.getAnimationPromise();
+
     this.cameraTargetZ = 58;
     this.isAnimating = true;
+
+    return animationPromise;
   }
 }

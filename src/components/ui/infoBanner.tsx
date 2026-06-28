@@ -49,6 +49,14 @@ export default function InfoBanner({ enable, title, flashingTitle, onClose, chil
                                 boxShadow: "0px 0px 40px rgba(34, 211, 238, 0.15)",
                             }}
                             transition={{ duration: 0.15 }}
+                            className="                                    
+                                rounded-b-2xl
+                                border 
+                                border-cyan-400/20
+                                bg-black/90
+                                bg-[linear-gradient(120deg,rgba(59,130,246,.3),rgba(168,85,247,.3),rgba(34,197,94,.3),rgba(59,130,246,.3))]
+                                bg-[length:300%_300%]
+                            "
                         >
                             <motion.div
                                 animate={{
@@ -65,12 +73,6 @@ export default function InfoBanner({ enable, title, flashingTitle, onClose, chil
                                 }}
                                 className="
                                     p-6
-                                    rounded-b-2xl
-                                    border 
-                                    border-cyan-400/20
-                                    bg-black/90
-                                    bg-[linear-gradient(120deg,rgba(59,130,246,.3),rgba(168,85,247,.3),rgba(34,197,94,.3),rgba(59,130,246,.3))]
-                                    bg-[length:300%_300%]
                                     pointer-events-auto
                                 "
                             >

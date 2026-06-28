@@ -10,16 +10,11 @@ type WhatsNewJsonItem = {
     title: string;
 }
 
-type WhatsNewProps = {
-    enable: boolean;
-}
-
-export default function WhatsNewBanner({ enable }: WhatsNewProps) {
+export default function WhatsNewBanner() {
     const { settings, settingsLoaded, setSettings } = useSettings();
     const [data, setData] = useState<WhatsNewJsonItem[] | null>(null);
 
     useEffect(() => {
-        if (!enable) return;
         if (!settingsLoaded) return;
         if (settings.lastSeenVersion === appVersion) return;
 
@@ -36,7 +31,7 @@ export default function WhatsNewBanner({ enable }: WhatsNewProps) {
         loadWhatsNew().catch((reject) => {
             console.log(new Error(`Error loading WhatsNew JSON payload.`, { cause: String(reject) }));
         })
-    }, [enable, settingsLoaded]);
+    }, [settingsLoaded]);
 
     function closeBanner() {
         setData(null);

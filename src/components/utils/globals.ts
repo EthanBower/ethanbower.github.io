@@ -51,8 +51,48 @@ export const animationVariants: Record<string, Variants> = {
       scale: 0.9,
       y: 10,
       transition: {
-        duration: 0.2,
+        duration: 0.15,
+        delay: 0.25,
         ease: "easeIn",
+      },
+    },
+  },
+  popupWindowChildrenContentVariant: {
+    hidden: {},
+    show: {
+      transition: {
+        staggerChildren: 0.09,
+        delayChildren: 0.15,
+      },
+    },
+    exit: {
+      transition: {
+        staggerChildren: -0.09,
+        delayChildren: 0.15,
+      },
+    },
+  },
+  popupWindowChildrenItemVariant: {
+    hidden: {
+      opacity: 0,
+      y: 25,
+    },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 500,
+        damping: 18,
+      },
+    },
+    exit: {
+      opacity: 0,
+      y: 25,
+      transition: {
+        type: "spring",
+        stiffness: 260,
+        damping: 18,
       },
     },
   },
