@@ -34,7 +34,7 @@ export const BACKGROUND_COLOR_PRESETS = [
 ];
 
 const WAVE_COLOR_PRESETS = [
-  { presetName: "Default Bark Space", colors: defaultSettings.waveColors },
+  { presetName: defaultSettings.waveColorSettings.presetName, colors: defaultSettings.waveColorSettings.colors },
   { presetName: "Milky Bone Nebula", colors: [0xB22222, 0x3B0764, 0xF2A900, 0x111111] },
   { presetName: "Event Howlizon", colors: [0x0E09DC, 0x4C1D95, 0xEC4899, 0x030712] },
   { presetName: "Aurora Fetcher", colors: [0x00786E, 0x10B981, 0xFF8844, 0x061320] },
@@ -83,10 +83,14 @@ export default function Settings({ enable, onClose }: SettingsProps) {
     }));
   }
 
-  function setWaveColor(colors: number[]) {
+  function setWaveColor(presetName: string, colors: number[]) {
     setSettings((s) => ({
       ...s,
-      waveColors: colors,
+      waveColorSettings:
+      {
+        presetName: presetName,
+        colors: colors
+      }
     }));
   }
 
@@ -97,10 +101,13 @@ export default function Settings({ enable, onClose }: SettingsProps) {
     }));
   }
 
-  function setBackgroundColor(backgroundColor: number | null) {
+  function setBackgroundColor(presetName: string | null, backgroundColor: number | null) {
     setSettings((s) => ({
       ...s,
-      backgroundColor: backgroundColor,
+      backgroundColorSettings: (presetName === null || backgroundColor === null) ? null : {
+        presetName: presetName,
+        color: backgroundColor
+      }
     }));
   }
 
@@ -134,14 +141,14 @@ export default function Settings({ enable, onClose }: SettingsProps) {
           </div>
           <div className="flex self-container justify-between items-center">
             <div className="flex flex-col flex-1 text-left justify-center">
-              <span>Auto (System Theme): {settings.backgroundColor === null ? "ON" : "OFF"}</span>
+              <span>Auto (System Theme): {settings.backgroundColorSettings === null ? "ON" : "OFF"}</span>
               <span className="text-sm text-white/50">Turn this button off by selecting a below box.</span>
             </div>
             <ButtonToggle
-              enabled={settings.backgroundColor === null}
+              enabled={settings.backgroundColorSettings === null}
               onChange={(toggleVal) => {
                 if (toggleVal) {
-                  setBackgroundColor(null);
+                  setBackgroundColor(null, null);
                 } else {
                   setError(new Error("Please select a background to disable."));
                 }
@@ -151,7 +158,7 @@ export default function Settings({ enable, onClose }: SettingsProps) {
           <div className="w-full h-[1px] rounded-xl bg-gray-300/30 my-3" />
           <div className="grid grid-cols-3 gap-4 text-center disable">
             {BACKGROUND_COLOR_PRESETS.map((item) => (
-              <SquareGradient key={item.presetName} presetName={item.presetName} colors={item.colors} onClick={(c) => setBackgroundColor(c[0])} />
+              <SquareGradient key={item.presetName} presetName={item.presetName} colors={item.colors} selected={item.presetName === settings.backgroundColorSettings?.presetName} onClick={(presetName, color) => setBackgroundColor(presetName, color[0])} />
             ))}
           </div>
         </PopupItem>
@@ -163,7 +170,7 @@ export default function Settings({ enable, onClose }: SettingsProps) {
           </div>
           <div className="grid grid-cols-3 gap-4 h-full text-center">
             {WAVE_COLOR_PRESETS.map((item) => (
-              <SquareGradient key={item.presetName} presetName={item.presetName} colors={item.colors} onClick={setWaveColor} />
+              <SquareGradient key={item.presetName} presetName={item.presetName} colors={item.colors} selected={item.presetName == settings.waveColorSettings.presetName} onClick={setWaveColor} />
             ))}
           </div>
         </PopupItem>

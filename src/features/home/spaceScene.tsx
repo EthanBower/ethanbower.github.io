@@ -29,7 +29,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
       try {
         await pageScene.init(threeJsRef.current!);
         setIsInstantiated(true);
-        determineBackgroundColor(settings.backgroundColor);
+        determineBackgroundColor(settings.backgroundColorSettings?.color!);
         pageScene.runAnimationLoop((error) => {
           setError(new Error("Space animation loop crashed. Please consider refreshing the page.", { cause: error }));
         });
@@ -54,7 +54,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
   // Handle dark mode listener
   useEffect(() => {
-    const handleSystemTheme = (e: MediaQueryListEvent) => determineBackgroundColor(settings.backgroundColor, e.matches);
+    const handleSystemTheme = (e: MediaQueryListEvent) => determineBackgroundColor(settings.backgroundColorSettings?.color!, e.matches);
     const darkModeMediaQuery = getDarkModeQuery();
 
     darkModeMediaQuery.addEventListener("change", handleSystemTheme);
@@ -62,7 +62,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
     return () => {
       darkModeMediaQuery.removeEventListener("change", handleSystemTheme);
     };
-  }, [settings.backgroundColor])
+  }, [settings.backgroundColorSettings])
 
   // Configure custom settings once localSettings is parsed/read
   useEffect(() => {
@@ -84,8 +84,8 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
   useEffect(() => {
     if (!isInstantiated) return;
-    SceneController.getInstance().setWaveLighting(settings.waveColors);
-  }, [isInstantiated, settings.waveColors]);
+    SceneController.getInstance().setWaveLighting(settings.waveColorSettings.colors);
+  }, [isInstantiated, settings.waveColorSettings]);
 
   useEffect(() => {
     if (!isInstantiated) return;
@@ -94,8 +94,8 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
   useEffect(() => {
     if (!isInstantiated) return;
-    determineBackgroundColor(settings.backgroundColor);
-  }, [isInstantiated, settings.backgroundColor]);
+    determineBackgroundColor(settings.backgroundColorSettings?.color!);
+  }, [isInstantiated, settings.backgroundColorSettings]);
 
   return (
     <>

@@ -7,22 +7,34 @@ import Permissions from "@/src/features/home/permissions";
 import WhatsNewBanner from "./whatsNewBanner";
 import DynamicNavigationMenu from "./dynamicNavigationMenu";
 
+enum AppStage {
+    SpaceSceneLoading,
+    Loaded,
+    Permissions,
+    Ready,
+}
+
 type GlobalScreenProps = {
     children: ReactNode;
 }
 
 export default function GlobalScreen({ children }: GlobalScreenProps) {
-    const [isSceneLoaded, setIsSceneLoaded] = useState(false);
-    const [showPermissions, setShowPermissions] = useState(false);
-    const [showChildren, setShowChildren] = useState(false);
+    const [stage, setStage] = useState(AppStage.SpaceSceneLoading);
 
     return (
-        <main className="relative w-full h-screen">
-            <SpaceScene onLoadingComplete={() => setIsSceneLoaded(true)} />
-            <LoadingScreen enable={!isSceneLoaded} onCloseAnimationDone={() => setShowPermissions(true)} />
+        <main className="relative h-screen w-full">
+            <SpaceScene onLoadingComplete={() => setStage(AppStage.Loaded)} />
 
-            {showPermissions && <Permissions onClose={() => setShowChildren(true)} />}
-            {showChildren && (
+            <LoadingScreen
+                enable={stage <= AppStage.SpaceSceneLoading}
+                onCloseAnimationDone={() => setStage(AppStage.Permissions)}
+            />
+
+            {stage >= AppStage.Permissions && (
+                <Permissions onClose={() => setStage(AppStage.Ready)} />
+            )}
+
+            {stage >= AppStage.Ready && (
                 <>
                     <DynamicNavigationMenu />
                     <WhatsNewBanner />
