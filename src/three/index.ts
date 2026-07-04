@@ -10,6 +10,7 @@ import { Animatable } from "./abstracts/animatable";
 import { Disposable } from "./abstracts/disposable";
 
 // todo - make multiple ufos and configure it
+// todo - make google analytics
 export class SceneController {
   private static instance?: SceneController | null;
   public frontPage?: FrontPageAnimation;
