@@ -55,13 +55,11 @@ type SettingsProps = Readonly<{
 
 export default function Settings({ enable, onClose }: SettingsProps) {
   const { setMenuFocusRequested } = useNavigation();
-  const { settings, settingsLoaded, setSettings, resetSettings } = useSettings();
+  const { settings, setSettings, resetSettings } = useSettings();
   const [error, setError] = useState<Error | null>(null);
   const [currentDotCount, setCurrentDotCount] = useState(
     SceneController.getInstance().frontPage!.dotScene.dots.length,
   );
-
-  if (!settingsLoaded) return null;
 
   useEffect(() => {
     setMenuFocusRequested(enable);

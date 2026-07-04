@@ -8,7 +8,6 @@ import { useNavigation } from "@/src/providers/navigationProvider";
 export default function Home() {
   const { setMenuOpen, addBeforeNavigate, menuFocusRequested } = useNavigation();
   const [homeDisplay, setHomeDisplayEnabled] = useState(false);
-  const [initialized, setInitialized] = useState<boolean>(false);
   const animationInitialized = useRef<boolean>(false);
   const exitResolver = useRef<() => void | null>(null);
 
@@ -22,7 +21,6 @@ export default function Home() {
       sceneController.moveCameraDownToHomePage(() => {
         setMenuOpen(true);
         setHomeDisplayEnabled(true);
-        setInitialized(true);
       }, .8);
     }, .8);
 
@@ -33,18 +31,13 @@ export default function Home() {
         exitResolver.current = resolve;
       });
     });
+
+    // 'setMenuOpen' and 'addBeforeNavigate' should not be added in dependency array as this is designed to be a one-time run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (!initialized) {
-      return;
-    }
-
-    setHomeDisplayEnabled(!menuFocusRequested);
-  }, [menuFocusRequested, initialized]);
-
   return (
-    <HomeTitle enable={false} onExitAnimationComplete={() => {
+    <HomeTitle enable={!homeDisplay && menuFocusRequested} onExitAnimationComplete={() => {
       exitResolver.current?.();
       exitResolver.current = null;
     }} />

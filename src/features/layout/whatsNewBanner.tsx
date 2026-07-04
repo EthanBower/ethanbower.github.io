@@ -31,6 +31,10 @@ export default function WhatsNewBanner() {
         loadWhatsNew().catch((reject) => {
             console.log(new Error(`Error loading WhatsNew JSON payload.`, { cause: String(reject) }));
         })
+
+        // 'settings.lastSeenVersion' should not be in dependency array as it will re-trigger this flow when cache is reset.
+        // Ideally, the desired effect is to run only once on loading which that will go against.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [settingsLoaded]);
 
     function closeBanner() {

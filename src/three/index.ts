@@ -9,6 +9,7 @@ import Stats from "three/examples/jsm/libs/stats.module.js";
 import { Animatable } from "./abstracts/animatable";
 import { Disposable } from "./abstracts/disposable";
 
+// todo - make multiple ufos and configure it
 export class SceneController {
   private static instance?: SceneController | null;
   public frontPage?: FrontPageAnimation;

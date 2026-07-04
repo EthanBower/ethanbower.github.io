@@ -29,7 +29,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
       try {
         await pageScene.init(threeJsRef.current!);
         setIsInstantiated(true);
-        determineBackgroundColor(settings.backgroundColorSettings?.color!);
+        determineBackgroundColor(settings.backgroundColorSettings?.color ?? null);
         pageScene.runAnimationLoop((error) => {
           setError(new Error("Space animation loop crashed. Please consider refreshing the page.", { cause: error }));
         });
@@ -54,7 +54,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
   // Handle dark mode listener
   useEffect(() => {
-    const handleSystemTheme = (e: MediaQueryListEvent) => determineBackgroundColor(settings.backgroundColorSettings?.color!, e.matches);
+    const handleSystemTheme = (e: MediaQueryListEvent) => determineBackgroundColor(settings.backgroundColorSettings?.color ?? null, e.matches);
     const darkModeMediaQuery = getDarkModeQuery();
 
     darkModeMediaQuery.addEventListener("change", handleSystemTheme);
@@ -94,7 +94,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
   useEffect(() => {
     if (!isInstantiated) return;
-    determineBackgroundColor(settings.backgroundColorSettings?.color!);
+    determineBackgroundColor(settings.backgroundColorSettings?.color ?? null);
   }, [isInstantiated, settings.backgroundColorSettings]);
 
   return (

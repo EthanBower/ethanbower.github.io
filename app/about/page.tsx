@@ -19,6 +19,9 @@ export default function About() {
                 setMenuOpen(true);
             }, .8);
         }, .8);
+
+        // 'setMenuOpen' should not be included in the dependency array as this is designed to be a one-time run.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (

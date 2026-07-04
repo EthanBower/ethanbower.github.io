@@ -14,10 +14,10 @@ type PermissionsProps = Readonly<{
 }>;
 
 export default function Permissions({ onClose }: PermissionsProps) {
-  const [error, setError] = useState<Error | null>(null);
-  const [enabled, setEnabled] = useState(false);
-  const [isPending, startTransition] = useTransition();
   const { settings, setSettings } = useSettings();
+  const [error, setError] = useState<Error | null>(null);
+  const [enabled, setEnabled] = useState(AppPermissions.gyroPermissions.gyroCompatible && !settings.motionEnabled);
+  const [isPending, startTransition] = useTransition();
 
   async function handleEnableGyro() {
     // Prevent double clicks or running if already processing
@@ -40,27 +40,11 @@ export default function Permissions({ onClose }: PermissionsProps) {
     });
   };
 
-  function permissionsNeeded() {
-    if (AppPermissions.gyroPermissions.gyroCompatible && !settings.motionEnabled) {
-      return true;
-    }
-
-    return false;
-  }
-
-  function closePermissions() {
-    setEnabled(false);
-    onClose();
-  }
-
   useEffect(() => {
-    if (!permissionsNeeded()) {
-      closePermissions();
-      return;
+    if (!enabled) {
+      onClose();
     }
-
-    setEnabled(true);
-  }, []);
+  }, [enabled, onClose]);
 
   return (
     <>
@@ -69,7 +53,7 @@ export default function Permissions({ onClose }: PermissionsProps) {
         windowTitle="PERMISSIONS"
         windowTitleDescription="For optimal experience, please grant motion permissions."
         isEnabled={enabled}
-        onClose={closePermissions}
+        onClose={() => setEnabled(false)}
       >
         <PopupItem>
           <div className="flex items-center justify-between gap-2">
