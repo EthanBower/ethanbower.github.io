@@ -2,6 +2,9 @@ import { render } from "@testing-library/react";
 import Home from "../app/home/page";
 import "@testing-library/jest-dom";
 import { SettingsProvider } from "@/src/providers/settingsProvider";
+import { NavigationProvider } from "@/src/providers/navigationProvider";
+import SpaceScene from "@/src/features/home/spaceScene";
+import GlobalScreen from "@/src/features/layout/globalScreen";
 
 jest.mock("three", () => {
   const originalThree = jest.requireActual("three");
@@ -36,6 +39,22 @@ jest.mock("three/examples/jsm/libs/stats.module.js", () => {
   };
 });
 
+jest.mock("next/navigation", () => ({
+  useRouter() {
+    return {
+      push: jest.fn(),
+      replace: jest.fn(),
+      refresh: jest.fn(),
+      prefetch: jest.fn(),
+      back: jest.fn(),
+      forward: jest.fn(),
+    };
+  },
+  usePathname() {
+    return "/";
+  },
+}));
+
 beforeAll(() => {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
@@ -57,7 +76,11 @@ describe("Home Page", () => {
     // ARRANGE: Render the component
     const { container } = render(
       <SettingsProvider>
-        <Home />
+        <NavigationProvider>
+          <GlobalScreen>
+            <Home />
+          </GlobalScreen>
+        </NavigationProvider>
       </SettingsProvider>,
     );
 
