@@ -9,6 +9,8 @@ import Stats from "three/examples/jsm/libs/stats.module.js";
 import { Animatable } from "./abstracts/animatable";
 import { Disposable } from "./abstracts/disposable";
 
+// todo - make multiple ufos and configure it
+// todo - make google analytics
 export class SceneController {
   private static instance?: SceneController | null;
   public frontPage?: FrontPageAnimation;
@@ -33,22 +35,46 @@ export class SceneController {
     this.frontPage!.eventListeners.enableGyroEventListener();
   }
 
-  public moveCameraDownToHomePage(): void {
-    this.frontPage!.mainCamera.introAnimation.isAnimating = true;
+  public moveCameraDownToHomePage(
+    onProgressReachedThreshold?: () => void,
+    percentThreshold: number = 0,
+  ): Promise<void> | void {
+    return this.frontPage?.mainCamera.introAnimation.startCameraIntro(
+      this.createThresholdCallback(
+        percentThreshold,
+        onProgressReachedThreshold,
+      ),
+    );
   }
 
-  public moveToMoon(): void {
+  public moveToMoon(
+    onProgressReachedThreshold?: () => void,
+    percentThreshold: number = 0,
+  ): Promise<void> | void {
     this.frontPage!.wavesScene.isAnimating = false;
     this.frontPage!.astroidScene.isAnimating = true;
     this.frontPage!.ufoScene.isAnimating = false;
-    this.frontPage!.mainCamera.asteroidAnimation.startZoomIntoAsteroid();
+    this.frontPage!.mainCamera.asteroidAnimation.startZoomIntoAsteroid(
+      this.createThresholdCallback(
+        percentThreshold,
+        onProgressReachedThreshold,
+      ),
+    );
   }
 
-  public moveAwayFromMoon(): void {
+  public moveAwayFromMoon(
+    onProgressReachedThreshold?: () => void,
+    percentThreshold: number = 0,
+  ): Promise<void> | void {
     this.frontPage!.wavesScene.isAnimating = true;
     this.frontPage!.ufoScene.isAnimating = true;
     this.frontPage!.astroidScene.isAnimating = false;
-    this.frontPage!.mainCamera.asteroidAnimation.startZoomOutAsteroid();
+    this.frontPage!.mainCamera.asteroidAnimation.startZoomOutAsteroid(
+      this.createThresholdCallback(
+        percentThreshold,
+        onProgressReachedThreshold,
+      ),
+    );
   }
 
   public changeDotSpawnCount(dotCount: number): void {
@@ -80,6 +106,20 @@ export class SceneController {
   public async dispose(): Promise<void> {
     await this.frontPage!.dispose();
     SceneController.instance = null;
+  }
+
+  private createThresholdCallback(
+    threshold: number,
+    callback?: () => void,
+  ): (progress: number) => void {
+    let thresholdReached = false;
+
+    return (progress: number) => {
+      if (!thresholdReached && progress >= threshold) {
+        thresholdReached = true;
+        callback?.();
+      }
+    };
   }
 }
 
@@ -612,18 +652,24 @@ class MainCamera extends Animatable {
 
   constructor(canvasElm: HTMLDivElement, frontPage: FrontPageAnimation) {
     super();
+    const mainCamSettings = globals.mainCameraSettings;
+
     this.camera = new THREE.PerspectiveCamera(
       75,
       canvasElm.clientWidth / canvasElm!.clientHeight,
-      globals.mainCameraSettings.renderDistanceMin,
-      globals.mainCameraSettings.renderDistanceMax,
+      mainCamSettings.renderDistanceMin,
+      mainCamSettings.renderDistanceMax,
     );
     this.asteroidAnimation = new AsteroidAnimation(frontPage);
     this.introAnimation = new IntroAnimation(frontPage);
     this.frontPage = frontPage;
 
     // Initial camera position
-    this.camera.position.set(0, 80, 58);
+    this.camera.position.set(
+      mainCamSettings.initialCameraPosition.x,
+      mainCamSettings.initialCameraPosition.y,
+      mainCamSettings.initialCameraPosition.z,
+    );
   }
 
   override update(): void {
@@ -963,6 +1009,7 @@ class DotsScene extends Animatable {
       (window.innerWidth * window.innerHeight) /
         globals.dotSceneSettings.pixelsPerDot,
     );
+
     return Math.min(dotCountRecommended, globals.dotSceneSettings.dotCountMax);
   }
 
@@ -1617,6 +1664,11 @@ export const globals = {
   mainCameraSettings: {
     renderDistanceMin: 0.1,
     renderDistanceMax: 135,
+    initialCameraPosition: {
+      x: 0,
+      y: 80,
+      z: 58,
+    },
   },
   frontPageRendererSettings: {
     rendererPixelRatio: 0.65,
@@ -1635,7 +1687,7 @@ export const globals = {
     },
   },
   dotSceneSettings: {
-    pixelsPerDot: 12000,
+    pixelsPerDot: 17500,
     maxLineCount: 150,
     dotCellSize: 25,
     dotCountMax: 65,

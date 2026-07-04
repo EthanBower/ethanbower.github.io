@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { AnimatePresence, motion, useScroll } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import RotatingLoader from "@/src/components/ui/rotatingLoader";
 
@@ -35,11 +35,11 @@ const LOADING_TEXTS: string[] = [
 ];
 
 type LoadingScreenProps = Readonly<{
-    isEnabled: boolean;
+    enable: boolean;
     onCloseAnimationDone: () => void;
 }>;
 
-export default function LoadingScreen({ isEnabled, onCloseAnimationDone }: LoadingScreenProps) {
+export default function LoadingScreen({ enable, onCloseAnimationDone }: LoadingScreenProps) {
     const [isVisible, setIsVisible] = useState(true);
     const [randomizedTexts, setRandomizedTexts] = useState<string[]>(LOADING_TEXTS);
     const startTimeRef = useRef<number>(0);
@@ -51,7 +51,7 @@ export default function LoadingScreen({ isEnabled, onCloseAnimationDone }: Loadi
     }, []);
 
     useEffect(() => {
-        if (!isEnabled) return;
+        if (enable) return;
 
         const loadFinishDelta = performance.now() - startTimeRef.current;
         const timeRemaining = MINIMUM_LOAD_SCREEN_TIME - loadFinishDelta;
@@ -66,7 +66,7 @@ export default function LoadingScreen({ isEnabled, onCloseAnimationDone }: Loadi
         }, timeRemaining);
 
         return () => clearTimeout(t);
-    }, [isEnabled]);
+    }, [enable]);
 
     return (
         <AnimatePresence onExitComplete={onCloseAnimationDone}>

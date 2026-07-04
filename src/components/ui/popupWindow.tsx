@@ -4,7 +4,6 @@ import { useRef } from "react";
 import { motion, useDragControls, AnimatePresence, } from "framer-motion";
 import DashedSeparator from "./dashedSeperator";
 import Typewriter from "./typewriter";
-import TextScramble from "./textScramble";
 import ExitIcon from "../icons/exit";
 import { buttonStyles } from "@/src/styles/buttonStyles";
 import { popupWindow } from "@/src/styles/windows";
@@ -70,10 +69,9 @@ export default function PopupWindow({
                       <h3 className="text-sm font-semibold text-white font-mono">
                         <Typewriter text={windowTitle} />
                       </h3>
-                      <TextScramble
-                        text={windowTitleDescription}
-                        className="text-xs text-white/50 mt-0.5"
-                      />
+                      <span className="text-xs text-white/50 mt-0.5">
+                        {windowTitleDescription}
+                      </span>
                     </div>
                   </div>
                   <div className="flex self-stretch ml-auto">
@@ -92,9 +90,10 @@ export default function PopupWindow({
               <DashedSeparator />
               <div className="flex-1 overflow-y-auto">
                 <motion.div
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15, duration: 0.3 }}
+                  variants={animationVariants.popupWindowChildrenContentVariant}
+                  initial="hidden"
+                  animate="show"
+                  exit="exit"
                 >
                   {children}
                 </motion.div>

@@ -1,24 +1,25 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import PopupWindow from "../../components/ui/popupWindow";
 import { useSettings } from "../../providers/settingsProvider";
 import ButtonToggle from "../../components/ui/buttonToggle";
 import ChevronIcon from "../../components/icons/chevron";
 import { AppPermissions } from "@/src/components/utils/appPermissions";
 import WarningWindow from "@/src/components/ui/warningWindow";
+import PopupItem from "@/src/components/ui/popupItem";
 
 type PermissionsProps = Readonly<{
-  isEnabled: boolean;
   onClose: () => void;
 }>;
 
-export default function Permissions({ isEnabled, onClose }: PermissionsProps) {
-  const [error, setError] = useState<Error | null>(null);
-  const [isPending, startTransition] = useTransition();
+export default function Permissions({ onClose }: PermissionsProps) {
   const { settings, setSettings } = useSettings();
+  const [error, setError] = useState<Error | null>(null);
+  const [enabled, setEnabled] = useState(AppPermissions.gyroPermissions.gyroCompatible && !settings.motionEnabled);
+  const [isPending, startTransition] = useTransition();
 
-  const handleEnableGyro = async () => {
+  async function handleEnableGyro() {
     // Prevent double clicks or running if already processing
     if (isPending) return;
 
@@ -39,24 +40,32 @@ export default function Permissions({ isEnabled, onClose }: PermissionsProps) {
     });
   };
 
+  useEffect(() => {
+    if (!enabled) {
+      onClose();
+    }
+  }, [enabled, onClose]);
+
   return (
-    <div>
+    <>
       <PopupWindow
         windowIcon={<ChevronIcon />}
         windowTitle="PERMISSIONS"
         windowTitleDescription="For optimal experience, please grant motion permissions."
-        isEnabled={isEnabled}
-        onClose={onClose}
+        isEnabled={enabled}
+        onClose={() => setEnabled(false)}
       >
-        <div className="flex items-center justify-between gap-2 m-[5px] bg-black/25 p-3 rounded-xl">
-          <span>{isPending ? "Activating..." : "Activate Motion"}</span>
-          <ButtonToggle
-            enabled={settings.motionEnabled}
-            onChange={handleEnableGyro}
-          />
-        </div>
+        <PopupItem>
+          <div className="flex items-center justify-between gap-2">
+            <span>{isPending ? "Activating..." : "Activate Motion"}</span>
+            <ButtonToggle
+              enabled={settings.motionEnabled}
+              onChange={handleEnableGyro}
+            />
+          </div>
+        </PopupItem>
       </PopupWindow>
       <WarningWindow error={error} enable={error != null} onClose={() => setError(null)} />
-    </div>
+    </>
   );
 }

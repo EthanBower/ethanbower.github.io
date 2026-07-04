@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { SettingsProvider } from "@/src/providers/settingsProvider";
+import GlobalScreen from "@/src/features/layout/globalScreen";
+import { NavigationProvider } from "@/src/providers/navigationProvider";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -39,7 +41,11 @@ export default function RootLayout({
     >
       <body>
         <SettingsProvider>
-          {children}
+          <NavigationProvider>
+            <GlobalScreen>
+              {children}
+            </GlobalScreen>
+          </NavigationProvider>
         </SettingsProvider>
       </body>
     </html>

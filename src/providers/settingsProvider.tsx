@@ -3,27 +3,41 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "app-settings";
+
+type WaveColorSettings = {
+  presetName: string;
+  colors: number[];
+};
+
+type BackgroundColorSettings = {
+  presetName: string;
+  color: number;
+}
+
 export const defaultSettings: {
   lastSeenVersion: string | null;
   motionEnabled: boolean;
   statsEnabled: boolean;
   dotCount: number | null;
   performance: number;
-  backgroundColor: number | null;
-  waveColors: number[];
+  backgroundColorSettings: BackgroundColorSettings | null;
+  waveColorSettings: WaveColorSettings;
 } = {
   lastSeenVersion: null,
   motionEnabled: false,
   statsEnabled: false,
   dotCount: null,
   performance: 0.65,
-  backgroundColor: null,
-  waveColors: [
-    0x0e09dc,
-    0x8c2700,
-    0x00786e,
-    0xee3bcf
-  ]
+  backgroundColorSettings: null,
+  waveColorSettings: {
+    presetName: "Default Bark Space",
+    colors: [
+      0x0e09dc,
+      0x8c2700,
+      0x00786e,
+      0xee3bcf
+    ]
+  }
 };
 
 type Settings = typeof defaultSettings;

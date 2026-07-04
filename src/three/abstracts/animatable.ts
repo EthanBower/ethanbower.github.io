@@ -12,6 +12,8 @@ type TickTask = {
 export abstract class Animatable extends Disposable {
   public isAnimating: boolean = true;
   private tickTasks: TickTask[] = [];
+  private animationResolver: (() => void) | null = null;
+  protected animationProgressCallback: ((p: number) => void) | null = null;
   private static animationsRegistry = new Set<Animatable>();
 
   protected abstract update(): void;
@@ -36,12 +38,38 @@ export abstract class Animatable extends Disposable {
     super.dispose();
   }
 
+  protected resolveAnimationPromise(): void {
+    this.animationResolver?.();
+    this.animationResolver = null;
+    this.animationProgressCallback = null;
+  }
+
+  protected getAnimationPromise(
+    onProgress?: (progress: number) => void,
+  ): Promise<void> {
+    this.resolveAnimationPromise();
+    this.animationProgressCallback = onProgress ?? null;
+
+    return new Promise<void>((resolve) => {
+      this.animationResolver = resolve;
+    });
+  }
+
   protected registerTick(interval: number, onTickExecution: () => void) {
     this.tickTasks.push({
       interval,
       lastRun: globals.timeTracker.lastFrameTime,
       onTickExecution,
     });
+  }
+
+  protected calculate1DProgress(
+    currentPos: number,
+    startPos: number,
+    distance: number,
+  ) {
+    const traveled = Math.abs(currentPos - startPos);
+    return Math.min(distance === 0 ? 1 : traveled / distance, 1);
   }
 
   private runTicks(): void {
