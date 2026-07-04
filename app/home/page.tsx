@@ -25,9 +25,7 @@ export default function Home() {
         setInitialized(true);
       }, .8);
     }, .8);
-  }, []);
 
-  useEffect(() => {
     return addBeforeNavigate(() => {
       setHomeDisplayEnabled(false);
 
@@ -46,7 +44,7 @@ export default function Home() {
   }, [menuFocusRequested, initialized]);
 
   return (
-    <HomeTitle enable={homeDisplay} onExitAnimationComplete={() => {
+    <HomeTitle enable={false} onExitAnimationComplete={() => {
       exitResolver.current?.();
       exitResolver.current = null;
     }} />
