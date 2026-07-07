@@ -1,7 +1,8 @@
 "use client;";
 
-import { FrontPageAnimation, globals, Utils } from "..";
+import { FrontPageAnimation, Utils } from "..";
 import { Animatable } from "../abstracts/animatable";
+import { globalConfig } from "../globalConfig";
 
 export class IntroAnimation extends Animatable {
   public cameraYStartPosition: number = 0;
@@ -36,7 +37,7 @@ export class IntroAnimation extends Animatable {
 
     camera.position.y +=
       (this.cameraTargetY - camera.position.y) *
-      (2.4 * globals.timeTracker.deltaTime);
+      (2.4 * globalConfig.timeTracker.deltaTime);
   }
 
   public startCameraIntro(

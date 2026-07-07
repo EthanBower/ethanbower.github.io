@@ -60,6 +60,9 @@ export default function Settings({ enable, onClose }: SettingsProps) {
   const [currentDotCount, setCurrentDotCount] = useState(
     SceneController.getInstance().frontPage!.dotScene.dots.length,
   );
+  const [currentUfoCount, setCurrentUfoCount] = useState(
+    SceneController.getInstance().frontPage!.ufoScene.ufos.length,
+  );
 
   useEffect(() => {
     setMenuFocusRequested(enable);
@@ -71,6 +74,14 @@ export default function Settings({ enable, onClose }: SettingsProps) {
     setSettings((s) => ({
       ...s,
       dotCount: dotNumber,
+    }));
+  }
+
+  function changeUfoCount(ufoNumber: number) {
+    setCurrentUfoCount(ufoNumber);
+    setSettings((s) => ({
+      ...s,
+      ufoCount: ufoNumber,
     }));
   }
 
@@ -186,6 +197,14 @@ export default function Settings({ enable, onClose }: SettingsProps) {
             </div>
           </div>
           <Slider onChange={changeDotCount} value={currentDotCount} />
+        </PopupItem>
+        <PopupItem>
+          <div className="pb-[10px] text-center">
+            <p>
+              UFO DENSITY: <b>{currentUfoCount}</b> UFO'S
+            </p>
+          </div>
+          <Slider onChange={changeUfoCount} value={currentUfoCount} min={0} max={10} />
         </PopupItem>
         <PopupItem>
           <div className="pb-[10px] text-center">
