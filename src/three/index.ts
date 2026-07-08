@@ -8,6 +8,7 @@ import { IntroAnimation } from "./cameraAnimations/introAnimation";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { Animatable } from "./abstracts/animatable";
 import { Disposable } from "./abstracts/disposable";
+import { globalConfig } from "./globalConfig";
 
 // todo - make multiple ufos and configure it
 // todo - make google analytics
@@ -79,6 +80,10 @@ export class SceneController {
 
   public changeDotSpawnCount(dotCount: number): void {
     this.frontPage!.dotScene.reinitializeDotSpawn(dotCount);
+  }
+
+  public changeUfoSpawnCount(ufoCount: number): void {
+    this.frontPage!.ufoScene.reinitializeUfoSpawn(ufoCount);
   }
 
   public setStatsEnable(showStats: boolean): void {
@@ -226,27 +231,10 @@ class AnimationEventListeners extends Disposable {
       this.frontPage.dotScene.mouseDot.mouseLeaveEvent,
     );
 
-    window.addEventListener("resize", this.frontPage.dotScene.reCalculateDots);
-  }
-}
-
-class TimeTracker {
-  public elapsedTime!: number;
-  public deltaTime!: number;
-  public lastFrameTime: number;
-
-  constructor() {
-    this.lastFrameTime = performance.now();
-    this.updateTime();
-  }
-
-  public updateTime() {
-    const perfNow = performance.now();
-
-    // The 0.001 converts to seconds
-    this.elapsedTime = perfNow * 0.001;
-    this.deltaTime = (perfNow - this.lastFrameTime) * 0.001;
-    this.lastFrameTime = perfNow;
+    window.removeEventListener(
+      "resize",
+      this.frontPage.dotScene.reCalculateDots,
+    );
   }
 }
 
@@ -264,6 +252,7 @@ export class FrontPageAnimation {
   private animationId?: number | null;
 
   public constructor(canvasElm: HTMLDivElement) {
+    console.log(`Running THREE JS Version ${THREE.REVISION}`);
     this.frontPageScene = new FrontPageSceneManager();
     this.frontPageRenderer = new FrontPageRenderer(this);
     this.mainCamera = new MainCamera(canvasElm, this);
@@ -284,7 +273,7 @@ export class FrontPageAnimation {
 
   public animatePage(onError?: (error: Error) => void): void {
     try {
-      globals.timeTracker!.updateTime();
+      globalConfig.timeTracker!.updateTime();
 
       this.stats?.begin();
       Animatable.updateAll();
@@ -312,192 +301,84 @@ export class FrontPageAnimation {
   public async dispose(): Promise<void> {
     cancelAnimationFrame(this.animationId!);
 
+    THREE.Cache.clear();
     this.stats?.dom.remove();
+
+    console.log(
+      `Before Dispose: ${JSON.stringify(this.frontPageRenderer.renderer.info.memory)}`,
+    );
 
     Disposable.disposeAllInRegistry();
     Animatable.disposeAllInRegistry();
+
+    this.frontPageScene.scene.traverse((node) => {
+      if (node instanceof THREE.Mesh) {
+        console.log("Stuck material:", node.material.name, node.material);
+      }
+    });
+
     this.frontPageRenderer.dispose();
+
+    console.log(
+      `After Dispose: ${JSON.stringify(this.frontPageRenderer.renderer.info.memory)}`,
+    );
   }
 }
 
-class UfoScene extends Animatable {
-  public ufoModel?: THREE.Sprite;
-  public ufoGlow?: THREE.Sprite;
-  public ufoBeam?: THREE.Mesh;
-  private frontPage: FrontPageAnimation;
-  private isFlying = false;
-  private speed = 12;
-  private direction = 1; // 1 = right, -1 = left
-  private nextSpawnTime = 0;
-  private spriteScale = {
-    ufoModel: { x: 12, y: 14, z: 12 },
-    glowModel: { x: 4, y: 4, z: 1 },
-  };
+class UfoMaterial extends Disposable {
+  public ufoSpriteMaterial: THREE.SpriteMaterial;
+  public ufoGlowSpriteMaterial: THREE.SpriteMaterial;
+  public ufoBeamMaterial: THREE.MeshBasicMaterial;
+  public ufoBeamGeometry: THREE.ConeGeometry;
+  private ufoBeamColors = [
+    0x3cd070, // Green
+    0x42e8f5, // Cyan
+    0x5ca8ff, // Blue
+    0x8b6cff, // Violet
+    0xd35cff, // Magenta
+    0xff5ebc, // Pink
+    0xff8c42, // Amber
+    0xffd54a, // Golden
+    0xffffff, // White
+  ];
 
-  constructor(frontPage: FrontPageAnimation) {
+  constructor(texture: THREE.Texture<HTMLImageElement, THREE.TextureEventMap>) {
     super();
-    this.frontPage = frontPage;
-    this.setNextSpawnTime();
+
+    this.ufoSpriteMaterial = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+    });
+
+    const selectedColor = Utils.selectRandomFromList(this.ufoBeamColors);
+
+    this.ufoGlowSpriteMaterial = new THREE.SpriteMaterial({
+      map: this.createGlowTexture(),
+      color: selectedColor,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      opacity: 0.6,
+    });
+
+    this.ufoBeamGeometry = new THREE.ConeGeometry(3, 19, 16, 1, true);
+    this.ufoBeamMaterial = new THREE.MeshBasicMaterial({
+      color: selectedColor,
+      transparent: true,
+      opacity: 0.2,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
   }
 
-  public async loadObjects(): Promise<void> {
-    const textureLoader = new THREE.TextureLoader();
+  protected override onDispose(): void {
+    this.ufoSpriteMaterial.map?.dispose();
+    this.ufoGlowSpriteMaterial.map?.dispose();
 
-    try {
-      const texture = await textureLoader.loadAsync("/three/ufo.svg");
-      texture.colorSpace = THREE.SRGBColorSpace;
-      texture.needsUpdate = true;
-
-      this.ufoModel = new THREE.Sprite(
-        new THREE.SpriteMaterial({
-          map: texture,
-          transparent: true,
-        }),
-      );
-
-      this.ufoGlow = new THREE.Sprite(
-        new THREE.SpriteMaterial({
-          map: this.createGlowTexture(),
-          transparent: true,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-          opacity: 0.6,
-        }),
-      );
-
-      this.ufoBeam = new THREE.Mesh(
-        new THREE.ConeGeometry(3, 19, 16, 1, true),
-        new THREE.MeshBasicMaterial({
-          color: 0x3cd070,
-          transparent: true,
-          opacity: 0.2,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-        }),
-      );
-
-      this.ufoModel.add(this.ufoGlow);
-      this.ufoModel.add(this.ufoBeam);
-
-      this.ufoModel.position.set(0, 0, -50);
-      this.ufoBeam.position.set(0, -9.2, 0);
-
-      this.ufoBeam.scale.set(1, 1, 1);
-      this.ufoModel.scale.set(
-        this.spriteScale.ufoModel.x,
-        this.spriteScale.ufoModel.y,
-        this.spriteScale.ufoModel.z,
-      );
-      this.ufoGlow.scale.set(
-        this.spriteScale.glowModel.x,
-        this.spriteScale.glowModel.y,
-        this.spriteScale.glowModel.z,
-      );
-
-      this.ufoGlow.renderOrder = 0;
-      this.ufoBeam.renderOrder = 1;
-      this.ufoModel.renderOrder = 2;
-
-      this.ufoModel.visible = false;
-      this.frontPage.frontPageScene.scene.add(this.ufoModel);
-    } catch (error) {
-      throw new Error("Could not load UFO Image.", { cause: error });
-    }
-  }
-
-  protected override update(): void {
-    if (!this.isFlying) {
-      if (globals.timeTracker.elapsedTime >= this.nextSpawnTime) {
-        this.spawnUfo();
-      }
-
-      return;
-    }
-
-    this.animate();
-  }
-
-  private spawnUfo(): void {
-    this.direction = Math.random() < 0.5 ? 1 : -1;
-    this.speed = Utils.getRandomBetween(10, 30);
-
-    const z = -Utils.getRandomBetween(20, 65);
-    const dims = this.frontPage.mainCamera.getVisibleDimensionsAtDepth(z);
-    const x =
-      this.direction === 1
-        ? -dims.halfWidth - 20 // spawn left
-        : dims.halfWidth + 20; // spawn right
-    const y = Utils.getRandomBetween(5, dims.halfHeight - 8);
-
-    this.ufoModel!.position.set(x, y, z);
-    this.ufoModel!.visible = true;
-    this.isFlying = true;
-  }
-
-  private animate(): void {
-    if (this.isOutsideView()) {
-      this.isFlying = false;
-      this.ufoModel!.visible = false;
-      this.setNextSpawnTime();
-    }
-
-    this.animateUfo();
-    this.animateGlow();
-    this.animateBeam();
-  }
-
-  private animateUfo(): void {
-    const t = globals.timeTracker.elapsedTime;
-    const yVelocity = Math.cos(t * 3.5) * 0.05;
-
-    this.ufoModel!.material.rotation = yVelocity * this.direction;
-    this.ufoModel!.scale.x = 15 + Math.sin(t) * 0.9;
-    this.ufoModel!.position.x +=
-      this.speed * this.direction * globals.timeTracker.deltaTime;
-    this.ufoModel!.position.y += yVelocity;
-  }
-
-  private animateBeam(): void {
-    const t = globals.timeTracker.elapsedTime;
-    const beamPulse = 1 + Math.sin(t * 6) * 0.08;
-
-    this.ufoBeam!.scale.x = beamPulse;
-    this.ufoBeam!.scale.z = beamPulse;
-
-    (this.ufoBeam?.material as THREE.MeshBasicMaterial).opacity =
-      0.15 + Math.sin(t * 5) * Math.sin(t) * 0.03;
-  }
-
-  private animateGlow(): void {
-    const pulse = 1 + Math.sin(globals.timeTracker.elapsedTime * 4) * 0.1;
-    this.ufoGlow!.scale.set(
-      this.spriteScale.glowModel.x * pulse,
-      this.spriteScale.glowModel.y * pulse,
-      this.spriteScale.glowModel.z,
-    );
-  }
-
-  private isOutsideView(): boolean {
-    const buffer = 70;
-    const cam = this.frontPage.mainCamera.camera;
-    const localPos = this.ufoModel!.position.clone().applyMatrix4(
-      cam.matrixWorldInverse,
-    );
-    const dims = this.frontPage.mainCamera.getVisibleDimensionsAtDepth(
-      cam.position.z + localPos.z,
-    );
-
-    return (
-      localPos.x > dims.halfWidth + buffer ||
-      localPos.x < -dims.halfWidth - buffer ||
-      localPos.y > dims.halfHeight + buffer ||
-      localPos.y < -dims.halfHeight - buffer
-    );
-  }
-
-  private setNextSpawnTime(): void {
-    this.nextSpawnTime =
-      globals.timeTracker.elapsedTime + Utils.getRandomBetween(5, 20);
+    this.ufoSpriteMaterial.dispose();
+    this.ufoGlowSpriteMaterial.dispose();
+    this.ufoBeamMaterial.dispose();
+    this.ufoBeamGeometry.dispose();
   }
 
   private createGlowTexture(): THREE.CanvasTexture {
@@ -526,19 +407,291 @@ class UfoScene extends Animatable {
 
     return new THREE.CanvasTexture(canvas);
   }
+}
+
+class UfoScene extends Animatable {
+  public ufoMaterials: UfoMaterial[] = [];
+  public ufos: Ufo[] = [];
+  public frontPage: FrontPageAnimation;
+  private ufoCount: number = 3;
+
+  constructor(frontPage: FrontPageAnimation) {
+    super();
+    this.frontPage = frontPage;
+  }
+
+  public async loadObjects(): Promise<void> {
+    try {
+      const textures = await Promise.all([
+        this.loadTexture("/three/ufo-blue.svg"),
+        this.loadTexture("/three/ufo-green.svg"),
+      ]);
+
+      for (const texture of textures) {
+        this.ufoMaterials.push(new UfoMaterial(texture));
+      }
+
+      this.reinitializeUfoSpawn(this.ufoCount);
+    } catch (error) {
+      throw new Error("Could not load UFO Image.", { cause: error });
+    }
+  }
+
+  public reinitializeUfoSpawn(targetCount: number): void {
+    if (targetCount > this.ufos.length) {
+      const amountToAdd = targetCount - this.ufos.length;
+      this.spawnUfos(amountToAdd);
+    }
+
+    if (targetCount < this.ufos.length) {
+      const amountToRemove = this.ufos.length - targetCount;
+
+      for (let i = 0; i < amountToRemove; i++) {
+        this.ufos.pop()?.dispose();
+      }
+    }
+
+    this.ufoCount = targetCount;
+  }
+
+  protected override update(): void {
+    for (const ufo of this.ufos) {
+      ufo.update();
+    }
+  }
+
+  private async loadTexture(
+    url: string,
+  ): Promise<THREE.Texture<HTMLImageElement, THREE.TextureEventMap>> {
+    const textureLoader = new THREE.TextureLoader();
+    const texture = await textureLoader.loadAsync(url);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+
+    return texture;
+  }
+
+  private spawnUfos(ufosToSpawn: number): void {
+    for (let i = 0; i < ufosToSpawn; i++) {
+      this.ufos.push(
+        new Ufo(this, Utils.selectRandomFromList(this.ufoMaterials)),
+      );
+    }
+  }
 
   protected override onDispose(): void {
-    if (this.ufoGlow) {
-      Utils.disposeSprite(this.ufoGlow);
+    return;
+  }
+}
+
+class Ufo extends Disposable {
+  public ufoModel: THREE.Sprite;
+  public ufoGlow: THREE.Sprite;
+  public ufoBeam: THREE.Mesh;
+  private beamEnabled: boolean = true;
+  private isFlying = false;
+  private speed: number = 0;
+  private direction: number = 1; // 1 = right, -1 = left
+  private nextSpawnTime: number = 0;
+  private spriteScale = {
+    ufoModel: { x: 12, y: 14, z: 12 },
+    glowModel: { x: 4, y: 4, z: 1 },
+  };
+  private frontPage: FrontPageAnimation;
+
+  constructor(ufoScene: UfoScene, ufoMaterial: UfoMaterial) {
+    super();
+
+    this.spriteScale.ufoModel = this.getNewSpriteScale(
+      this.spriteScale.ufoModel,
+      Utils.getRandomBetween(10, 15),
+    );
+    this.spriteScale.glowModel = this.getNewSpriteScale(
+      this.spriteScale.glowModel,
+      Utils.getRandomBetween(2, 4),
+    );
+
+    this.ufoModel = new THREE.Sprite(ufoMaterial.ufoSpriteMaterial);
+    this.ufoGlow = new THREE.Sprite(ufoMaterial.ufoGlowSpriteMaterial);
+    this.ufoBeam = new THREE.Mesh(
+      ufoMaterial.ufoBeamGeometry,
+      ufoMaterial.ufoBeamMaterial,
+    );
+    this.frontPage = ufoScene.frontPage;
+
+    this.ufoModel.add(this.ufoGlow);
+    this.ufoModel.add(this.ufoBeam);
+
+    this.ufoModel.position.set(0, 0, -50);
+    this.ufoBeam.position.set(0, -9.2, 0);
+
+    this.ufoBeam.scale.set(1, 1, 1);
+    this.ufoModel.scale.set(
+      this.spriteScale.ufoModel.x,
+      this.spriteScale.ufoModel.y,
+      this.spriteScale.ufoModel.z,
+    );
+    this.ufoGlow.scale.set(
+      this.spriteScale.glowModel.x,
+      this.spriteScale.glowModel.y,
+      this.spriteScale.glowModel.z,
+    );
+
+    this.ufoGlow.renderOrder = 0;
+    this.ufoBeam.renderOrder = 1;
+    this.ufoModel.renderOrder = 2;
+
+    this.ufoModel.visible = false;
+
+    this.frontPage.frontPageScene.scene.add(this.ufoModel);
+
+    this.setUfoBeamVisibility();
+    this.setSpeed();
+    this.setNextSpawnTime();
+  }
+
+  public update() {
+    if (!this.isFlying) {
+      if (globalConfig.timeTracker.elapsedTime >= this.nextSpawnTime) {
+        this.spawnUfo();
+      }
+
+      return;
     }
 
-    if (this.ufoBeam) {
-      Utils.disposeMesh(this.ufoBeam, this.frontPage.frontPageScene.scene);
+    this.animate();
+  }
+
+  private spawnUfo(): void {
+    this.setUfoBeamVisibility();
+    this.setSpeed();
+    this.direction = Math.random() < 0.5 ? 1 : -1;
+
+    const z = -Utils.getRandomBetween(20, 65);
+    const dims = this.frontPage.mainCamera.getVisibleDimensionsAtDepth(z);
+    const x =
+      this.direction === 1
+        ? -dims.halfWidth - 20 // spawn left
+        : dims.halfWidth + 20; // spawn right
+    const y = Utils.getRandomBetween(5, dims.halfHeight - 8);
+
+    this.ufoModel!.position.set(x, y, z);
+    this.ufoModel!.visible = true;
+    this.isFlying = true;
+  }
+
+  private animate(): void {
+    if (this.isOutsideView()) {
+      this.isFlying = false;
+      this.ufoModel!.visible = false;
+      this.setNextSpawnTime();
     }
 
-    if (this.ufoModel) {
-      Utils.disposeSprite(this.ufoModel);
+    this.animateUfo();
+    this.animateGlow();
+    this.animateBeam();
+  }
+
+  private animateUfo(): void {
+    const t = globalConfig.timeTracker.elapsedTime;
+    const yVelocity = Math.cos(t * 3.5) * 0.05;
+
+    this.ufoModel!.material.rotation = yVelocity * this.direction;
+    this.ufoModel!.scale.x = 15 + Math.sin(t) * 0.9;
+    this.ufoModel!.position.x +=
+      this.speed * this.direction * globalConfig.timeTracker.deltaTime;
+    this.ufoModel!.position.y += yVelocity;
+  }
+
+  private animateBeam(): void {
+    if (!this.beamEnabled) {
+      this.ufoBeam.visible = false;
+      return;
+    } else {
+      this.ufoBeam.visible = true;
     }
+
+    const t = globalConfig.timeTracker.elapsedTime;
+    const beamPulse = 1 + Math.sin(t * 6) * 0.08;
+
+    this.ufoBeam!.scale.x = beamPulse;
+    this.ufoBeam!.scale.z = beamPulse;
+
+    (this.ufoBeam?.material as THREE.MeshBasicMaterial).opacity =
+      0.15 + Math.sin(t * 5) * Math.sin(t) * 0.03;
+  }
+
+  private animateGlow(): void {
+    const pulse = 1 + Math.sin(globalConfig.timeTracker.elapsedTime * 4) * 0.1;
+    this.ufoGlow!.scale.set(
+      this.spriteScale.glowModel.x * pulse,
+      this.spriteScale.glowModel.y * pulse,
+      this.spriteScale.glowModel.z,
+    );
+  }
+
+  private isOutsideView(): boolean {
+    const buffer = 70;
+    const cam = this.frontPage.mainCamera.camera;
+    const localPos = this.ufoModel!.position.clone().applyMatrix4(
+      cam.matrixWorldInverse,
+    );
+    const dims = this.frontPage.mainCamera.getVisibleDimensionsAtDepth(
+      cam.position.z + localPos.z,
+    );
+
+    return (
+      localPos.x > dims.halfWidth + buffer ||
+      localPos.x < -dims.halfWidth - buffer ||
+      localPos.y > dims.halfHeight + buffer ||
+      localPos.y < -dims.halfHeight - buffer
+    );
+  }
+
+  private setNextSpawnTime(): void {
+    this.nextSpawnTime =
+      globalConfig.timeTracker.elapsedTime + Utils.getRandomBetween(5, 20);
+  }
+
+  private getNewSpriteScale(
+    currentScale: { x: number; y: number; z: number },
+    newXScale: number,
+  ): {
+    x: number;
+    y: number;
+    z: number;
+  } {
+    const xyScaleRatio = currentScale.x / currentScale.y;
+    const xNewScale = newXScale;
+    const yNewScale = xNewScale / xyScaleRatio;
+
+    return { x: xNewScale, y: yNewScale, z: currentScale.z };
+  }
+
+  private setSpeed(): void {
+    this.speed = Utils.getRandomBetween(10, 30);
+  }
+
+  private setUfoBeamVisibility(): void {
+    this.beamEnabled = Math.random() < 0.7;
+  }
+
+  protected override onDispose(): void {
+    this.ufoGlow.material.dispose();
+    this.ufoGlow.geometry.dispose();
+    this.ufoBeam.geometry.dispose();
+
+    const ufoBeamMaterial = this.ufoBeam.material;
+
+    if (Array.isArray(ufoBeamMaterial)) {
+      for (const mat of ufoBeamMaterial) {
+        mat.dispose();
+      }
+    } else {
+      ufoBeamMaterial.dispose();
+    }
+
+    this.ufoModel.removeFromParent();
   }
 }
 
@@ -565,8 +718,8 @@ class AstroidScene extends Animatable {
     const gltLoader = new GLTFLoader();
 
     try {
-      const gltfModel = await gltLoader.loadAsync("/three/asteroid.glb");
-      this.asteroidModel = gltfModel.scene;
+      const gltf = await gltLoader.loadAsync("/three/asteroid.glb");
+      this.asteroidModel = gltf.scene;
       this.asteroidModel.position.set(0, 0, -180);
       this.asteroidModel.scale.set(1, 1, 1);
       this.frontPage.frontPageScene.astroidGroup.add(this.asteroidModel);
@@ -576,8 +729,8 @@ class AstroidScene extends Animatable {
   }
 
   override update(): void {
-    const dt = globals.timeTracker.deltaTime;
-    const t = globals.timeTracker.elapsedTime;
+    const dt = globalConfig.timeTracker.deltaTime;
+    const t = globalConfig.timeTracker.elapsedTime;
 
     // rotation (continuous)
     this.asteroidModel!.rotation.y += 0.2 * dt;
@@ -597,13 +750,9 @@ class AstroidScene extends Animatable {
       if (!light) return;
       Utils.disposeLight(light, this.frontPage.frontPageScene.scene);
     });
-
-    if (this.asteroidModel) {
-      Utils.disposeGLB2(
-        this.asteroidModel,
-        this.frontPage.frontPageScene.scene,
-      );
-    }
+    Utils.disposeGLB2(this.asteroidModel!, this.frontPage.frontPageScene.scene);
+    this.asteroidModel!.removeFromParent();
+    this.asteroidModel!.clear();
   }
 
   private initLighting(): void {
@@ -625,6 +774,7 @@ class FrontPageSceneManager {
   public astroidGroup: THREE.Group;
   public wavesGroup: THREE.Group;
   public dotsGroup: THREE.Group;
+  // todo - add in ufo group
 
   constructor() {
     this.scene = new THREE.Scene();
@@ -632,7 +782,10 @@ class FrontPageSceneManager {
     this.wavesGroup = new THREE.Group();
     this.dotsGroup = new THREE.Group();
 
-    this.scene.fog = new THREE.FogExp2(globals.threeJsBackgroundColor, 0.009);
+    this.scene.fog = new THREE.FogExp2(
+      globalConfig.threeJsBackgroundColor,
+      0.009,
+    );
     this.scene.add(this.astroidGroup);
     this.scene.add(this.wavesGroup);
     this.scene.add(this.dotsGroup);
@@ -652,7 +805,7 @@ class MainCamera extends Animatable {
 
   constructor(canvasElm: HTMLDivElement, frontPage: FrontPageAnimation) {
     super();
-    const mainCamSettings = globals.mainCameraSettings;
+    const mainCamSettings = globalConfig.mainCameraSettings;
 
     this.camera = new THREE.PerspectiveCamera(
       75,
@@ -779,7 +932,7 @@ class Canvas {
 
 class FrontPageRenderer {
   public renderer: THREE.WebGLRenderer;
-  public pixelRatio = globals.frontPageRendererSettings.rendererPixelRatio;
+  public pixelRatio = globalConfig.frontPageRendererSettings.rendererPixelRatio;
   public preventWheel = (e: WheelEvent) => e.preventDefault();
   public preventTouch = (e: TouchEvent) => e.preventDefault();
   private frontPage: FrontPageAnimation;
@@ -787,7 +940,7 @@ class FrontPageRenderer {
   constructor(frontPage: FrontPageAnimation) {
     this.frontPage = frontPage;
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    this.renderer.setClearColor(globals.threeJsBackgroundColor, 1);
+    this.renderer.setClearColor(globalConfig.threeJsBackgroundColor, 1);
   }
 
   public setPixelRatio() {
@@ -828,7 +981,8 @@ class DotsScene extends Animatable {
   private nextDotId = 0;
   private dotSpatialGrid = new Map<string, Dot[]>();
   private readonly dotCellSizeSquared =
-    globals.dotSceneSettings.dotCellSize * globals.dotSceneSettings.dotCellSize;
+    globalConfig.dotSceneSettings.dotCellSize *
+    globalConfig.dotSceneSettings.dotCellSize;
 
   constructor(frontPage: FrontPageAnimation) {
     super();
@@ -908,7 +1062,7 @@ class DotsScene extends Animatable {
 
       // Update opacity
       const distanceAlpha =
-        1 - Math.sqrt(distanceSq) / globals.dotSceneSettings.dotCellSize;
+        1 - Math.sqrt(distanceSq) / globalConfig.dotSceneSettings.dotCellSize;
       const dotOpacityAlpha = Math.min(
         dot.material.opacity,
         nearbyDot.material.opacity,
@@ -934,10 +1088,7 @@ class DotsScene extends Animatable {
 
       for (let i = 0; i < amountToRemove; i++) {
         const dot = this.dots.pop();
-
-        if (dot) {
-          dot.dispose();
-        }
+        dot?.dispose();
       }
     }
 
@@ -991,9 +1142,9 @@ class DotsScene extends Animatable {
     z: number,
   ): { cellKeyName: string; x: number; y: number; z: number } {
     const [xCell, yCell, zCell] = [
-      Math.floor(x / globals.dotSceneSettings.dotCellSize),
-      Math.floor(y / globals.dotSceneSettings.dotCellSize),
-      Math.floor(z / globals.dotSceneSettings.dotCellSize),
+      Math.floor(x / globalConfig.dotSceneSettings.dotCellSize),
+      Math.floor(y / globalConfig.dotSceneSettings.dotCellSize),
+      Math.floor(z / globalConfig.dotSceneSettings.dotCellSize),
     ];
 
     return {
@@ -1007,14 +1158,17 @@ class DotsScene extends Animatable {
   private calcDotCount(): number {
     const dotCountRecommended = Math.round(
       (window.innerWidth * window.innerHeight) /
-        globals.dotSceneSettings.pixelsPerDot,
+        globalConfig.dotSceneSettings.pixelsPerDot,
     );
 
-    return Math.min(dotCountRecommended, globals.dotSceneSettings.dotCountMax);
+    return Math.min(
+      dotCountRecommended,
+      globalConfig.dotSceneSettings.dotCountMax,
+    );
   }
 
   private initLinePool(): void {
-    for (let i = 0; i < globals.dotSceneSettings.maxLineCount; i++) {
+    for (let i = 0; i < globalConfig.dotSceneSettings.maxLineCount; i++) {
       const positions = new Float32Array(6);
       const geometry = new THREE.BufferGeometry();
       const material = new THREE.LineBasicMaterial({
@@ -1043,9 +1197,9 @@ class DotsScene extends Animatable {
     for (let i = 0; i < dotsToSpawn; i++) {
       const z = Utils.getRandomBetween(
         cameraZ -
-          globals.dotSettings.dotCameraDistanceSettings.minZCameraDistance,
+          globalConfig.dotSettings.dotCameraDistanceSettings.minZCameraDistance,
         cameraZ -
-          globals.dotSettings.dotCameraDistanceSettings.maxZCameraDistance,
+          globalConfig.dotSettings.dotCameraDistanceSettings.maxZCameraDistance,
       );
       const dims = this.frontPage.mainCamera.getVisibleDimensionsAtDepth(z);
       const dotPosition = new THREE.Vector3(
@@ -1101,13 +1255,13 @@ class Dot extends Disposable {
     this.id = indexId;
 
     this.material = new THREE.MeshBasicMaterial({
-      color: globals.dotSettings.dotColorGradient.near,
+      color: globalConfig.dotSettings.dotColorGradient.near,
       transparent: true,
       opacity: 0,
       fog: true,
     });
     this.dotMesh = new THREE.Mesh(
-      new THREE.CircleGeometry(globals.dotSettings.dotRadius, 6),
+      new THREE.CircleGeometry(globalConfig.dotSettings.dotRadius, 6),
       this.material,
     );
     this.dotMesh.position.copy(dotPos);
@@ -1118,7 +1272,7 @@ class Dot extends Disposable {
   public updateDot(frontPage: FrontPageAnimation): void {
     this.dotMesh.position.addScaledVector(
       this.velocity,
-      globals.timeTracker.deltaTime,
+      globalConfig.timeTracker.deltaTime,
     );
 
     this.runCollisionOpenSpace(frontPage);
@@ -1151,34 +1305,34 @@ class Dot extends Disposable {
       this.recycle(
         frontPage,
         local,
-        -globals.dotSettings.dotCameraDistanceSettings.minZCameraDistance,
-        -globals.dotSettings.dotCameraDistanceSettings.maxZCameraDistance,
+        -globalConfig.dotSettings.dotCameraDistanceSettings.minZCameraDistance,
+        -globalConfig.dotSettings.dotCameraDistanceSettings.maxZCameraDistance,
       );
     }
 
     // Behind camera
     if (
       local.z >
-      -globals.dotSettings.dotCameraDistanceSettings.minZCameraDistance
+      -globalConfig.dotSettings.dotCameraDistanceSettings.minZCameraDistance
     ) {
       this.recycle(
         frontPage,
         local,
-        -globals.dotSettings.dotCameraDistanceSettings.minZCameraDistance,
-        -globals.dotSettings.dotCameraDistanceSettings.maxZCameraDistance,
+        -globalConfig.dotSettings.dotCameraDistanceSettings.minZCameraDistance,
+        -globalConfig.dotSettings.dotCameraDistanceSettings.maxZCameraDistance,
       );
     }
 
     // Too far away
     if (
       local.z <
-      -globals.dotSettings.dotCameraDistanceSettings.maxZCameraDistance
+      -globalConfig.dotSettings.dotCameraDistanceSettings.maxZCameraDistance
     ) {
       this.recycle(
         frontPage,
         local,
-        -globals.dotSettings.dotCameraDistanceSettings.minZCameraDistance,
-        -globals.dotSettings.dotCameraDistanceSettings.maxZCameraDistance,
+        -globalConfig.dotSettings.dotCameraDistanceSettings.minZCameraDistance,
+        -globalConfig.dotSettings.dotCameraDistanceSettings.maxZCameraDistance,
       );
     }
 
@@ -1271,8 +1425,8 @@ class Dot extends Disposable {
     );
 
     this.material.color.lerpColors(
-      globals.dotSettings.dotColorGradient.near,
-      globals.dotSettings.dotColorGradient.far,
+      globalConfig.dotSettings.dotColorGradient.near,
+      globalConfig.dotSettings.dotColorGradient.far,
       t,
     );
   }
@@ -1357,7 +1511,7 @@ class WavesScene extends Animatable {
     this.planeMesh.worldToLocal(localPos);
     const waveZ = this.getWaveNoise(localPos.x, localPos.y, zHeight); // Sample wave height in LOCAL plane coordinates
     const distToSurface = localPos.z - waveZ; // Distance from particle to wave surface
-    const radius = globals.dotSettings.dotRadius; // Radius padding
+    const radius = globalConfig.dotSettings.dotRadius; // Radius padding
 
     // If collision occurs (dot is within radius of surface), push dot out and reflect velocity
     if (distToSurface <= radius) {
@@ -1399,7 +1553,7 @@ class WavesScene extends Animatable {
     const decay: number = 1;
     // Blue
     this.lights.light1 = new THREE.PointLight(
-      globals.waveSceneSettings.lightColors[0],
+      globalConfig.waveSceneSettings.lightColors[0],
       lightIntensity,
       lightDistance,
       decay,
@@ -1408,7 +1562,7 @@ class WavesScene extends Animatable {
     this.frontPage.frontPageScene.wavesGroup.add(this.lights.light1);
     // Cyan
     this.lights.light2 = new THREE.PointLight(
-      globals.waveSceneSettings.lightColors[1],
+      globalConfig.waveSceneSettings.lightColors[1],
       lightIntensity,
       lightDistance,
       decay,
@@ -1417,7 +1571,7 @@ class WavesScene extends Animatable {
     this.frontPage.frontPageScene.wavesGroup.add(this.lights.light2);
     // Red
     this.lights.light3 = new THREE.PointLight(
-      globals.waveSceneSettings.lightColors[2],
+      globalConfig.waveSceneSettings.lightColors[2],
       lightIntensity,
       lightDistance,
       decay,
@@ -1426,7 +1580,7 @@ class WavesScene extends Animatable {
     this.frontPage.frontPageScene.wavesGroup.add(this.lights.light3);
     // Purple
     this.lights.light4 = new THREE.PointLight(
-      globals.waveSceneSettings.lightColors[3],
+      globalConfig.waveSceneSettings.lightColors[3],
       lightIntensity,
       lightDistance,
       decay,
@@ -1471,16 +1625,16 @@ class WavesScene extends Animatable {
   private getWaveNoise(x: number, y: number, z: number): number {
     return (
       this.simplexNoise(
-        x / globals.waveSceneSettings.waveHeight.xCoef,
-        y / globals.waveSceneSettings.waveHeight.yCoef,
+        x / globalConfig.waveSceneSettings.waveHeight.xCoef,
+        y / globalConfig.waveSceneSettings.waveHeight.yCoef,
         z,
         0,
-      ) * globals.waveSceneSettings.waveHeight.zCoef
+      ) * globalConfig.waveSceneSettings.waveHeight.zCoef
     );
   }
 
   private updateLights(...lights: THREE.PointLight[]): void {
-    const time = globals.timeTracker.elapsedTime;
+    const time = globalConfig.timeTracker.elapsedTime;
     const d = 50;
     let i = 0;
     for (const light of lights) {
@@ -1491,7 +1645,7 @@ class WavesScene extends Animatable {
   }
 
   private getWaveZHeight(): number {
-    return globals.timeTracker.elapsedTime * 0.17;
+    return globalConfig.timeTracker.elapsedTime * 0.17;
   }
 }
 
@@ -1548,6 +1702,10 @@ class MouseDot extends Dot {
 }
 
 export class Utils {
+  public static selectRandomFromList<T>(list: T[]): T {
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
   public static getRandomBetween(min: number, max: number, buffer = 0): number {
     let val = Math.random() * (max - min) + min;
 
@@ -1633,7 +1791,6 @@ export class Utils {
     scene.remove(mesh);
 
     mesh.removeFromParent();
-
     mesh.geometry.dispose();
 
     if (Array.isArray(mesh.material)) {
@@ -1643,64 +1800,31 @@ export class Utils {
     }
   }
 
-  public static disposeMaterial(material: THREE.Material) {
-    material.dispose();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const matAsRecord = material as unknown as Record<string, any>;
-
-    for (const key in matAsRecord) {
-      const property = matAsRecord[key];
-      if (property && typeof property.dispose === "function") {
-        property.dispose();
-      }
+  public static disposeMaterial(material: THREE.Material | THREE.Material[]) {
+    if (Array.isArray(material)) {
+      material.forEach((m) => Utils.disposeMaterial(m));
+      return;
     }
+
+    console.log("Disposing material:", material.uuid);
+
+    const matAsRecord = material as unknown as Record<string, unknown>;
+
+    for (const value of Object.values(matAsRecord)) {
+      if (!(value instanceof THREE.Texture)) {
+        continue;
+      }
+
+      console.log(value.uuid, value.source.data?.constructor?.name);
+
+      if (value.source.data instanceof ImageBitmap) {
+        console.log("Closing ImageBitmap", value.uuid);
+        value.source.data.close();
+      }
+
+      value.dispose();
+    }
+
+    material.dispose();
   }
 }
-
-export const globals = {
-  timeTracker: new TimeTracker(),
-  threeJsBackgroundColor: 0x1a1a1a,
-  mainCameraSettings: {
-    renderDistanceMin: 0.1,
-    renderDistanceMax: 135,
-    initialCameraPosition: {
-      x: 0,
-      y: 80,
-      z: 58,
-    },
-  },
-  frontPageRendererSettings: {
-    rendererPixelRatio: 0.65,
-  },
-  waveSceneSettings: {
-    lightColors: [
-      0x0e09dc, // Blue
-      0x8c2700, // Cyan
-      0x00786e, // Red
-      0xee3bcf, // Purple
-    ],
-    waveHeight: {
-      xCoef: 50,
-      yCoef: 50,
-      zCoef: 8,
-    },
-  },
-  dotSceneSettings: {
-    pixelsPerDot: 17500,
-    maxLineCount: 150,
-    dotCellSize: 25,
-    dotCountMax: 65,
-  },
-  dotSettings: {
-    dotRadius: 0.35,
-    dotCameraDistanceSettings: {
-      maxZCameraDistance: 130,
-      minZCameraDistance: 30,
-    },
-    dotColorGradient: {
-      near: new THREE.Color(0xbdbdbd),
-      far: new THREE.Color(0x084eff),
-    },
-  },
-};

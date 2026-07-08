@@ -6,7 +6,7 @@ import { SceneController } from "@/src/three";
 import { AppPermissions } from "@/src/components/utils/appPermissions";
 import WarningWindow from "@/src/components/ui/warningWindow";
 
-const LIGHT_MODE_COLOR = 0x1a1a1a;
+const LIGHT_MODE_COLOR = 0x243447;
 const DARK_MODE_COLOR = 0x0a0a0a;
 
 type SpaceSceneProps = Readonly<{
@@ -22,7 +22,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
   // Handle initialization and asset loading.
   useEffect(() => {
-    if (!threeJsRef.current || isInstantiated) return;
+    //if (!threeJsRef.current || isInstantiated) return;
 
     const pageScene = SceneController.getInstance();
     const initLoading = async () => {
@@ -47,7 +47,9 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
       setError(error instanceof Error ? error : new Error(String(error)));
     });
 
-    return () => { };
+    return () => {
+      pageScene.dispose();
+    };
     // eslint rule disabled because this is meant to run exactly once, as this space scene is a singleton instance.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -81,6 +83,12 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
     if (settings.dotCount === null) return;
     SceneController.getInstance().changeDotSpawnCount(settings.dotCount);
   }, [isInstantiated, settings.dotCount]);
+
+  useEffect(() => {
+    if (!isInstantiated) return;
+    if (settings.ufoCount === null) return;
+    SceneController.getInstance().changeUfoSpawnCount(settings.ufoCount);
+  }, [isInstantiated, settings.ufoCount]);
 
   useEffect(() => {
     if (!isInstantiated) return;

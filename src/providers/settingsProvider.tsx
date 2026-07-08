@@ -19,6 +19,7 @@ export const defaultSettings: {
   motionEnabled: boolean;
   statsEnabled: boolean;
   dotCount: number | null;
+  ufoCount: number | null;
   performance: number;
   backgroundColorSettings: BackgroundColorSettings | null;
   waveColorSettings: WaveColorSettings;
@@ -27,6 +28,7 @@ export const defaultSettings: {
   motionEnabled: false,
   statsEnabled: false,
   dotCount: null,
+  ufoCount: null,
   performance: 0.65,
   backgroundColorSettings: null,
   waveColorSettings: {

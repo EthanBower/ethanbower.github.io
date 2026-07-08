@@ -1,6 +1,6 @@
 "use client";
 
-import { globals } from "..";
+import { globalConfig } from "../globalConfig";
 import { Disposable } from "./disposable";
 
 type TickTask = {
@@ -58,7 +58,7 @@ export abstract class Animatable extends Disposable {
   protected registerTick(interval: number, onTickExecution: () => void) {
     this.tickTasks.push({
       interval,
-      lastRun: globals.timeTracker.lastFrameTime,
+      lastRun: globalConfig.timeTracker.lastFrameTime,
       onTickExecution,
     });
   }
@@ -73,7 +73,7 @@ export abstract class Animatable extends Disposable {
   }
 
   private runTicks(): void {
-    const now = globals.timeTracker.lastFrameTime;
+    const now = globalConfig.timeTracker.lastFrameTime;
 
     for (const tick of this.tickTasks) {
       if (now - tick.lastRun >= tick.interval) {
