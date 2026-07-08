@@ -38,7 +38,7 @@ export default function Home() {
 
   return (
     <>
-      <HomeTitle enable={!homeDisplay && menuFocusRequested} onExitAnimationComplete={() => {
+      <HomeTitle enable={homeDisplay && !menuFocusRequested} onExitAnimationComplete={() => {
         exitResolver.current?.();
         exitResolver.current = null;
       }} />

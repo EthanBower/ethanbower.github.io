@@ -54,14 +54,15 @@ type SettingsProps = Readonly<{
 }>;
 
 export default function Settings({ enable, onClose }: SettingsProps) {
+  const spaceScene = SceneController.getInstance();
   const { setMenuFocusRequested } = useNavigation();
   const { settings, setSettings, resetSettings } = useSettings();
   const [error, setError] = useState<Error | null>(null);
   const [currentDotCount, setCurrentDotCount] = useState(
-    SceneController.getInstance().frontPage!.dotScene.dots.length,
+    spaceScene.frontPage!.dotScene.dots.length,
   );
   const [currentUfoCount, setCurrentUfoCount] = useState(
-    SceneController.getInstance().frontPage!.ufoScene.ufos.length,
+    spaceScene.frontPage!.ufoScene.ufos.length,
   );
 
   useEffect(() => {

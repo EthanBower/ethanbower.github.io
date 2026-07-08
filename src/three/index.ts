@@ -330,6 +330,17 @@ class UfoMaterial extends Disposable {
   public ufoGlowSpriteMaterial: THREE.SpriteMaterial;
   public ufoBeamMaterial: THREE.MeshBasicMaterial;
   public ufoBeamGeometry: THREE.ConeGeometry;
+  private ufoBeamColors = [
+    0x3cd070, // Green
+    0x42e8f5, // Cyan
+    0x5ca8ff, // Blue
+    0x8b6cff, // Violet
+    0xd35cff, // Magenta
+    0xff5ebc, // Pink
+    0xff8c42, // Amber
+    0xffd54a, // Golden
+    0xffffff, // White
+  ];
 
   constructor(texture: THREE.Texture<HTMLImageElement, THREE.TextureEventMap>) {
     super();
@@ -339,8 +350,11 @@ class UfoMaterial extends Disposable {
       transparent: true,
     });
 
+    const selectedColor = Utils.selectRandomFromList(this.ufoBeamColors);
+
     this.ufoGlowSpriteMaterial = new THREE.SpriteMaterial({
       map: this.createGlowTexture(),
+      color: selectedColor,
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
@@ -349,7 +363,7 @@ class UfoMaterial extends Disposable {
 
     this.ufoBeamGeometry = new THREE.ConeGeometry(3, 19, 16, 1, true);
     this.ufoBeamMaterial = new THREE.MeshBasicMaterial({
-      color: 0x3cd070,
+      color: selectedColor,
       transparent: true,
       opacity: 0.2,
       depthWrite: false,
@@ -433,8 +447,7 @@ class UfoScene extends Animatable {
       const amountToRemove = this.ufos.length - targetCount;
 
       for (let i = 0; i < amountToRemove; i++) {
-        const ufo = this.ufos.pop();
-        ufo?.dispose();
+        this.ufos.pop()?.dispose();
       }
     }
 
@@ -476,10 +489,11 @@ class Ufo extends Disposable {
   public ufoModel: THREE.Sprite;
   public ufoGlow: THREE.Sprite;
   public ufoBeam: THREE.Mesh;
+  private beamEnabled: boolean = true;
   private isFlying = false;
   private speed: number = 0;
-  private direction = 1; // 1 = right, -1 = left
-  private nextSpawnTime = 0;
+  private direction: number = 1; // 1 = right, -1 = left
+  private nextSpawnTime: number = 0;
   private spriteScale = {
     ufoModel: { x: 12, y: 14, z: 12 },
     glowModel: { x: 4, y: 4, z: 1 },
@@ -488,6 +502,15 @@ class Ufo extends Disposable {
 
   constructor(ufoScene: UfoScene, ufoMaterial: UfoMaterial) {
     super();
+
+    this.spriteScale.ufoModel = this.getNewSpriteScale(
+      this.spriteScale.ufoModel,
+      Utils.getRandomBetween(10, 15),
+    );
+    this.spriteScale.glowModel = this.getNewSpriteScale(
+      this.spriteScale.glowModel,
+      Utils.getRandomBetween(2, 4),
+    );
 
     this.ufoModel = new THREE.Sprite(ufoMaterial.ufoSpriteMaterial);
     this.ufoGlow = new THREE.Sprite(ufoMaterial.ufoGlowSpriteMaterial);
@@ -522,6 +545,8 @@ class Ufo extends Disposable {
     this.ufoModel.visible = false;
 
     this.frontPage.frontPageScene.scene.add(this.ufoModel);
+
+    this.setUfoBeamVisibility();
     this.setSpeed();
     this.setNextSpawnTime();
   }
@@ -539,6 +564,7 @@ class Ufo extends Disposable {
   }
 
   private spawnUfo(): void {
+    this.setUfoBeamVisibility();
     this.setSpeed();
     this.direction = Math.random() < 0.5 ? 1 : -1;
 
@@ -579,6 +605,13 @@ class Ufo extends Disposable {
   }
 
   private animateBeam(): void {
+    if (!this.beamEnabled) {
+      this.ufoBeam.visible = false;
+      return;
+    } else {
+      this.ufoBeam.visible = true;
+    }
+
     const t = globalConfig.timeTracker.elapsedTime;
     const beamPulse = 1 + Math.sin(t * 6) * 0.08;
 
@@ -621,8 +654,27 @@ class Ufo extends Disposable {
       globalConfig.timeTracker.elapsedTime + Utils.getRandomBetween(5, 20);
   }
 
+  private getNewSpriteScale(
+    currentScale: { x: number; y: number; z: number },
+    newXScale: number,
+  ): {
+    x: number;
+    y: number;
+    z: number;
+  } {
+    const xyScaleRatio = currentScale.x / currentScale.y;
+    const xNewScale = newXScale;
+    const yNewScale = xNewScale / xyScaleRatio;
+
+    return { x: xNewScale, y: yNewScale, z: currentScale.z };
+  }
+
   private setSpeed(): void {
     this.speed = Utils.getRandomBetween(10, 30);
+  }
+
+  private setUfoBeamVisibility(): void {
+    this.beamEnabled = Math.random() < 0.7;
   }
 
   protected override onDispose(): void {
@@ -1651,6 +1703,10 @@ class MouseDot extends Dot {
 }
 
 export class Utils {
+  public static selectRandomFromList<T>(list: T[]): T {
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
   public static getRandomBetween(min: number, max: number, buffer = 0): number {
     let val = Math.random() * (max - min) + min;
 
