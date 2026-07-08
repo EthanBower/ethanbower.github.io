@@ -311,8 +311,8 @@ export class FrontPageAnimation {
     Disposable.disposeAllInRegistry();
     Animatable.disposeAllInRegistry();
 
-    this.frontPageScene.scene.traverse((node: any) => {
-      if (node.isMesh && node.material) {
+    this.frontPageScene.scene.traverse((node) => {
+      if (node instanceof THREE.Mesh) {
         console.log("Stuck material:", node.material.name, node.material);
       }
     });
@@ -473,10 +473,9 @@ class UfoScene extends Animatable {
 
   private spawnUfos(ufosToSpawn: number): void {
     for (let i = 0; i < ufosToSpawn; i++) {
-      const randomMaterialIndex = Math.floor(
-        Math.random() * this.ufoMaterials.length,
+      this.ufos.push(
+        new Ufo(this, Utils.selectRandomFromList(this.ufoMaterials)),
       );
-      this.ufos.push(new Ufo(this, this.ufoMaterials[randomMaterialIndex]));
     }
   }
 
@@ -1801,9 +1800,7 @@ export class Utils {
     }
   }
 
-  public static disposeMaterial(
-    material: THREE.Material | THREE.Material[] | any,
-  ) {
+  public static disposeMaterial(material: THREE.Material | THREE.Material[]) {
     if (Array.isArray(material)) {
       material.forEach((m) => Utils.disposeMaterial(m));
       return;
@@ -1811,19 +1808,21 @@ export class Utils {
 
     console.log("Disposing material:", material.uuid);
 
-    const matAsRecord = material as unknown as Record<string, any>;
+    const matAsRecord = material as unknown as Record<string, unknown>;
 
     for (const value of Object.values(matAsRecord)) {
-      if (value?.isTexture) {
-        console.log(value.uuid, value.source.data?.constructor?.name);
-
-        if (value.source.data instanceof ImageBitmap) {
-          console.log("Closing ImageBitmap", value.uuid);
-          value.source.data.close();
-        }
-
-        value.dispose();
+      if (!(value instanceof THREE.Texture)) {
+        continue;
       }
+
+      console.log(value.uuid, value.source.data?.constructor?.name);
+
+      if (value.source.data instanceof ImageBitmap) {
+        console.log("Closing ImageBitmap", value.uuid);
+        value.source.data.close();
+      }
+
+      value.dispose();
     }
 
     material.dispose();

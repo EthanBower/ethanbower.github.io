@@ -202,7 +202,7 @@ export default function Settings({ enable, onClose }: SettingsProps) {
         <PopupItem>
           <div className="pb-[10px] text-center">
             <p>
-              UFO DENSITY: <b>{currentUfoCount}</b> UFO'S
+              UFO DENSITY: <b>{currentUfoCount}</b> UFOS
             </p>
           </div>
           <Slider onChange={changeUfoCount} value={currentUfoCount} min={0} max={10} />
