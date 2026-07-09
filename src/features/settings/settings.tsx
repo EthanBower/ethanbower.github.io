@@ -54,24 +54,29 @@ type SettingsProps = Readonly<{
 }>;
 
 export default function Settings({ enable, onClose }: SettingsProps) {
-  const spaceScene = SceneController.getInstance();
   const { setMenuFocusRequested } = useNavigation();
   const { settings, setSettings, resetSettings } = useSettings();
   const [error, setError] = useState<Error | null>(null);
   const [currentDotCount, setCurrentDotCount] = useState(
-    spaceScene.frontPage!.dotScene.dots.length,
+    SceneController.getInstance().frontPage!.dotScene.dots.length,
   );
   const [currentUfoCount, setCurrentUfoCount] = useState(
-    spaceScene.frontPage!.ufoScene.ufos.length,
+    SceneController.getInstance().frontPage!.ufoScene.ufos.length,
   );
 
   useEffect(() => {
     setMenuFocusRequested(enable);
   }, [setMenuFocusRequested, enable]);
 
-  // to-do make a callback on three js app to update the real dot count
+  useEffect(() => {
+    return SceneController.getInstance().onDotCountChanged(setCurrentDotCount);
+  }, []);
+
+  useEffect(() => {
+    return SceneController.getInstance().onUfoCountChanged(setCurrentUfoCount);
+  }, []);
+
   function changeDotCount(dotNumber: number) {
-    setCurrentDotCount(dotNumber);
     setSettings((s) => ({
       ...s,
       dotCount: dotNumber,
@@ -79,7 +84,6 @@ export default function Settings({ enable, onClose }: SettingsProps) {
   }
 
   function changeUfoCount(ufoNumber: number) {
-    setCurrentUfoCount(ufoNumber);
     setSettings((s) => ({
       ...s,
       ufoCount: ufoNumber,

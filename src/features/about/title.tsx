@@ -40,7 +40,7 @@ export default function Title() {
 
                 {/* Role */}
                 <p className="mt-5 text-center font-mono text-cyan-300 tracking-[0.25em] uppercase">
-                    Senior Full Stack Engineer
+                    Lead Full Stack Engineer
                 </p>
 
                 {/* Description */}
