@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   motion,
   useMotionValue,
@@ -33,7 +33,7 @@ const thumbVariants: Variants = {
   },
 } as const;
 
-type DotControlProps = {
+type SliderControlProps = {
   min?: number;
   max?: number;
   step?: number;
@@ -47,16 +47,19 @@ export default function Slider({
   step = 1,
   value = 0,
   onChange,
-}: DotControlProps) {
+}: SliderControlProps) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [currentValue, setCurrentValue] = useState(value);
-  const progress = useMotionValue(currentValue);
-  const last = useMotionValue(currentValue);
+  const progress = useMotionValue(value);
+  const last = useMotionValue(value);
   const rawScaleX = useMotionValue(1);
   const rawScaleY = useMotionValue(1);
   const scaleX = useSpring(rawScaleX, { stiffness: 500, damping: 20 });
   const scaleY = useSpring(rawScaleY, { stiffness: 500, damping: 20 });
   const xPercent = useTransform(progress, [min, max], ["0%", "100%"]);
+
+  useEffect(() => {
+    progress.set(value);
+  }, [value, progress]);
 
   function handleNewValue(newVal: number) {
     let speed = Math.abs(newVal - last.get());
@@ -77,9 +80,8 @@ export default function Slider({
       rawScaleY.set(1);
     }, 80);
 
-    last.set(newVal);
-    setCurrentValue(newVal);
     progress.set(newVal);
+    last.set(newVal);
     onChange(newVal);
   }
 
@@ -114,7 +116,7 @@ export default function Slider({
         min={min}
         max={max}
         step={step}
-        value={currentValue}
+        value={value}
         onChange={(e) => handleNewValue(Number(e.target.value))}
         className="absolute w-full h-full opacity-0 cursor-pointer"
       />

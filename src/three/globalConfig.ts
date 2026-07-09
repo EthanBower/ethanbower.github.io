@@ -16,6 +16,9 @@ export const globalConfig = {
   frontPageRendererSettings: {
     rendererPixelRatio: 0.65,
   },
+  ufoSceneSettings: {
+    ufoCount: 3,
+  },
   waveSceneSettings: {
     lightColors: [
       0x0e09dc, // Blue

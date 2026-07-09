@@ -5,6 +5,7 @@ import { useSettings } from "../../providers/settingsProvider";
 import { SceneController } from "@/src/three";
 import { AppPermissions } from "@/src/components/utils/appPermissions";
 import WarningWindow from "@/src/components/ui/warningWindow";
+import { globalConfig } from "@/src/three/globalConfig";
 
 const LIGHT_MODE_COLOR = 0x243447;
 const DARK_MODE_COLOR = 0x0a0a0a;
@@ -80,14 +81,28 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
   useEffect(() => {
     if (!isInstantiated) return;
-    if (settings.dotCount === null) return;
-    SceneController.getInstance().changeDotSpawnCount(settings.dotCount);
+
+    const spaceScene = SceneController.getInstance();
+
+    if (settings.dotCount === null) {
+      spaceScene.changeDotSpawnCount(spaceScene.frontPage!.dotScene.calcDotCount());
+      return;
+    }
+
+    spaceScene.changeDotSpawnCount(settings.dotCount);
   }, [isInstantiated, settings.dotCount]);
 
   useEffect(() => {
     if (!isInstantiated) return;
-    if (settings.ufoCount === null) return;
-    SceneController.getInstance().changeUfoSpawnCount(settings.ufoCount);
+
+    const spaceScene = SceneController.getInstance();
+
+    if (settings.ufoCount === null) {
+      spaceScene.changeUfoSpawnCount(globalConfig.ufoSceneSettings.ufoCount);
+      return;
+    };
+
+    spaceScene.changeUfoSpawnCount(settings.ufoCount);
   }, [isInstantiated, settings.ufoCount]);
 
   useEffect(() => {

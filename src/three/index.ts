@@ -10,11 +10,13 @@ import { Animatable } from "./abstracts/animatable";
 import { Disposable } from "./abstracts/disposable";
 import { globalConfig } from "./globalConfig";
 
-// todo - make multiple ufos and configure it
+// todo - make multiple ufos and configure***** it
 // todo - make google analytics
 export class SceneController {
   private static instance?: SceneController | null;
   public frontPage?: FrontPageAnimation;
+  private dotCountListeners = new Set<(count: number) => void>();
+  private ufoCountListeners = new Set<(count: number) => void>();
 
   static getInstance(): SceneController {
     if (!SceneController.instance) {
@@ -29,7 +31,11 @@ export class SceneController {
   }
 
   public runAnimationLoop(onError: (error: Error) => void): void {
-    this.frontPage!.animatePage(onError);
+    this.frontPage!.startAnimation(onError);
+  }
+
+  public pauseAnimationLoop() {
+    this.frontPage!.pauseAnimation();
   }
 
   public initGyro(): void {
@@ -80,10 +86,40 @@ export class SceneController {
 
   public changeDotSpawnCount(dotCount: number): void {
     this.frontPage!.dotScene.reinitializeDotSpawn(dotCount);
+    this.notifyDotCountChanged(dotCount);
+  }
+
+  public onDotCountChanged(listener: (count: number) => void) {
+    this.dotCountListeners.add(listener);
+
+    return () => {
+      this.dotCountListeners.delete(listener);
+    };
+  }
+
+  public notifyDotCountChanged(count: number) {
+    for (const listener of this.dotCountListeners) {
+      listener(count);
+    }
   }
 
   public changeUfoSpawnCount(ufoCount: number): void {
     this.frontPage!.ufoScene.reinitializeUfoSpawn(ufoCount);
+    this.notifyUfoCountChanged(ufoCount);
+  }
+
+  public onUfoCountChanged(listener: (count: number) => void) {
+    this.ufoCountListeners.add(listener);
+
+    return () => {
+      this.ufoCountListeners.delete(listener);
+    };
+  }
+
+  public notifyUfoCountChanged(count: number) {
+    for (const listener of this.ufoCountListeners) {
+      listener(count);
+    }
   }
 
   public setStatsEnable(showStats: boolean): void {
@@ -250,9 +286,11 @@ export class FrontPageAnimation {
   public eventListeners: AnimationEventListeners;
   public stats?: Stats;
   private animationId?: number | null;
+  private isPaused: boolean = true;
 
   public constructor(canvasElm: HTMLDivElement) {
     console.log(`Running THREE JS Version ${THREE.REVISION}`);
+
     this.frontPageScene = new FrontPageSceneManager();
     this.frontPageRenderer = new FrontPageRenderer(this);
     this.mainCamera = new MainCamera(canvasElm, this);
@@ -271,20 +309,23 @@ export class FrontPageAnimation {
     ]);
   }
 
-  public animatePage(onError?: (error: Error) => void): void {
-    try {
-      globalConfig.timeTracker!.updateTime();
-
-      this.stats?.begin();
-      Animatable.updateAll();
-      this.frontPageRenderer.render();
-      this.stats?.end();
-
-      this.animationId = requestAnimationFrame(() => this.animatePage(onError));
-    } catch (err) {
+  public pauseAnimation(): void {
+    if (this.animationId !== null) {
+      cancelAnimationFrame(this.animationId!);
       this.animationId = null;
-      onError?.(err instanceof Error ? err : new Error(String(err)));
     }
+
+    this.isPaused = true;
+  }
+
+  public startAnimation(onError?: (error: Error) => void): void {
+    if (!this.isPaused) {
+      return;
+    }
+
+    this.isPaused = false;
+    globalConfig.timeTracker.updateTime(); // This will prevent animations from 'jolting' back into animating
+    this.animatePage(onError);
   }
 
   public setStatsEnable(showStats: boolean): void {
@@ -322,6 +363,26 @@ export class FrontPageAnimation {
     console.log(
       `After Dispose: ${JSON.stringify(this.frontPageRenderer.renderer.info.memory)}`,
     );
+  }
+
+  private animatePage(onError?: (error: Error) => void): void {
+    if (this.isPaused) {
+      return;
+    }
+
+    try {
+      globalConfig.timeTracker!.updateTime();
+
+      this.stats?.begin();
+      Animatable.updateAll();
+      this.frontPageRenderer.render();
+      this.stats?.end();
+
+      this.animationId = requestAnimationFrame(() => this.animatePage(onError));
+    } catch (err) {
+      this.animationId = null;
+      onError?.(err instanceof Error ? err : new Error(String(err)));
+    }
   }
 }
 
@@ -413,7 +474,7 @@ class UfoScene extends Animatable {
   public ufoMaterials: UfoMaterial[] = [];
   public ufos: Ufo[] = [];
   public frontPage: FrontPageAnimation;
-  private ufoCount: number = 3;
+  private ufoCount: number = globalConfig.ufoSceneSettings.ufoCount;
 
   constructor(frontPage: FrontPageAnimation) {
     super();
@@ -1095,6 +1156,18 @@ class DotsScene extends Animatable {
     this.dotCount = targetCount;
   }
 
+  public calcDotCount(): number {
+    const dotCountRecommended = Math.round(
+      (window.innerWidth * window.innerHeight) /
+        globalConfig.dotSceneSettings.pixelsPerDot,
+    );
+
+    return Math.min(
+      dotCountRecommended,
+      globalConfig.dotSceneSettings.dotCountMax,
+    );
+  }
+
   private getNearbyDots(dot: Dot): Dot[] {
     const pos = dot.dotMesh.position;
     const cellKeys = this.getSpatialGridCellKey(pos.x, pos.y, pos.z);
@@ -1153,18 +1226,6 @@ class DotsScene extends Animatable {
       z: zCell,
       cellKeyName: `${xCell},${yCell},${zCell}`,
     };
-  }
-
-  private calcDotCount(): number {
-    const dotCountRecommended = Math.round(
-      (window.innerWidth * window.innerHeight) /
-        globalConfig.dotSceneSettings.pixelsPerDot,
-    );
-
-    return Math.min(
-      dotCountRecommended,
-      globalConfig.dotSceneSettings.dotCountMax,
-    );
   }
 
   private initLinePool(): void {
