@@ -5,14 +5,17 @@ import { AnimatePresence, motion, Variants } from "framer-motion";
 import { useState } from "react";
 
 const navbarVariants: Variants = {
-  initial: { y: 120, scale: 0.8, transition: { delay: 1 } },
+  initial: (position) => ({
+    y: position === "Top" ? -120 : 120,
+    scale: 0.8
+  }),
   enter: {
     y: 0,
     scale: 1,
     transition: { type: "spring", stiffness: 140, damping: 6, mass: 0.8 },
   },
-  exit: {
-    y: 150,
+  exit: (position) => ({
+    y: position === "Top" ? -150 : 150,
     scale: 0.85,
     transition: {
       type: "spring",
@@ -21,7 +24,7 @@ const navbarVariants: Variants = {
       mass: 0.8,
       delay: 0.5,
     },
-  },
+  }),
 } as const;
 
 const containerVariants: Variants = {
@@ -42,48 +45,79 @@ const containerVariants: Variants = {
 } as const;
 
 const toolTipVariants: Variants = {
-  initial: { opacity: 0, y: -20, scale: 0.95, filter: "blur(6px)" },
-  enter: { opacity: 1, y: -45, scale: 1, filter: "blur(0px)" },
-  exit: { opacity: 0, y: -20, scale: 0.95, filter: "blur(6px)" },
+  initial: (position) => ({
+    opacity: 0,
+    y: position === "Top" ? 20 : -20,
+    scale: 0.95,
+    filter: "blur(6px)"
+  }),
+  enter: (position) => ({
+    opacity: 1,
+    y: position === "Top" ? 45 : -45,
+    scale: 1,
+    filter: "blur(0px)"
+  }),
+  exit: (position) => ({
+    opacity: 0,
+    y: position === "Top" ? 20 : -20,
+    scale: 0.95,
+    filter: "blur(6px)"
+  }),
 } as const;
 
 const itemVariants: Variants = {
-  initial: { opacity: 0, y: 35, scale: 0.5 },
+  initial: (position) => ({
+    opacity: 0,
+    y: position === "Top" ? -35 : 35,
+    scale: 0.5
+  }),
   enter: {
     opacity: 1,
     y: 0,
     scale: 1,
     transition: { type: "spring", stiffness: 260, damping: 18 },
   },
-  exit: {
+  exit: (position) => ({
     opacity: 0,
-    y: 35,
+    y: position === "Top" ? -35 : 35,
     scale: 0.5,
     transition: { type: "spring", stiffness: 260, damping: 18 },
-  },
+  }),
 } as const;
 
-interface NavItem {
+type NavBarPosition = "Top" | "Bottom";
+
+type NavItem = {
   label: string;
   icon: React.ReactNode;
   onClick: () => void;
 }
 
-interface NavbarProp {
+type NavItemProp = NavItem & {
+  position: NavBarPosition;
+}
+
+type NavbarProp = {
   items: NavItem[];
+  position: NavBarPosition;
   enable: boolean;
 }
 
-export default function Navbar({ items, enable }: NavbarProp) {
+export default function Navbar({ items, position, enable }: NavbarProp) {
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {enable && (
         <motion.nav
+          key={position}
           variants={navbarVariants}
+          custom={position}
           initial="initial"
           animate="enter"
           exit="exit"
-          className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 transform-gpu will-change-transform"
+          className={`
+            fixed left-1/2 -translate-x-1/2 z-50 transform-gpu will-change-transform
+            ${position === "Top" ? "top-3" : "bottom-3"}
+          `}
         >
           <motion.div
             transition={{
@@ -103,6 +137,7 @@ export default function Navbar({ items, enable }: NavbarProp) {
                   key={item.label}
                   label={item.label}
                   icon={item.icon}
+                  position={position}
                   onClick={item.onClick}
                 />
               ))}
@@ -114,7 +149,7 @@ export default function Navbar({ items, enable }: NavbarProp) {
   );
 }
 
-function NavItem({ label, icon, onClick }: NavItem) {
+function NavItem({ label, icon, position, onClick }: NavItemProp) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -125,6 +160,7 @@ function NavItem({ label, icon, onClick }: NavItem) {
     >
       <motion.div
         variants={toolTipVariants}
+        custom={position}
         initial="initial"
         animate={isHovered ? "enter" : "initial"}
         exit="exit"
@@ -134,7 +170,7 @@ function NavItem({ label, icon, onClick }: NavItem) {
           <span className="text-xs tracking-wide">{label}</span>
         </div>
       </motion.div>
-      <motion.div variants={itemVariants}>
+      <motion.div custom={position} variants={itemVariants}>
         <motion.button
           onClick={onClick}
           animate={isHovered ? { y: -4, scale: 1.08 } : { y: 0, scale: 1 }}

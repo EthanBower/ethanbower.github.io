@@ -9,7 +9,7 @@ import { useState } from "react";
 import { useNavigation } from "@/src/providers/navigationProvider";
 
 export default function DynamicNavigationMenu() {
-    const { menuOpen, setMenuOpen, navigate } = useNavigation();
+    const { menuOpen, setMenuOpen, menuPosition, navigate } = useNavigation();
     const [settingsDisplay, setSettingsDisplayEnabled] = useState(false);
     const navbarItems = [
         {
@@ -38,7 +38,7 @@ export default function DynamicNavigationMenu() {
 
     return (
         <>
-            <NavigationMenu items={navbarItems} enable={menuOpen} />
+            <NavigationMenu items={navbarItems} position={menuPosition} enable={menuOpen} />
             <Settings enable={settingsDisplay} onClose={() => {
                 setSettingsDisplayEnabled(false);
                 setMenuOpen(true);

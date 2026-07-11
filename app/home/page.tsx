@@ -6,7 +6,7 @@ import { SceneController } from "@/src/three";
 import { useNavigation } from "@/src/providers/navigationProvider";
 
 export default function Home() {
-  const { setMenuOpen, addBeforeNavigate, menuFocusRequested } = useNavigation();
+  const { setMenuOpen, addBeforeNavigate, setMenuPosition, menuFocusRequested } = useNavigation();
   const [homeDisplay, setHomeDisplayEnabled] = useState(false);
   const animationInitialized = useRef<boolean>(false);
   const exitResolver = useRef<() => void | null>(null);
@@ -15,15 +15,22 @@ export default function Home() {
     if (animationInitialized.current) return;
     animationInitialized.current = true;
 
+    setMenuOpen(true);
+    setMenuPosition("Bottom");
+
     const sceneController = SceneController.getInstance();
 
     sceneController.moveAwayFromMoon(() => {
       sceneController.moveCameraDownToHomePage(() => {
-        setMenuOpen(true);
         setHomeDisplayEnabled(true);
-      }, .8);
+      }, .2);
     }, .8);
 
+    // 'setMenuOpen' and 'addBeforeNavigate' should not be added in dependency array as this is designed to be a one-time run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     return addBeforeNavigate(() => {
       setHomeDisplayEnabled(false);
 
@@ -31,10 +38,7 @@ export default function Home() {
         exitResolver.current = resolve;
       });
     });
-
-    // 'setMenuOpen' and 'addBeforeNavigate' should not be added in dependency array as this is designed to be a one-time run.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [addBeforeNavigate]);
 
   return (
     <>

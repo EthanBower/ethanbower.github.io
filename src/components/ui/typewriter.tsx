@@ -17,17 +17,21 @@ const cursorVariants = {
 
 interface TypewriterProps {
   text: string;
+  onDone?: () => void;
   className?: string;
 }
 
-export default function Typewriter({ text, className = "" }: TypewriterProps) {
+export default function Typewriter({ text, onDone, className = "" }: TypewriterProps) {
   const [displayedText, setDisplayedText] = useState("");
   const [index, setIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     // Stop if we finished typing
-    if (index >= text.length && !isDeleting) return;
+    if (index >= text.length && !isDeleting) {
+      onDone?.();
+      return;
+    }
 
     let timeoutId: NodeJS.Timeout;
     let currentSpeed = Math.floor(Math.random() * 65) + 40;
@@ -82,12 +86,14 @@ export default function Typewriter({ text, className = "" }: TypewriterProps) {
 
   return (
     <span className={`inline-flex items-center justify-center ${className}`}>
-      <span>{displayedText}</span>
-      <motion.span
-        variants={cursorVariants}
-        animate="blinking"
-        className="inline-block w-[3px] h-[1em] ml-[2px] bg-current vertical-middle align-middle"
-      />
+      <span>
+        {displayedText}
+        <motion.span
+          variants={cursorVariants}
+          animate="blinking"
+          className="inline-block w-[3px] h-[1em] ml-[2px] bg-current vertical-middle align-middle"
+        />
+      </span>
     </span>
   );
 }

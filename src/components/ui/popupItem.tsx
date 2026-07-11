@@ -10,8 +10,8 @@ type PopupItemProps = {
 
 export default function PopupItem({ children }: PopupItemProps) {
     return (
-        <motion.div variants={animationVariants.popupWindowChildrenItemVariant} className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
+        <motion.section variants={animationVariants.popupWindowChildrenItemVariant} className="m-[5px] bg-black/15 dark:bg-slate-500/10 p-3 rounded-xl">
             {children}
-        </motion.div>
+        </motion.section>
     );
 }

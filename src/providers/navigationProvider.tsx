@@ -4,13 +4,16 @@ import { createContext, useContext, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 type BeforeNavigateCallback = () => Promise<void> | void;
+type MenuPosition = "Top" | "Bottom";
 type NavigationContextType = {
     menuOpen: boolean;
     setMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    menuPosition: MenuPosition;
+    setMenuPosition: React.Dispatch<React.SetStateAction<MenuPosition>>;
     menuFocusRequested: boolean;
     setMenuFocusRequested: React.Dispatch<React.SetStateAction<boolean>>;
     navigate: (href: string) => Promise<void>;
-    addBeforeNavigate: (callback: BeforeNavigateCallback | null) => void;
+    addBeforeNavigate: (callback: BeforeNavigateCallback | null) => () => void;
 };
 
 const NavigationContext = createContext<NavigationContextType | null>(null);
@@ -19,6 +22,7 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
     const router = useRouter();
     const pathname = usePathname();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [menuPosition, setMenuPosition] = useState<MenuPosition>("Bottom");
     const [menuFocusRequested, setMenuFocusRequested] = useState(false);
     const beforeNavigatingCallbacks = useRef(new Set<BeforeNavigateCallback | null>());
 
@@ -50,6 +54,8 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
             value={{
                 menuOpen,
                 setMenuOpen,
+                menuPosition,
+                setMenuPosition,
                 menuFocusRequested,
                 setMenuFocusRequested,
                 navigate,
