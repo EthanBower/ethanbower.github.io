@@ -40,8 +40,8 @@ export const child: Variants = {
         filter: "blur(2px)",
         transition: {
             type: "spring",
-            stiffness: 200,
-            damping: 25,
+            stiffness: 800,
+            damping: 50,
         },
     }
 };
