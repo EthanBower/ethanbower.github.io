@@ -12,7 +12,7 @@ export default function Quote() {
         <section className="absolute inset-0 pointer-events-none flex items-center justify-center text-white z-1">
             <div className="pointer-events-auto max-w-3xl px-8 text-center">
                 <Typewriter
-                    text="Don't tell me the sky's the limit when there are footprints on the moon."
+                    text={`"Don't tell me the sky's the limit when there are footprints on the moon." `}
                     onDone={() => setShowAuthor(true)}
                     className="
                         text-3xl md:text-5xl

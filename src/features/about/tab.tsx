@@ -1,43 +1,52 @@
 "use client";
 
-import { animate, motion, useAnimation, useMotionValue, Variants } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-import { transition } from "three/examples/jsm/tsl/display/TransitionNode.js";
+import { motion, Variants } from "framer-motion";
+import { useState } from "react";
 
 const TabBarVariants: Variants = {
     initial: {
-        y: 30
+        height: 0,
+        width: "36rem",
     },
     enterTab: {
         height: "auto",
+        width: "36rem",
         paddingBottom: 0,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
-        y: 0,
         transition: {
             type: "spring",
             stiffness: 140,
-            damping: 24,
+            damping: 18
         }
     },
     enterFullScreen: {
         height: "100dvh",
+        width: "100%",
         paddingBottom: 0,
         borderTopLeftRadius: 0,
         borderTopRightRadius: 0,
-        y: 0,
         transition: {
             type: "spring",
             stiffness: 140,
-            damping: 24,
+            damping: 18,
         }
     },
     tabHover: {
-        paddingBottom: "30px",
+        paddingBottom: "20px",
+        scale: 1.02,
         transition: {
             type: "spring",
-            stiffness: 140,
-            damping: 24,
+            stiffness: 250,
+            damping: 14,
+        }
+    },
+    tabClick: {
+        scaleX: 0.94,
+        transition: {
+            type: "spring",
+            stiffness: 250,
+            damping: 14,
         }
     }
 }
@@ -49,10 +58,11 @@ export default function Tab() {
     return (
         <motion.div
             onClick={() => !open && (setOpen(true), setHovered(false))}
-            variants={TabBarVariants}
-            initial="initial"
             onHoverStart={() => !open && setHovered(true)}
             onHoverEnd={() => setHovered(false)}
+            variants={TabBarVariants}
+            whileTap={open ? "" : "tabClick"}
+            initial="initial"
             animate={[
                 open ? "enterFullScreen" : "enterTab",
                 hovered ? "tabHover" : ""
@@ -63,20 +73,19 @@ export default function Tab() {
                 right-0
                 left-1/2
                 -translate-x-1/2
-                w-full
-                bg-black/30
-                backdrop-blur-xl
+                bg-black
                 text-white
                 overflow-hidden
                 pointer-events-auto
+                select-none
                 z-50
-                ${open ? "border-none shadow-none" : "border-t border-t-white/30 shadow-[0_0_30px_rgba(255,255,255,0.2)] cursor-pointer"}
+                ${open ?
+                    "border-none shadow-none" :
+                    `border-t border-t-white/30 shadow-[0_0_30px_rgba(255,255,255,0.1)] cursor-pointer`
+                }
                 `} >
             {!open ? (
-                <motion.p
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center pt-3" >
+                <motion.p className="text-center pt-3" >
                     Explore
                 </motion.p>
             ) : (
@@ -108,16 +117,17 @@ export default function Tab() {
                             py-2
                             bg-white/10
                             hover:bg-white/20
+                            z-1
                         ">
                         Close
                     </button>
-                    <div className="flex h-full items-center justify-center">
-                        <div>
+                    <div className="absolute h-full w-full overflow-y-auto z-0">
+                        <div className="flex flex-col gap-4 p-4">
                             {Array.from({ length: 50 }, (_, i) => (
                                 <div key={i}>Item {i}</div>
                             ))}
+                            Content goes here
                         </div>
-                        Content goes here
                     </div>
                 </motion.div>
             )}
