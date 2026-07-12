@@ -10,6 +10,7 @@ const TabBarVariants: Variants = {
     },
     enterTab: {
         height: "auto",
+        paddingBottom: 0,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         y: 0,
@@ -21,6 +22,7 @@ const TabBarVariants: Variants = {
     },
     enterFullScreen: {
         height: "100dvh",
+        paddingBottom: 0,
         borderTopLeftRadius: 0,
         borderTopRightRadius: 0,
         y: 0,
@@ -42,14 +44,19 @@ const TabBarVariants: Variants = {
 
 export default function Tab() {
     const [open, setOpen] = useState(false);
+    const [hovered, setHovered] = useState(false);
 
     return (
         <motion.div
-            onClick={() => !open && setOpen(true)}
+            onClick={() => !open && (setOpen(true), setHovered(false))}
             variants={TabBarVariants}
             initial="initial"
-            whileHover="tabHover"
-            animate={open ? "enterFullScreen" : "enterTab"}
+            onHoverStart={() => !open && setHovered(true)}
+            onHoverEnd={() => setHovered(false)}
+            animate={[
+                open ? "enterFullScreen" : "enterTab",
+                hovered ? "tabHover" : ""
+            ]}
             className={`
                 fixed
                 bottom-0
@@ -60,10 +67,11 @@ export default function Tab() {
                 bg-black/30
                 backdrop-blur-xl
                 text-white
-                ${open ? "border-none shadow-none" : "border-t border-t-white/30 shadow-[0_0_30px_rgba(255,255,255,0.2)]"}
                 overflow-hidden
                 pointer-events-auto
-                z-50`} >
+                z-50
+                ${open ? "border-none shadow-none" : "border-t border-t-white/30 shadow-[0_0_30px_rgba(255,255,255,0.2)] cursor-pointer"}
+                `} >
             {!open ? (
                 <motion.p
                     initial={{ opacity: 0, y: -10 }}
@@ -90,7 +98,7 @@ export default function Tab() {
                     }}
                     className="relative h-full w-full" >
                     <button
-                        onClick={() => setOpen(false)}
+                        onClick={(e) => { e.stopPropagation(); setOpen(false) }}
                         className="
                             absolute
                             top-6
@@ -103,8 +111,12 @@ export default function Tab() {
                         ">
                         Close
                     </button>
-
                     <div className="flex h-full items-center justify-center">
+                        <div>
+                            {Array.from({ length: 50 }, (_, i) => (
+                                <div key={i}>Item {i}</div>
+                            ))}
+                        </div>
                         Content goes here
                     </div>
                 </motion.div>
