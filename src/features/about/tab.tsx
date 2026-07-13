@@ -1,7 +1,8 @@
 "use client";
 
-import { motion, Variants } from "framer-motion";
-import { useState } from "react";
+import { glass } from "@/src/styles/surfaces";
+import { motion, useAnimation, Variants } from "framer-motion";
+import { useEffect, useState } from "react";
 
 const TabBarVariants: Variants = {
     initial: {
@@ -14,6 +15,7 @@ const TabBarVariants: Variants = {
         paddingBottom: 0,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
+        backdropFilter: "blur(3px)",
         transition: {
             type: "spring",
             stiffness: 140,
@@ -26,6 +28,7 @@ const TabBarVariants: Variants = {
         paddingBottom: 0,
         borderTopLeftRadius: 0,
         borderTopRightRadius: 0,
+        backdropFilter: "blur(0px)",
         transition: {
             type: "spring",
             stiffness: 140,
@@ -42,18 +45,60 @@ const TabBarVariants: Variants = {
         }
     },
     tabClick: {
-        scaleX: 0.94,
+        scaleX: 0.93,
         transition: {
             type: "spring",
             stiffness: 250,
             damping: 14,
         }
+    },
+    tabWiggle: {
+        paddingBottom: ["10px", "0px", "10px"],
+        scale: [1.02, 1, 1.02],
+        transition: {
+            duration: 1.5,
+            repeat: Infinity,
+            repeatDelay: 0,
+            ease: "easeInOut",
+        }
+    },
+    tabResetMaxPosition: {
+        paddingBottom: "10px",
+        scale: 1.02,
+        transition: {
+            type: "spring",
+            stiffness: 250,
+            damping: 18,
+        },
     }
 }
 
 export default function Tab() {
     const [open, setOpen] = useState(false);
     const [hovered, setHovered] = useState(false);
+    const controls = useAnimation();
+
+    useEffect(() => {
+        async function run() {
+            if (open) { // If large window is open
+                await controls.start("enterFullScreen");
+                return;
+            } else if (hovered) { // If large window not open, AND hovered over mini tab
+                await controls.start("tabHover");
+                return;
+            } else { // If large window is not open, AND not hovered, then make sure tab is shrunken
+                await controls.start('enterTab');
+            }
+
+            // Reset to max position for a smooth rebound to the wiggle animation
+            await controls.start('tabResetMaxPosition');
+
+            // Then begin the infinite wiggle
+            controls.start('tabWiggle');
+        }
+
+        run();
+    }, [open, hovered, controls]);
 
     return (
         <motion.div
@@ -63,31 +108,39 @@ export default function Tab() {
             variants={TabBarVariants}
             whileTap={open ? "" : "tabClick"}
             initial="initial"
-            animate={[
-                open ? "enterFullScreen" : "enterTab",
-                hovered ? "tabHover" : ""
-            ]}
+            animate={controls}
             className={`
                 fixed
                 bottom-0
                 right-0
                 left-1/2
                 -translate-x-1/2
-                bg-black
                 text-white
                 overflow-hidden
                 pointer-events-auto
                 select-none
-                z-50
+                z-1
+                saturate-150
                 ${open ?
-                    "border-none shadow-none" :
-                    `border-t border-t-white/30 shadow-[0_0_30px_rgba(255,255,255,0.1)] cursor-pointer`
+                    "border-none shadow-none bg-white/30 dark:bg-zinc-900/40" :
+                    `border-t border-t-white/30 shadow-[0_0_30px_rgba(255,255,255,0.1)]! cursor-pointer ${glass} `
                 }
                 `} >
             {!open ? (
-                <motion.p className="text-center pt-3" >
-                    Explore
-                </motion.p>
+                <motion.div
+                    animate={{ y: [0, 4, 0] }}
+                    transition={{
+                        repeat: Infinity,
+                        duration: 1.8,
+                    }}
+                    className="pt-3 text-center">
+                    <div className="text-md tracking-[0.35em] text-white/70">
+                        CLICK TO EXPLORE
+                    </div>
+                    <div className="mt-2 text-white/70 text-xl">
+                        ↓
+                    </div>
+                </motion.div>
             ) : (
                 <motion.div
                     initial={{
@@ -101,13 +154,13 @@ export default function Tab() {
                         y: 0,
                     }}
                     transition={{
-                        delay: 0.25,
+                        delay: 0.5,
                         duration: 0.35,
                         ease: "easeOut",
                     }}
                     className="relative h-full w-full" >
                     <button
-                        onClick={(e) => { e.stopPropagation(); setOpen(false) }}
+                        onClick={() => setOpen(false)}
                         className="
                             absolute
                             top-6
