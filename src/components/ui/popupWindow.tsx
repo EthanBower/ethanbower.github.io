@@ -31,7 +31,7 @@ export default function PopupWindow({
   const windowRef = useRef<HTMLDivElement>(null);
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isEnabled && (
         <div
           ref={windowRef}

@@ -13,9 +13,8 @@ const TabBarVariants: Variants = {
         height: "auto",
         width: "36rem",
         paddingBottom: 0,
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        backdropFilter: "blur(3px)",
+        //backdropFilter: "blur(3px)",
+        scale: 1,
         transition: {
             type: "spring",
             stiffness: 140,
@@ -26,9 +25,8 @@ const TabBarVariants: Variants = {
         height: "100dvh",
         width: "100%",
         paddingBottom: 0,
-        borderTopLeftRadius: 0,
-        borderTopRightRadius: 0,
-        backdropFilter: "blur(0px)",
+        //backdropFilter: "blur(0px)",
+        scale: 1,
         transition: {
             type: "spring",
             stiffness: 140,
@@ -116,14 +114,13 @@ export default function Tab() {
                 left-1/2
                 -translate-x-1/2
                 text-white
-                overflow-hidden
+                overflow-visible
                 pointer-events-auto
                 select-none
                 z-1
-                saturate-150
                 ${open ?
-                    "border-none shadow-none bg-white/30 dark:bg-zinc-900/40" :
-                    `border-t border-t-white/30 shadow-[0_0_30px_rgba(255,255,255,0.1)]! cursor-pointer ${glass} `
+                    "border-none shadow-none bg-white/30 dark:bg-zinc-900/40 rounded-none" :
+                    `border-t border-t-white/30 shadow-[0_0_30px_rgba(255,255,255,0.1)]! cursor-pointer rounded-t-3xl ${glass} `
                 }
                 `} >
             {!open ? (
