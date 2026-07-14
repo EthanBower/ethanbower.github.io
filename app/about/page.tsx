@@ -1,10 +1,10 @@
 "use client";
 
 import Quote from "@/src/features/about/quote";
-import Tab from "@/src/features/about/tab";
 import { useNavigation } from "@/src/providers/navigationProvider";
 import { SceneController } from "@/src/three";
 import { useEffect, useRef, useState } from "react";
+import AboutMeTab from "@/src/features/about/aboutMeTab";
 
 enum AppStage {
     Initial,
@@ -50,14 +50,14 @@ export default function About() {
 
     return (
         <>
-            <button onClick={() => { setStage(AppStage.Initial) }} className="relative">Off</button>
-            <button onClick={() => { setStage(AppStage.SceneZoomToMoonDone) }} className="relative">On</button>
             <Quote />
-            <Tab enable={stage >= AppStage.SceneZoomToMoonDone}
+            <AboutMeTab
+                enable={stage >= AppStage.SceneZoomToMoonDone}
                 onCloseComplete={() => {
                     exitResolver.current?.();
                     exitResolver.current = null;
-                }} />
+                }}>
+            </AboutMeTab>
         </>
     );
 }

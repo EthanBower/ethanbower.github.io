@@ -23,17 +23,20 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
   // Handle initialization and asset loading.
   useEffect(() => {
-    //if (!threeJsRef.current || isInstantiated) return;
+    if (!threeJsRef.current || isInstantiated) return;
 
     const pageScene = SceneController.getInstance();
     const initLoading = async () => {
       try {
-        await pageScene.init(threeJsRef.current!);
+        await pageScene.init(
+          threeJsRef.current!,
+          (error) => {
+            setError(new Error("Space animation loop crashed. Please consider refreshing the page.", { cause: error }));
+          }
+        );
         setIsInstantiated(true);
         determineBackgroundColor(settings.backgroundColorSettings?.color ?? null);
-        pageScene.runAnimationLoop((error) => {
-          setError(new Error("Space animation loop crashed. Please consider refreshing the page.", { cause: error }));
-        });
+        pageScene.runAnimationLoop();
       } catch (error) {
         throw new Error("Failed to initialize the scene, please try refreshing. Will otherwise attempt to continue on with page if window is exited.", {
           cause: error instanceof Error ? error : new Error(String(error)),

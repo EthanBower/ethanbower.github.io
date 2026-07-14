@@ -1,9 +1,9 @@
 "use client";
 
 import { ReactNode, useState } from "react";
-import SpaceScene from "../home/spaceScene";
+import SpaceScene from "./spaceScene";
 import LoadingScreen from "./loadingScreen";
-import Permissions from "@/src/features/home/permissions";
+import Permissions from "@/src/features/layout/permissions";
 import WhatsNewBanner from "./whatsNewBanner";
 import DynamicNavigationMenu from "./dynamicNavigationMenu";
 

@@ -13,6 +13,7 @@ import { globalConfig } from "./globalConfig";
 export class SceneController {
   private static instance?: SceneController | null;
   public frontPage?: FrontPageAnimation;
+  private onAnimationError?: (error: Error) => void;
   private dotCountListeners = new Set<(count: number) => void>();
   private ufoCountListeners = new Set<(count: number) => void>();
 
@@ -23,13 +24,17 @@ export class SceneController {
     return SceneController.instance;
   }
 
-  public async init(canvasElm: HTMLDivElement): Promise<void> {
+  public async init(
+    canvasElm: HTMLDivElement,
+    onAnimationError: (error: Error) => void,
+  ): Promise<void> {
+    this.onAnimationError = onAnimationError;
     this.frontPage = new FrontPageAnimation(canvasElm);
     await this.frontPage.loadAssets();
   }
 
-  public runAnimationLoop(onError: (error: Error) => void): void {
-    this.frontPage!.startAnimation(onError);
+  public runAnimationLoop(): void {
+    this.frontPage!.startAnimation(this.onAnimationError);
   }
 
   public pauseAnimationLoop() {

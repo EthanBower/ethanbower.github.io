@@ -3,7 +3,7 @@ import Home from "../app/home/page";
 import "@testing-library/jest-dom";
 import { SettingsProvider } from "@/src/providers/settingsProvider";
 import { NavigationProvider } from "@/src/providers/navigationProvider";
-import SpaceScene from "@/src/features/home/spaceScene";
+import SpaceScene from "@/src/features/layout/spaceScene";
 import GlobalScreen from "@/src/features/layout/globalScreen";
 
 jest.mock("three", () => {

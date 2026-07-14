@@ -3,7 +3,7 @@
 import CloseButton from "@/src/components/ui/closeButton";
 import { glass } from "@/src/styles/surfaces";
 import { AnimatePresence, motion, useAnimation, Variants } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 
 const TabBarVariants: Variants = {
     initial: {
@@ -71,12 +71,15 @@ const TabBarVariants: Variants = {
     }
 }
 
-type TabProps = {
+type BottomTabProps = {
     enable: boolean;
+    onTabOpen?: () => void;
+    onTabClose?: () => void;
     onCloseComplete: () => void;
+    children: ReactNode;
 }
 
-export default function Tab({ enable, onCloseComplete }: TabProps) {
+export default function BottomTab({ enable, onCloseComplete, onTabOpen, onTabClose, children }: BottomTabProps) {
     const [open, setOpen] = useState(false);
     const [hovered, setHovered] = useState(false);
     const controls = useAnimation();
@@ -121,7 +124,7 @@ export default function Tab({ enable, onCloseComplete }: TabProps) {
         <AnimatePresence onExitComplete={onCloseComplete}>
             {enable && (
                 <motion.div
-                    onClick={() => !open && (setOpen(true), setHovered(false))}
+                    onClick={() => !open && (setOpen(true), setHovered(false), onTabOpen?.())}
                     onHoverStart={() => !open && setHovered(true)}
                     onHoverEnd={() => setHovered(false)}
                     variants={TabBarVariants}
@@ -140,17 +143,16 @@ export default function Tab({ enable, onCloseComplete }: TabProps) {
                         select-none
                         z-1
                         ${open ?
-                            "border-none shadow-none bg-white/30 dark:bg-zinc-900/40 rounded-none" :
+                            `border-none shadow-none rounded-none 
+                                bg-[radial-gradient(circle_at_30%_30%,rgba(79,70,229,.55)_0%,transparent_45%),radial-gradient(circle_at_80%_60%,rgba(147,51,234,.5)_0%,transparent_50%),radial-gradient(circle_at_20%_100%,rgba(242,169,0,.42)_0%,transparent_50%),linear-gradient(180deg,rgba(10,12,20,.96),rgba(3,5,10,.98))]
+                                dark:bg-[radial-gradient(circle_at_30%_30%,rgba(79,70,229,.28)_0%,transparent_45%),radial-gradient(circle_at_80%_60%,rgba(147,51,234,.24)_0%,transparent_50%),radial-gradient(circle_at_20%_100%,rgba(242,169,0,.18)_0%,transparent_50%),linear-gradient(180deg,rgba(10,12,20,.96),rgba(3,5,10,.98))]` :
                             `border-t border-t-white/30 shadow-[0_0_30px_rgba(255,255,255,0.1)]! cursor-pointer rounded-t-3xl max-w-[90%] ${glass}`
                         }
                 `} >
                     {!open ? (
                         <motion.div
                             animate={{ y: [0, 4, 0] }}
-                            transition={{
-                                repeat: Infinity,
-                                duration: 1.8,
-                            }}
+                            transition={{ repeat: Infinity, duration: 1.8 }}
                             className="pt-3 text-center">
                             <div className="text-md tracking-[0.35em] text-white/70">
                                 CLICK TO EXPLORE
@@ -163,27 +165,17 @@ export default function Tab({ enable, onCloseComplete }: TabProps) {
                     ) : (
                         <div className="relative h-full w-full">
                             <div className="absolute top-6 right-6 px-4 py-2 z-1">
-                                <CloseButton onClick={() => setOpen(false)}>
+                                <CloseButton onClick={() => (setOpen(false), onTabClose?.())}>
                                     Close
                                 </CloseButton>
                             </div>
                             <div className="absolute h-full w-full overflow-y-auto z-0">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 40 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.5, duration: 0.35 }}
-                                >
-                                    <div className="flex flex-col gap-4 p-4">
-                                        {Array.from({ length: 50 }, (_, i) => (
-                                            <div key={i}>Item {i}</div>
-                                        ))}
-                                    </div>
-                                </motion.div>
+                                {children}
                             </div>
                         </div>
                     )}
                 </motion.div>
             )}
-        </AnimatePresence>
+        </AnimatePresence >
     );
 }
