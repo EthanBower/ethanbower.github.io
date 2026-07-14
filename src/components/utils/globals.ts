@@ -8,7 +8,7 @@ export const whatsNewJsonUrl = "/release-notes.json";
 export const animationVariants: Record<string, Variants> = {
   buttonVariant: {
     hover: {
-      scale: 1.05,
+      scale: 1.06,
       boxShadow: "0px 0px 20px rgba(37, 37, 37, 0.5)",
       transition: {
         type: "spring",
@@ -19,7 +19,7 @@ export const animationVariants: Record<string, Variants> = {
       },
     },
     tap: {
-      scale: 0.95,
+      scale: 1,
       boxShadow: "0px 0px 20px rgba(66, 66, 66, 0.2)",
       transition: {
         type: "spring",

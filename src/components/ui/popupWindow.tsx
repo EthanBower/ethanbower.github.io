@@ -9,6 +9,7 @@ import { buttonStyles } from "@/src/styles/buttonStyles";
 import { popupWindow } from "@/src/styles/windows";
 import { transparentNoGlass } from "@/src/styles/surfaces";
 import { animationVariants } from "../utils/globals";
+import CloseButton from "./closeButton";
 
 type PopupWindowProps = Readonly<{
   windowTitle: string;
@@ -75,15 +76,11 @@ export default function PopupWindow({
                     </div>
                   </div>
                   <div className="flex self-stretch ml-auto">
-                    <motion.button
-                      whileHover="hover"
-                      whileTap="hover"
+                    <CloseButton
                       onClick={() => onClose?.()}
-                      className={`${buttonStyles.red} !rounded-none !rounded-tr-xl !rounded-bl-xl !m-0 !p-1.5 h-full max-h-[80px] leading-none flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap`}
-                    >
-                      <ExitIcon />
-                      <span>Exit</span>
-                    </motion.button>
+                      className="!rounded-none !rounded-tr-xl !rounded-bl-xl h-full max-h-[80px] leading-none" >
+                      Exit
+                    </CloseButton>
                   </div>
                 </div>
               </motion.div>

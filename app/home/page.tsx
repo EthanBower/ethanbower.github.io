@@ -32,11 +32,13 @@ export default function Home() {
 
   useEffect(() => {
     return addBeforeNavigate(() => {
-      setHomeDisplayEnabled(false);
-
-      return new Promise<void>((resolve) => {
+      const titleAnimationDonePromise = new Promise<void>((resolve) => {
         exitResolver.current = resolve;
       });
+
+      setHomeDisplayEnabled(false);
+
+      return titleAnimationDonePromise;
     });
   }, [addBeforeNavigate]);
 

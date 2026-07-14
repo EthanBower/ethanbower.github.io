@@ -1,22 +1,6 @@
 import CheckMark from "@/src/components/icons/checkMark";
-import { motion, Variants } from "framer-motion";
-
-const dynamicSquareVariants: Variants = {
-    hover: {
-        scale: 1.1,
-        boxShadow: "0px 0px 20px rgba(37, 37, 37, 0.5)",
-        transition: {
-            type: "spring",
-            stiffness: 400,
-            damping: 12,
-            mass: 0.6
-        }
-    },
-    tap: {
-        scale: 1.05,
-        boxShadow: "0px 0px 20px rgba(66, 66, 66, 0.2)",
-    }
-} as const;
+import { animationVariants } from "@/src/components/utils/globals";
+import { motion } from "framer-motion";
 
 interface SquareGradientProps {
     presetName: string,
@@ -36,7 +20,7 @@ export default function SquareGradient({ presetName, colors, selected, onClick }
                 className={`
                     relative h-24 rounded-2xl cursor-pointer rounded-lg
                     ${selected ? "border-2 border-cyan-300/60" : "border-white/40 border-1"}`}
-                variants={dynamicSquareVariants}
+                variants={animationVariants.buttonVariant}
                 whileHover="hover"
                 whileTap="tap"
                 style={{
