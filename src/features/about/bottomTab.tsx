@@ -10,12 +10,14 @@ const TabBarVariants: Variants = {
         height: 0,
         width: "36rem",
         scale: 0.9,
+        opacity: 0,
     },
     enterTab: {
         height: "auto",
         width: "36rem",
         paddingBottom: 0,
         scale: 1,
+        opacity: 1,
         transition: {
             type: "spring",
             stiffness: 140,
@@ -27,6 +29,7 @@ const TabBarVariants: Variants = {
         width: "100%",
         paddingBottom: 0,
         scale: 1,
+        opacity: 1,
         transition: {
             type: "spring",
             stiffness: 140,

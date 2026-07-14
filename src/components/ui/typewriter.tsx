@@ -17,14 +17,25 @@ const cursorVariants = {
 
 interface TypewriterProps {
   text: string;
+  minSpeed?: number;
+  maxSpeed?: number;
+  typoChance?: number;
   onDone?: () => void;
   className?: string;
 }
 
-export default function Typewriter({ text, onDone, className = "" }: TypewriterProps) {
+export default function Typewriter({ text, minSpeed = 40, maxSpeed = 105, typoChance = 0.1, onDone, className = "" }: TypewriterProps) {
   const [displayedText, setDisplayedText] = useState("");
   const [index, setIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  if (minSpeed > maxSpeed) {
+    throw new Error(`Min speed of '${minSpeed}' cannot be greater than max speed of '${maxSpeed}'.`);
+  }
+
+  if (typoChance > 1) {
+    throw new Error(`Typo chance of '${typoChance}' cannot be greater than 1.`);
+  }
 
   useEffect(() => {
     // Stop if we finished typing
@@ -34,7 +45,7 @@ export default function Typewriter({ text, onDone, className = "" }: TypewriterP
     }
 
     let timeoutId: NodeJS.Timeout;
-    let currentSpeed = Math.floor(Math.random() * 65) + 40;
+    let currentSpeed = Math.floor(Math.random() * (maxSpeed - minSpeed + 1)) + minSpeed;
 
     // Pause longer on punctuation
     if (
@@ -46,7 +57,7 @@ export default function Typewriter({ text, onDone, className = "" }: TypewriterP
     }
 
     const shouldMakeTypo =
-      Math.random() < 0.1 &&
+      Math.random() < typoChance &&
       !isDeleting &&
       index > 2 &&
       index < text.length - 2;

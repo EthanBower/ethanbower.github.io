@@ -12,7 +12,7 @@ enum AppStage {
 }
 
 export default function About() {
-    const { setMenuOpen, setMenuPosition, addBeforeNavigate } = useNavigation();
+    const { setMenuOpen, menuFocusRequested, setMenuPosition, addBeforeNavigate } = useNavigation();
     const [stage, setStage] = useState(AppStage.Initial);
     const animationInitialized = useRef<boolean>(false);
     const exitResolver = useRef<() => void | null>(null);
@@ -50,9 +50,9 @@ export default function About() {
 
     return (
         <>
-            <Quote />
+            <Quote enable={!menuFocusRequested && (stage >= AppStage.SceneZoomToMoonDone)} />
             <AboutMeTab
-                enable={stage >= AppStage.SceneZoomToMoonDone}
+                enable={!menuFocusRequested && (stage >= AppStage.SceneZoomToMoonDone)}
                 onCloseComplete={() => {
                     exitResolver.current?.();
                     exitResolver.current = null;
