@@ -29,9 +29,9 @@ function QuoteContent() {
         className="pointer-events-auto max-w-3xl px-8 text-center">
         <Typewriter
             text={`"Don't tell me the sky's the limit when there are footprints on the moon." `}
-            minSpeed={30}
-            maxSpeed={60}
-            typoChance={.05}
+            minSpeed={35}
+            maxSpeed={55}
+            typoChance={.02}
             onDone={() => setShowAuthor(true)}
             className="
                 text-3xl md:text-5xl

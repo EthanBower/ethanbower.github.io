@@ -4,6 +4,7 @@ import "./globals.css";
 import { SettingsProvider } from "@/src/providers/settingsProvider";
 import GlobalScreen from "@/src/features/layout/globalScreen";
 import { NavigationProvider } from "@/src/providers/navigationProvider";
+import Test, { SpaceSceneLite } from "./test/page";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -35,6 +36,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   // todo - enable analytics
   // todo - implement motion config to reduce motion globally
+
   return (
     <html
       lang="en"

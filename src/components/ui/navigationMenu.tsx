@@ -25,7 +25,7 @@ const navbarVariants: Variants = {
       delay: 0.5,
     },
   }),
-} as const;
+};
 
 const containerVariants: Variants = {
   enter: {
@@ -42,7 +42,7 @@ const containerVariants: Variants = {
       staggerDirection: -1,
     },
   },
-} as const;
+};
 
 const toolTipVariants: Variants = {
   initial: (position) => ({
@@ -63,7 +63,7 @@ const toolTipVariants: Variants = {
     scale: 0.95,
     filter: "blur(6px)"
   }),
-} as const;
+};
 
 const itemVariants: Variants = {
   initial: (position) => ({
@@ -83,7 +83,7 @@ const itemVariants: Variants = {
     scale: 0.5,
     transition: { type: "spring", stiffness: 260, damping: 18 },
   }),
-} as const;
+};
 
 type NavBarPosition = "Top" | "Bottom";
 
@@ -107,43 +107,44 @@ export default function Navbar({ items, position, enable }: NavbarProp) {
   return (
     <AnimatePresence mode="wait">
       {enable && (
-        <motion.nav
+        <motion.div
           key={position}
-          variants={navbarVariants}
-          custom={position}
-          initial="initial"
-          animate="enter"
-          exit="exit"
-          className={`
-            fixed left-1/2 -translate-x-1/2 z-50 transform-gpu will-change-transform
-            ${position === "Top" ? "top-3" : "bottom-3"}
-          `}
-        >
-          <motion.div
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 5,
-            }}
-            animate={{ y: [0, -3, -2, -4, 0] }}
+          className={`fixed left-1/2 -translate-x-1/2 z-50 inset-x-0 flex justify-center
+          ${position === "Top" ? "top-3" : "bottom-3"}`}>
+          <motion.nav
+            variants={navbarVariants}
+            custom={position}
+            initial="initial"
+            animate="enter"
+            exit="exit"
+            className="will-change-transform"
           >
             <motion.div
-              variants={containerVariants}
-              className={`flex items-center gap-8 px-8 py-4 rounded-full ${glass}`}
+              transition={{
+                duration: 6,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 5,
+              }}
+              animate={{ y: [0, 3, 2, 4, 0] }}
             >
-              {items.map((item) => (
-                <NavItem
-                  key={item.label}
-                  label={item.label}
-                  icon={item.icon}
-                  position={position}
-                  onClick={item.onClick}
-                />
-              ))}
+              <motion.div
+                variants={containerVariants}
+                className={`flex items-center gap-8 px-8 py-4 rounded-full ${glass}`}
+              >
+                {items.map((item) => (
+                  <NavItem
+                    key={item.label}
+                    label={item.label}
+                    icon={item.icon}
+                    position={position}
+                    onClick={item.onClick}
+                  />
+                ))}
+              </motion.div>
             </motion.div>
-          </motion.div>
-        </motion.nav>
+          </motion.nav>
+        </motion.div>
       )}
     </AnimatePresence>
   );

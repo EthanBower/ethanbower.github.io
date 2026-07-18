@@ -76,13 +76,14 @@ const TabBarVariants: Variants = {
 
 type BottomTabProps = {
     enable: boolean;
+    tabCloseTitle: string;
     onTabOpen?: () => void;
     onTabClose?: () => void;
     onCloseComplete: () => void;
     children: ReactNode;
 }
 
-export default function BottomTab({ enable, onCloseComplete, onTabOpen, onTabClose, children }: BottomTabProps) {
+export default function BottomTab({ enable, tabCloseTitle, onCloseComplete, onTabOpen, onTabClose, children }: BottomTabProps) {
     const [open, setOpen] = useState(false);
     const [hovered, setHovered] = useState(false);
     const controls = useAnimation();
@@ -158,9 +159,8 @@ export default function BottomTab({ enable, onCloseComplete, onTabOpen, onTabClo
                             transition={{ repeat: Infinity, duration: 1.8 }}
                             className="pt-3 text-center">
                             <div className="text-md tracking-[0.35em] text-white/70">
-                                CLICK TO EXPLORE
+                                {tabCloseTitle}
                             </div>
-                            {/* todo - replace this with SVG */}
                             <div className="mt-2 text-white/70 text-xl">
                                 ↓
                             </div>

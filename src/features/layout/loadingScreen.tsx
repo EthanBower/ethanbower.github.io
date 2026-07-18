@@ -71,67 +71,69 @@ export default function LoadingScreen({ enable, onCloseAnimationDone }: LoadingS
     return (
         <AnimatePresence onExitComplete={onCloseAnimationDone}>
             {isVisible && (
-                <motion.div
-                    className="absolute inset-0 bg-gradient-to-b from-black via-[#050816] to-black overflow-hidden z-1"
-                    exit={{
-                        clipPath: [
-                            "circle(150% at 50% 50%)",
-                            "circle(60% at 50% 50%)",
-                            "circle(0% at 50% 50%)",
-                        ],
-                        opacity: [1, 0.8, 0.5],
-                        scale: [1, 1.15, 0.9],
-                    }}
-                    transition={{
-                        duration: 0.9,
-                        times: [0, 0.35, 1],
-                        ease: [0.22, 1, 0.36, 1],
-                    }}
-                >
-                    {/* nebula */}
-                    <div
-                        className="absolute inset-0 opacity-40 animate-pulse"
-                        style={{
-                            background:
-                                "radial-gradient(circle at 30% 30%, #4f46e5 0%, transparent 45%), radial-gradient(circle at 80% 60%, #9333ea 0%, transparent 50%), radial-gradient(circle at 20% 100%, #f2a900 0%, transparent 50%)",
+                <div className="absolute inset-0 overflow-hidden z-1">
+                    <motion.div
+                        className="w-full h-full bg-gradient-to-b from-black via-[#050816] to-black"
+                        exit={{
+                            clipPath: [
+                                "circle(150% at 50% 50%)",
+                                "circle(60% at 50% 50%)",
+                                "circle(0% at 50% 50%)",
+                            ],
+                            opacity: [1, 0.8, 0.5],
+                            scale: [1, 1.15, 0.9],
                         }}
-                    />
-                    {/* stars */}
-                    <div
-                        className="absolute inset-0 opacity-30"
-                        style={{
-                            backgroundImage:
-                                "radial-gradient(1px 1px at 10px 20px, white, transparent), radial-gradient(1px 1px at 80px 90px, white, transparent)",
-                            backgroundSize: "120px 120px",
-                            animation: "drift 75s linear infinite",
+                        transition={{
+                            duration: 0.9,
+                            times: [0, 0.35, 1],
+                            ease: [0.22, 1, 0.36, 1],
                         }}
-                    />
-                    <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center loader">
-                        <motion.div
-                            animate={{
-                                y: [0, -6, 0, -3, 0],
-                                rotate: [-2, 6, -18, 11, -2],
-                                scale: [1, 1.1, 0.94, 1.2, 1],
+                    >
+                        {/* nebula */}
+                        <div
+                            className="absolute inset-0 opacity-40 animate-pulse"
+                            style={{
+                                background:
+                                    "radial-gradient(circle at 30% 30%, #4f46e5 0%, transparent 45%), radial-gradient(circle at 80% 60%, #9333ea 0%, transparent 50%), radial-gradient(circle at 20% 100%, #f2a900 0%, transparent 50%)",
                             }}
-                            transition={{
-                                duration: 3.5,
-                                repeat: Infinity,
-                                ease: "easeInOut",
+                        />
+                        {/* stars */}
+                        <div
+                            className="absolute inset-0 opacity-30"
+                            style={{
+                                backgroundImage:
+                                    "radial-gradient(1px 1px at 10px 20px, white, transparent), radial-gradient(1px 1px at 80px 90px, white, transparent)",
+                                backgroundSize: "120px 120px",
+                                animation: "drift 75s linear infinite",
                             }}
-                            className="w-[30%] min-w-[150px] max-w-[230px]"
-                        >
-                            <Image
-                                src="./holly-face.svg"
-                                width="20"
-                                height="20"
-                                alt=""
-                                className="w-full h-auto"
-                                loading="eager"
-                            />
-                        </motion.div>
-                        <RotatingLoader textMessages={randomizedTexts} />
-                    </div>
-                </motion.div>
+                        />
+                        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center loader">
+                            <motion.div
+                                animate={{
+                                    y: [0, -6, 0, -3, 0],
+                                    rotate: [-2, 6, -18, 11, -2],
+                                    scale: [1, 1.1, 0.94, 1.2, 1],
+                                }}
+                                transition={{
+                                    duration: 3.5,
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                }}
+                                className="w-[30%] min-w-[150px] max-w-[230px]"
+                            >
+                                <Image
+                                    src="./holly-face.svg"
+                                    width="20"
+                                    height="20"
+                                    alt=""
+                                    className="w-full h-auto"
+                                    loading="eager"
+                                />
+                            </motion.div>
+                            <RotatingLoader textMessages={randomizedTexts} />
+                        </div>
+                    </motion.div>
+                </div>
             )}
         </AnimatePresence>
     );

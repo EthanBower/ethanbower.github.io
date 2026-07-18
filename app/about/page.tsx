@@ -4,7 +4,7 @@ import Quote from "@/src/features/about/quote";
 import { useNavigation } from "@/src/providers/navigationProvider";
 import { SceneController } from "@/src/three";
 import { useEffect, useRef, useState } from "react";
-import AboutMeTab from "@/src/features/about/aboutMeTab";
+import AboutMeTab from "@/src/features/about/tab/aboutMeTab";
 
 enum AppStage {
     Initial,

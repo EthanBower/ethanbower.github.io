@@ -11,7 +11,7 @@ const LIGHT_MODE_COLOR = 0x243447;
 const DARK_MODE_COLOR = 0x0a0a0a;
 
 type SpaceSceneProps = Readonly<{
-  onLoadingComplete: () => void;
+  onLoadingComplete?: () => void;
 }>;
 
 export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
@@ -42,7 +42,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
           cause: error instanceof Error ? error : new Error(String(error)),
         });
       } finally {
-        onLoadingComplete();
+        onLoadingComplete?.();
       }
     };
 
@@ -125,7 +125,7 @@ export default function SpaceScene({ onLoadingComplete }: SpaceSceneProps) {
 
   return (
     <>
-      {!errorOccurred && <div ref={threeJsRef} id="three-root" className="fixed inset-0 w-screen h-full z-0 w-full h-full z-0" />}
+      {!errorOccurred && <div ref={threeJsRef} id="three-root" className="fixed inset-0 z-0" />}
       {errorOccurred && <p className="absolute flex justify-center items-center w-full h-full text-white">An error occurred loading the 3D scene. Please consider refreshing the page.</p>}
       <WarningWindow enable={error != null} error={error} onClose={() => setError(null)} />
     </>
