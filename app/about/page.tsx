@@ -22,7 +22,6 @@ export default function About() {
         animationInitialized.current = true;
 
         setMenuOpen(true);
-        setMenuPosition("Top");
 
         const sceneController = SceneController.getInstance();
 

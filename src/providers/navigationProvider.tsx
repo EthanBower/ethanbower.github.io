@@ -1,11 +1,20 @@
 "use client";
 
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
+export type MenuPosition = "Top" | "Bottom";
+export type NavItem = {
+    id: string;
+    label: string;
+    icon: React.ReactNode;
+    isPersistent: boolean;
+    onClick: () => void;
+}
 type BeforeNavigateCallback = () => Promise<void> | void;
-type MenuPosition = "Top" | "Bottom";
 type NavigationContextType = {
+    navigationItems: NavItem[];
+    setNavigationItems: React.Dispatch<React.SetStateAction<NavItem[]>>;
     menuOpen: boolean;
     setMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
     menuPosition: MenuPosition;
@@ -21,20 +30,21 @@ const NavigationContext = createContext<NavigationContextType | null>(null);
 export function NavigationProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
+    const [navigationItems, setNavigationItems] = useState<NavItem[]>([]);
     const [menuOpen, setMenuOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState<MenuPosition>("Bottom");
     const [menuFocusRequested, setMenuFocusRequested] = useState(false);
     const beforeNavigatingCallbacks = useRef(new Set<BeforeNavigateCallback | null>());
 
-    function addBeforeNavigate(callback: BeforeNavigateCallback | null): () => void {
+    const addBeforeNavigate = useCallback((callback: BeforeNavigateCallback | null) => {
         beforeNavigatingCallbacks.current.add(callback);
 
         return () => {
             beforeNavigatingCallbacks.current.delete(callback);
         };
-    };
+    }, []);
 
-    async function navigate(href: string) {
+    const navigate = useCallback(async (href: string) => {
         if (pathname === href) {
             return;
         }
@@ -47,21 +57,30 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
         );
 
         router.push(href);
-    }
+    }, [pathname, router]);
+
+    const value = useMemo(() => ({
+        navigationItems,
+        setNavigationItems,
+        menuOpen,
+        setMenuOpen,
+        menuPosition,
+        setMenuPosition,
+        menuFocusRequested,
+        setMenuFocusRequested,
+        navigate,
+        addBeforeNavigate,
+    }), [
+        navigationItems,
+        menuOpen,
+        menuPosition,
+        menuFocusRequested,
+        navigate,
+        addBeforeNavigate,
+    ]);
 
     return (
-        <NavigationContext.Provider
-            value={{
-                menuOpen,
-                setMenuOpen,
-                menuPosition,
-                setMenuPosition,
-                menuFocusRequested,
-                setMenuFocusRequested,
-                navigate,
-                addBeforeNavigate,
-            }}
-        >
+        <NavigationContext.Provider value={value}>
             {children}
         </NavigationContext.Provider>
     );

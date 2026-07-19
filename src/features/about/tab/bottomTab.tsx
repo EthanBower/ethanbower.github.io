@@ -1,6 +1,8 @@
 "use client";
 
-import CloseButton from "@/src/components/ui/closeButton";
+import ExitIcon from "@/src/components/icons/exit";
+import { animationVariants } from "@/src/components/utils/globals";
+import { NavItem, useNavigation } from "@/src/providers/navigationProvider";
 import { glass } from "@/src/styles/surfaces";
 import { AnimatePresence, motion, useAnimation, Variants } from "framer-motion";
 import { ReactNode, useEffect, useRef, useState } from "react";
@@ -84,10 +86,44 @@ type BottomTabProps = {
 }
 
 export default function BottomTab({ enable, tabCloseTitle, onCloseComplete, onTabOpen, onTabClose, children }: BottomTabProps) {
+    const { setNavigationItems, setMenuPosition } = useNavigation();
     const [open, setOpen] = useState(false);
     const [hovered, setHovered] = useState(false);
     const controls = useAnimation();
     const needsInitial = useRef(false);
+
+    useEffect(() => {
+        setMenuPosition("Top");
+    }, []);
+
+    function addCloseButtonToMenu() {
+        const closeNavItem: NavItem = {
+            id: crypto.randomUUID(),
+            label: "Close Window",
+            icon: <ExitMenuIcon />,
+            isPersistent: false,
+            onClick: () => closeMainMenu(),
+        }
+
+        setNavigationItems(prev => [...prev, closeNavItem]);
+    }
+
+    function openMainMenu() {
+        setMenuPosition("Bottom");
+        setOpen(true);
+        setHovered(false);
+        addCloseButtonToMenu();
+        onTabOpen?.();
+    }
+
+    function closeMainMenu() {
+        setMenuPosition("Top");
+        setOpen(false);
+        onTabClose?.();
+        setNavigationItems(prev =>
+            prev.filter(item => item.isPersistent)
+        );
+    }
 
     useEffect(() => {
         if (!enable) {
@@ -128,7 +164,7 @@ export default function BottomTab({ enable, tabCloseTitle, onCloseComplete, onTa
         <AnimatePresence onExitComplete={onCloseComplete}>
             {enable && (
                 <motion.div
-                    onClick={() => !open && (setOpen(true), setHovered(false), onTabOpen?.())}
+                    onClick={() => !open && (openMainMenu())}
                     onHoverStart={() => !open && setHovered(true)}
                     onHoverEnd={() => setHovered(false)}
                     variants={TabBarVariants}
@@ -167,11 +203,6 @@ export default function BottomTab({ enable, tabCloseTitle, onCloseComplete, onTa
                         </motion.div>
                     ) : (
                         <div className="relative h-full w-full">
-                            <div className="absolute top-6 right-6 px-4 py-2 z-1">
-                                <CloseButton onClick={() => (setOpen(false), onTabClose?.())}>
-                                    Close
-                                </CloseButton>
-                            </div>
                             <div className="absolute h-full w-full overflow-y-auto z-0">
                                 {children}
                             </div>
@@ -180,5 +211,17 @@ export default function BottomTab({ enable, tabCloseTitle, onCloseComplete, onTa
                 </motion.div>
             )}
         </AnimatePresence >
+    );
+}
+
+function ExitMenuIcon() {
+    return (
+        <motion.div
+            variants={animationVariants.buttonVariant}
+            whileHover="hover"
+            whileTap={["hover", "tap"]}
+            className={`text-red-500`} >
+            <ExitIcon />
+        </motion.div>
     );
 }

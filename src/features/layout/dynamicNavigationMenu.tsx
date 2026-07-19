@@ -5,40 +5,59 @@ import NavigationMenu from "../../components/ui/navigationMenu";
 import HomeIcon from "@/src/components/icons/home";
 import Gear from "@/src/components/icons/gear";
 import Settings from "../settings/settings";
-import { useState } from "react";
-import { useNavigation } from "@/src/providers/navigationProvider";
+import { useEffect, useState } from "react";
+import { NavItem, useNavigation } from "@/src/providers/navigationProvider";
 
 export default function DynamicNavigationMenu() {
-    const { menuOpen, setMenuOpen, menuPosition, navigate } = useNavigation();
+    const { setMenuOpen, navigate, setNavigationItems } = useNavigation();
     const [settingsDisplay, setSettingsDisplayEnabled] = useState(false);
-    const navbarItems = [
-        {
-            label: "Settings",
-            icon: <Gear />,
-            onClick: () => {
-                setMenuOpen(false);
-                setSettingsDisplayEnabled(true);
+
+    useEffect(() => {
+        const navbarItems: NavItem[] = [
+            {
+                id: crypto.randomUUID(),
+                label: "Settings",
+                icon: <Gear />,
+                isPersistent: true,
+                onClick: () => {
+                    setMenuOpen(false);
+                    setSettingsDisplayEnabled(true);
+                },
             },
-        },
-        {
-            label: "Home",
-            icon: <HomeIcon />,
-            onClick: () => {
-                navigate("/home");
+            {
+                id: crypto.randomUUID(),
+                label: "Home",
+                icon: <HomeIcon />,
+                isPersistent: true,
+                onClick: () => {
+                    navigate("/home");
+                },
             },
-        },
-        {
-            label: "Moon",
-            icon: <PlanetIcon />,
-            onClick: () => {
-                navigate("/about");
+            {
+                id: crypto.randomUUID(),
+                label: "Moon",
+                icon: <PlanetIcon />,
+                isPersistent: true,
+                onClick: () => {
+                    navigate("/about");
+                },
             },
-        },
-    ];
+        ];
+
+        setNavigationItems(navbarItems);
+
+        return () => {
+            const ids = new Set(navbarItems.map(item => item.id));
+
+            setNavigationItems(prev =>
+                prev.filter(item => !ids.has(item.id))
+            );
+        };
+    }, [setNavigationItems, navigate, setMenuOpen, setSettingsDisplayEnabled]);
 
     return (
         <>
-            <NavigationMenu items={navbarItems} position={menuPosition} enable={menuOpen} />
+            <NavigationMenu />
             <Settings enable={settingsDisplay} onClose={() => {
                 setSettingsDisplayEnabled(false);
                 setMenuOpen(true);

@@ -1,5 +1,6 @@
 "use client";
 
+import { MenuPosition, NavItem, useNavigation } from "@/src/providers/navigationProvider";
 import { glass } from "@/src/styles/surfaces";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import { useState } from "react";
@@ -27,23 +28,6 @@ const navbarVariants: Variants = {
   }),
 };
 
-const containerVariants: Variants = {
-  enter: {
-    transition: {
-      delayChildren: 0.25,
-      staggerChildren: 0.1,
-      staggerDirection: 1,
-    },
-  },
-  exit: {
-    transition: {
-      delayChildren: 0.25,
-      staggerChildren: 0.1,
-      staggerDirection: -1,
-    },
-  },
-};
-
 const toolTipVariants: Variants = {
   initial: (position) => ({
     opacity: 0,
@@ -66,54 +50,52 @@ const toolTipVariants: Variants = {
 };
 
 const itemVariants: Variants = {
-  initial: (position) => ({
+  initial: ({ position, index, totalItems }) => ({
     opacity: 0,
     y: position === "Top" ? -35 : 35,
     scale: 0.5
   }),
-  enter: {
+  enter: ({ position, index, totalItems }) => ({
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { type: "spring", stiffness: 260, damping: 18 },
-  },
-  exit: (position) => ({
+    transition: {
+      type: "spring",
+      stiffness: 260,
+      damping: 18,
+      delay: 0.25 + index * 0.1
+    },
+  }),
+  exit: ({ position, index, totalItems }) => ({
     opacity: 0,
     y: position === "Top" ? -35 : 35,
     scale: 0.5,
-    transition: { type: "spring", stiffness: 260, damping: 18 },
+    transition: {
+      type: "spring",
+      stiffness: 260,
+      damping: 18,
+      delay: (totalItems - 1 - index) * 0.1
+    },
   }),
 };
 
-type NavBarPosition = "Top" | "Bottom";
-
-type NavItem = {
-  label: string;
-  icon: React.ReactNode;
-  onClick: () => void;
+type NavbarItemProp = Omit<NavItem, "isPersistent" | "id"> & {
+  position: MenuPosition;
 }
 
-type NavItemProp = NavItem & {
-  position: NavBarPosition;
-}
+export default function Navbar() {
+  const { menuOpen, menuPosition, navigationItems } = useNavigation();
 
-type NavbarProp = {
-  items: NavItem[];
-  position: NavBarPosition;
-  enable: boolean;
-}
-
-export default function Navbar({ items, position, enable }: NavbarProp) {
   return (
     <AnimatePresence mode="wait">
-      {enable && (
-        <motion.div
-          key={position}
+      {menuOpen && (
+        <div
+          key={menuPosition}
           className={`fixed left-1/2 -translate-x-1/2 z-50 inset-x-0 flex justify-center
-          ${position === "Top" ? "top-3" : "bottom-3"}`}>
+          ${menuPosition === "Top" ? "top-3" : "bottom-3"}`}>
           <motion.nav
             variants={navbarVariants}
-            custom={position}
+            custom={menuPosition}
             initial="initial"
             animate="enter"
             exit="exit"
@@ -128,29 +110,38 @@ export default function Navbar({ items, position, enable }: NavbarProp) {
               }}
               animate={{ y: [0, 3, 2, 4, 0] }}
             >
-              <motion.div
-                variants={containerVariants}
-                className={`flex items-center gap-8 px-8 py-4 rounded-full ${glass}`}
-              >
-                {items.map((item) => (
-                  <NavItem
-                    key={item.label}
-                    label={item.label}
-                    icon={item.icon}
-                    position={position}
-                    onClick={item.onClick}
-                  />
-                ))}
-              </motion.div>
+              <div className={`flex items-center gap-8 px-8 py-4 rounded-full ${glass}`}>
+                <AnimatePresence>
+                  {navigationItems.map((item, index) => (
+                    <motion.div
+                      layout
+                      key={item.id}
+                      variants={itemVariants}
+                      custom={{
+                        position: menuPosition,
+                        index: index,
+                        totalItems: navigationItems.length
+                      }}
+                    >
+                      <NavbarItem
+                        label={item.label}
+                        icon={item.icon}
+                        position={menuPosition}
+                        onClick={item.onClick}
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
             </motion.div>
           </motion.nav>
-        </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );
 }
 
-function NavItem({ label, icon, position, onClick }: NavItemProp) {
+function NavbarItem({ label, icon, position, onClick }: NavbarItemProp) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -171,18 +162,16 @@ function NavItem({ label, icon, position, onClick }: NavItemProp) {
           <span className="text-xs tracking-wide">{label}</span>
         </div>
       </motion.div>
-      <motion.div custom={position} variants={itemVariants}>
-        <motion.button
-          onClick={onClick}
-          animate={isHovered ? { y: -4, scale: 1.08 } : { y: 0, scale: 1 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 400, damping: 18 }}
-          style={{ transform: "translateZ(0)" }}
-          className="flex flex-col items-center gap-1 text-white/70 transition-colors cursor-pointer"
-        >
-          {icon}
-        </motion.button>
-      </motion.div>
+      <motion.button
+        onClick={onClick}
+        animate={isHovered ? { y: -4, scale: 1.08 } : { y: 0, scale: 1 }}
+        whileTap={{ scale: 0.95 }}
+        transition={{ type: "spring", stiffness: 400, damping: 18 }}
+        style={{ transform: "translateZ(0)" }}
+        className="flex flex-col items-center gap-1 text-white/70 transition-colors cursor-pointer"
+      >
+        {icon}
+      </motion.button>
     </div>
   );
 }
