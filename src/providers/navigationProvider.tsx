@@ -7,8 +7,9 @@ export type MenuPosition = "Top" | "Bottom";
 export type NavItem = {
     id: string;
     label: string;
-    icon: React.ReactNode;
+    icon: React.ComponentType<any>;
     isPersistent: boolean;
+    selectQuery: () => boolean;
     onClick: () => void;
 }
 type BeforeNavigateCallback = () => Promise<void> | void;

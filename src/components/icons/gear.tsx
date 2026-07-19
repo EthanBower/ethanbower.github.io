@@ -1,17 +1,24 @@
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 const DEFAULT_CLASSNAME = "cursor-pointer text-gray-900 dark:text-gray-300 transition-colors";
+const GearIconVariants: Variants = {
+  initial: {
+    rotate: 0
+  },
+  hover: {
+    rotate: 180,
+    transition: {
+      type: "spring",
+      stiffness: 70,
+      damping: 15,
+    }
+  }
+}
 
 export default function GearIcon({ className = DEFAULT_CLASSNAME }: { className?: string }) {
   return (
     <motion.svg
-      whileHover={{ rotate: 180 }}
-      whileTap={{ rotate: 180 }}
-      transition={{
-        type: "spring",
-        stiffness: 70,
-        damping: 15,
-      }}
+      variants={GearIconVariants}
       style={{ transformOrigin: "50% 50%" }}
       width="26px"
       height="26px"

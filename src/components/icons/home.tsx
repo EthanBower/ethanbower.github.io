@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 
 const doorVariants = {
-  rest: {
+  initial: {
     scaleY: 1,
     opacity: 0,
   },
@@ -27,9 +27,6 @@ export default function HomeIcon() {
       viewBox="4 3 18 18"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      initial="rest"
-      animate="rest"
-      whileHover="hover"
       className="cursor-pointer 
         text-gray-900
         dark:text-gray-300

@@ -31,19 +31,19 @@ const navbarVariants: Variants = {
 const toolTipVariants: Variants = {
   initial: (position) => ({
     opacity: 0,
-    y: position === "Top" ? 20 : -20,
+    y: 0,
     scale: 0.95,
     filter: "blur(6px)"
   }),
   enter: (position) => ({
     opacity: 1,
-    y: position === "Top" ? 45 : -45,
+    y: position === "Top" ? 15 : -15,
     scale: 1,
     filter: "blur(0px)"
   }),
   exit: (position) => ({
     opacity: 0,
-    y: position === "Top" ? 20 : -20,
+    y: 0,
     scale: 0.95,
     filter: "blur(6px)"
   }),
@@ -92,7 +92,7 @@ export default function Navbar() {
         <div
           key={menuPosition}
           className={`fixed left-1/2 -translate-x-1/2 z-50 inset-x-0 flex justify-center
-          ${menuPosition === "Top" ? "top-3" : "bottom-3"}`}>
+            ${menuPosition === "Top" ? "top-3" : "bottom-3"}`}>
           <motion.nav
             variants={navbarVariants}
             custom={menuPosition}
@@ -110,7 +110,7 @@ export default function Navbar() {
               }}
               animate={{ y: [0, 3, 2, 4, 0] }}
             >
-              <div className={`flex items-center gap-8 px-8 py-4 rounded-full ${glass}`}>
+              <div className={`flex items-center gap-1 px-4 py-2 rounded-full ${glass}`}>
                 <AnimatePresence>
                   {navigationItems.map((item, index) => (
                     <motion.div
@@ -128,6 +128,7 @@ export default function Navbar() {
                         icon={item.icon}
                         position={menuPosition}
                         onClick={item.onClick}
+                        selectQuery={item.selectQuery}
                       />
                     </motion.div>
                   ))}
@@ -141,37 +142,43 @@ export default function Navbar() {
   );
 }
 
-function NavbarItem({ label, icon, position, onClick }: NavbarItemProp) {
+function NavbarItem({ label, icon, position, onClick, selectQuery }: NavbarItemProp) {
   const [isHovered, setIsHovered] = useState(false);
+  const IconComponent = icon;
 
   return (
-    <div
-      className="d-block relative flex flex-col items-center"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="relative flex flex-col items-center">
       <motion.div
         variants={toolTipVariants}
         custom={position}
         initial="initial"
         animate={isHovered ? "enter" : "initial"}
         exit="exit"
-        className="absolute"
-      >
+        className={`absolute left-1/2 -translate-x-1/2 pointer-events-none ${position === "Top" ? "top-full" : "bottom-full"}`}      >
         <div className={`${glass} text-white text-[10px] p-[5px] px-2.5 py-1 rounded-md whitespace-nowrap`}>
           <span className="text-xs tracking-wide">{label}</span>
         </div>
       </motion.div>
-      <motion.button
-        onClick={onClick}
+      <motion.div
         animate={isHovered ? { y: -4, scale: 1.08 } : { y: 0, scale: 1 }}
         whileTap={{ scale: 0.95 }}
         transition={{ type: "spring", stiffness: 400, damping: 18 }}
         style={{ transform: "translateZ(0)" }}
-        className="flex flex-col items-center gap-1 text-white/70 transition-colors cursor-pointer"
       >
-        {icon}
-      </motion.button>
+        <motion.div
+          className={`flex flex-col items-center cursor-pointer px-3.5 py-2
+          ${selectQuery() ? "bg-slate-700/30 dark:bg-slate-300/20 border-black/30 dark:border-white/30 border rounded-full" : "bg-none"}
+        `}
+          onClick={onClick}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          initial="initial"
+          whileHover="hover"
+          whileTap="tap"
+        >
+          <IconComponent />
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

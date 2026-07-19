@@ -93,15 +93,20 @@ export default function BottomTab({ enable, tabCloseTitle, onCloseComplete, onTa
     const needsInitial = useRef(false);
 
     useEffect(() => {
-        setMenuPosition("Top");
+        if (open) {
+            setMenuPosition("Bottom");
+        } else {
+            setMenuPosition("Top");
+        }
     }, []);
 
     function addCloseButtonToMenu() {
         const closeNavItem: NavItem = {
             id: crypto.randomUUID(),
             label: "Close Window",
-            icon: <ExitMenuIcon />,
+            icon: ExitMenuIcon,
             isPersistent: false,
+            selectQuery: () => false,
             onClick: () => closeMainMenu(),
         }
 

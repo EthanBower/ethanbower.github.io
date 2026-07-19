@@ -7,8 +7,10 @@ import Gear from "@/src/components/icons/gear";
 import Settings from "../settings/settings";
 import { useEffect, useState } from "react";
 import { NavItem, useNavigation } from "@/src/providers/navigationProvider";
+import { usePathname } from "next/navigation";
 
 export default function DynamicNavigationMenu() {
+    const pathname = usePathname();
     const { setMenuOpen, navigate, setNavigationItems } = useNavigation();
     const [settingsDisplay, setSettingsDisplayEnabled] = useState(false);
 
@@ -17,8 +19,9 @@ export default function DynamicNavigationMenu() {
             {
                 id: crypto.randomUUID(),
                 label: "Settings",
-                icon: <Gear />,
+                icon: Gear,
                 isPersistent: true,
+                selectQuery: () => false,
                 onClick: () => {
                     setMenuOpen(false);
                     setSettingsDisplayEnabled(true);
@@ -27,20 +30,18 @@ export default function DynamicNavigationMenu() {
             {
                 id: crypto.randomUUID(),
                 label: "Home",
-                icon: <HomeIcon />,
+                icon: HomeIcon,
                 isPersistent: true,
-                onClick: () => {
-                    navigate("/home");
-                },
+                selectQuery: () => pathname === "/home",
+                onClick: () => navigate("/home")
             },
             {
                 id: crypto.randomUUID(),
                 label: "Moon",
-                icon: <PlanetIcon />,
+                icon: PlanetIcon,
                 isPersistent: true,
-                onClick: () => {
-                    navigate("/about");
-                },
+                selectQuery: () => pathname === "/about",
+                onClick: () => navigate("/about")
             },
         ];
 
