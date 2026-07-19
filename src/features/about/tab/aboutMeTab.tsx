@@ -1,9 +1,9 @@
 "use client";
 
-import BottomTab from "./bottomTab";
 import { SceneController } from "@/src/three";
 import StandardCard from "../card/standardCard/standardCard";
 import SkillCard from "../card/skillCard/skillCard";
+import BottomTab2 from "./bottomTab";
 
 type AboutMeTabProps = {
     enable: boolean;
@@ -12,7 +12,7 @@ type AboutMeTabProps = {
 
 export default function AboutMeTab({ enable, onCloseComplete }: AboutMeTabProps) {
     return (
-        <BottomTab
+        <BottomTab2
             enable={enable}
             tabCloseTitle="ABOUT"
             onCloseComplete={onCloseComplete}
@@ -28,6 +28,6 @@ export default function AboutMeTab({ enable, onCloseComplete }: AboutMeTabProps)
                 </StandardCard>
                 <SkillCard name="C#" skillLevel={8} />
             </div>
-        </BottomTab>
+        </BottomTab2>
     );
 }

@@ -1,10 +1,11 @@
 "use client";
 
 import Quote from "@/src/features/about/quote";
-import { useNavigation } from "@/src/providers/navigationProvider";
 import { SceneController } from "@/src/three";
 import { useEffect, useRef, useState } from "react";
 import AboutMeTab from "@/src/features/about/tab/aboutMeTab";
+import { useNavigation } from "@/src/providers/navigationProvider";
+import { useNavigationMenuUI } from "@/src/providers/navigationMenuUIProvider";
 
 enum AppStage {
     Initial,
@@ -12,7 +13,8 @@ enum AppStage {
 }
 
 export default function About() {
-    const { setMenuOpen, menuFocusRequested, setMenuPosition, addBeforeNavigate } = useNavigation();
+    const { addBeforeNavigate } = useNavigation();
+    const { setMenuOpen, menuFocusRequested } = useNavigationMenuUI();
     const [stage, setStage] = useState(AppStage.Initial);
     const animationInitialized = useRef<boolean>(false);
     const exitResolver = useRef<() => void | null>(null);
@@ -45,7 +47,7 @@ export default function About() {
 
             return tabAnimationDonePromise;
         });
-    }, [addBeforeNavigate]);
+    }, [addBeforeNavigate, setStage]);
 
     return (
         <>
@@ -53,6 +55,7 @@ export default function About() {
             <AboutMeTab
                 enable={!menuFocusRequested && (stage >= AppStage.SceneZoomToMoonDone)}
                 onCloseComplete={() => {
+                    console.log("CLOSE COMPLETE....");
                     exitResolver.current?.();
                     exitResolver.current = null;
                 }}>

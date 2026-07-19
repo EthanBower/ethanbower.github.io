@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import HomeTitle from "@/src/features/home/homeTitle";
 import { SceneController } from "@/src/three";
 import { useNavigation } from "@/src/providers/navigationProvider";
+import { useNavigationMenuUI } from "@/src/providers/navigationMenuUIProvider";
 
 export default function Home() {
-  const { setMenuOpen, addBeforeNavigate, setMenuPosition, menuFocusRequested } = useNavigation();
+  const { addBeforeNavigate } = useNavigation();
+  const { setMenuOpen, setMenuPosition, menuFocusRequested } = useNavigationMenuUI();
   const [homeDisplay, setHomeDisplayEnabled] = useState(false);
   const animationInitialized = useRef<boolean>(false);
   const exitResolver = useRef<() => void | null>(null);
@@ -40,7 +42,7 @@ export default function Home() {
 
       return titleAnimationDonePromise;
     });
-  }, [addBeforeNavigate]);
+  }, [addBeforeNavigate, setHomeDisplayEnabled]);
 
   return (
     <>

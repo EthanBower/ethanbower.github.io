@@ -1,6 +1,6 @@
 "use client";
 
-import { MenuPosition, NavItem, useNavigation } from "@/src/providers/navigationProvider";
+import { MenuPosition, NavItem, useNavigationMenuUI } from "@/src/providers/navigationMenuUIProvider";
 import { glass } from "@/src/styles/surfaces";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import { useState } from "react";
@@ -84,7 +84,7 @@ type NavbarItemProp = Omit<NavItem, "isPersistent" | "id"> & {
 }
 
 export default function Navbar() {
-  const { menuOpen, menuPosition, navigationItems } = useNavigation();
+  const { menuOpen, menuPosition, navigationItems } = useNavigationMenuUI();
 
   return (
     <AnimatePresence mode="wait">
@@ -111,7 +111,7 @@ export default function Navbar() {
               animate={{ y: [0, 3, 2, 4, 0] }}
             >
               <div className={`flex items-center gap-1 px-4 py-2 rounded-full ${glass}`}>
-                <AnimatePresence>
+                <AnimatePresence mode="popLayout">
                   {navigationItems.map((item, index) => (
                     <motion.div
                       layout
@@ -167,8 +167,8 @@ function NavbarItem({ label, icon, position, onClick, selectQuery }: NavbarItemP
       >
         <motion.div
           className={`flex flex-col items-center cursor-pointer px-3.5 py-2
-          ${selectQuery() ? "bg-slate-700/30 dark:bg-slate-300/20 border-black/30 dark:border-white/30 border rounded-full" : "bg-none"}
-        `}
+            ${selectQuery() ? "outline outline-1 outline-black/30 dark:outline-white/30 bg-slate-700/30 dark:bg-slate-300/20 rounded-full" : "bg-none"}
+          `}
           onClick={onClick}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}

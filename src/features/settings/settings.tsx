@@ -22,7 +22,7 @@ import WarningBackground from "@/src/components/ui/warningBackground";
 import { yellowWindowGlow } from "@/src/styles/windows";
 import { appVersion } from "@/src/components/utils/globals";
 import PopupItem from "@/src/components/ui/popupItem";
-import { useNavigation } from "@/src/providers/navigationProvider";
+import { useNavigationMenuUI } from "@/src/providers/navigationMenuUIProvider";
 
 export const BACKGROUND_COLOR_PRESETS = [
   { presetName: "Cosmic Night Walk", colors: [0x0b1020] },
@@ -54,7 +54,7 @@ type SettingsProps = Readonly<{
 }>;
 
 export default function Settings({ enable, onClose }: SettingsProps) {
-  const { setMenuFocusRequested } = useNavigation();
+  const { setMenuFocusRequested } = useNavigationMenuUI();
   const { settings, setSettings, resetSettings } = useSettings();
   const [error, setError] = useState<Error | null>(null);
   const [currentDotCount, setCurrentDotCount] = useState(

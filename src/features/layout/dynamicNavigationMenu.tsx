@@ -6,12 +6,14 @@ import HomeIcon from "@/src/components/icons/home";
 import Gear from "@/src/components/icons/gear";
 import Settings from "../settings/settings";
 import { useEffect, useState } from "react";
-import { NavItem, useNavigation } from "@/src/providers/navigationProvider";
 import { usePathname } from "next/navigation";
+import { useNavigation } from "@/src/providers/navigationProvider";
+import { NavItem, useNavigationMenuUI } from "@/src/providers/navigationMenuUIProvider";
 
 export default function DynamicNavigationMenu() {
     const pathname = usePathname();
-    const { setMenuOpen, navigate, setNavigationItems } = useNavigation();
+    const { navigate } = useNavigation();
+    const { setMenuOpen, setNavigationItems } = useNavigationMenuUI();
     const [settingsDisplay, setSettingsDisplayEnabled] = useState(false);
 
     useEffect(() => {
