@@ -1,8 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
-const doorVariants = {
+const doorVariants: Variants = {
   initial: {
     scaleY: 1,
     opacity: 0,
@@ -17,7 +17,7 @@ const doorVariants = {
       mass: 0.6,
     },
   },
-} as const;
+};
 
 export default function HomeIcon() {
   return (

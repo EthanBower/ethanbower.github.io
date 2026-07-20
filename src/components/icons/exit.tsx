@@ -7,16 +7,17 @@ type ExitIconProps = {
   height?: number;
   viewBox?: string;
   strokeWidth?: number;
+  className?: string;
 }
 
-export default function ExitIcon({ width = 32, height = 32, viewBox = "0 0 24 24", strokeWidth = 1.8 }: ExitIconProps) {
+export default function ExitIcon({ width = 32, height = 32, viewBox = "0 0 24 24", strokeWidth = 1.8, className = "text-red-500" }: ExitIconProps) {
   return (
     <svg
       width={String(width)}
       height={String(height)}
       viewBox={viewBox}
       fill="none"
-      className="overflow-visible"
+      className={`overflow-visible ${className}`}
     >
       {/* Box */}
       <motion.path

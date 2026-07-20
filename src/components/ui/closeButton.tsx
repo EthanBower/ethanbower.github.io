@@ -30,7 +30,7 @@ export default function CloseButton({ className, onClick, children }: CloseButto
                 gap-2 
                 cursor-pointer 
                 whitespace-nowrap`} >
-            <ExitIcon />
+            <ExitIcon className="" />
             <span>{children}</span>
         </motion.button>
     );

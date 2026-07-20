@@ -3,6 +3,7 @@
 import { MenuPosition, NavItem, useNavigationMenuUI } from "@/src/providers/navigationMenuUIProvider";
 import { glass } from "@/src/styles/surfaces";
 import { AnimatePresence, motion, Variants } from "framer-motion";
+import React from "react";
 import { useState } from "react";
 
 const navbarVariants: Variants = {
@@ -79,8 +80,9 @@ const itemVariants: Variants = {
   }),
 };
 
-type NavbarItemProp = Omit<NavItem, "isPersistent" | "id"> & {
+type NavbarItemProp = Omit<NavItem, "isPersistent" | "id" | "selectQuery"> & {
   position: MenuPosition;
+  selectQueryActive: boolean;
 }
 
 export default function Navbar() {
@@ -128,7 +130,8 @@ export default function Navbar() {
                         icon={item.icon}
                         position={menuPosition}
                         onClick={item.onClick}
-                        selectQuery={item.selectQuery}
+                        selectQueryActive={item.selectQuery()}
+                        addSeparator={item.addSeparator}
                       />
                     </motion.div>
                   ))}
@@ -142,43 +145,49 @@ export default function Navbar() {
   );
 }
 
-function NavbarItem({ label, icon, position, onClick, selectQuery }: NavbarItemProp) {
-  const [isHovered, setIsHovered] = useState(false);
-  const IconComponent = icon;
+const NavbarItem = React.memo(
+  function NavbarItem({ label, icon, position, onClick, selectQueryActive, addSeparator }: NavbarItemProp) {
+    const [isHovered, setIsHovered] = useState(false);
+    const IconComponent = icon;
 
-  return (
-    <div className="relative flex flex-col items-center">
-      <motion.div
-        variants={toolTipVariants}
-        custom={position}
-        initial="initial"
-        animate={isHovered ? "enter" : "initial"}
-        exit="exit"
-        className={`absolute left-1/2 -translate-x-1/2 pointer-events-none ${position === "Top" ? "top-full" : "bottom-full"}`}      >
-        <div className={`${glass} text-white text-[10px] p-[5px] px-2.5 py-1 rounded-md whitespace-nowrap`}>
-          <span className="text-xs tracking-wide">{label}</span>
-        </div>
-      </motion.div>
-      <motion.div
-        animate={isHovered ? { y: -4, scale: 1.08 } : { y: 0, scale: 1 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ type: "spring", stiffness: 400, damping: 18 }}
-        style={{ transform: "translateZ(0)" }}
-      >
+    return (
+      <div className="relative flex flex-col items-center">
         <motion.div
-          className={`flex flex-col items-center cursor-pointer px-3.5 py-2
-            ${selectQuery() ? "outline outline-1 outline-black/30 dark:outline-white/30 bg-slate-700/30 dark:bg-slate-300/20 rounded-full" : "bg-none"}
-          `}
-          onClick={onClick}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          variants={toolTipVariants}
+          custom={position}
           initial="initial"
-          whileHover="hover"
-          whileTap="tap"
-        >
-          <IconComponent />
+          animate={isHovered ? "enter" : "initial"}
+          exit="exit"
+          className={`absolute left-1/2 -translate-x-1/2 pointer-events-none ${position === "Top" ? "top-full" : "bottom-full"}`}      >
+          <div className={`${glass} text-white text-[10px] p-[5px] px-2.5 py-1 rounded-md whitespace-nowrap`}>
+            <span className="text-xs tracking-wide">{label}</span>
+          </div>
         </motion.div>
-      </motion.div>
-    </div>
-  );
-}
+        <div className="flex h-full items-center">
+          {addSeparator && (
+            <div className="w-[1px] mx-1 self-stretch bg-black/20 dark:bg-white/20" />
+          )}
+          <motion.div
+            animate={isHovered ? { y: -4, scale: 1.08 } : { y: 0, scale: 1 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 18 }}
+            style={{ transform: "translateZ(0)" }}
+          >
+            <motion.div
+              className={`flex flex-col items-center cursor-pointer px-3.5 py-2
+            ${selectQueryActive ? "outline outline-1 outline-black/30 dark:outline-white/30 bg-slate-700/30 dark:bg-slate-300/20 rounded-full" : "bg-none"}
+          `}
+              onClick={onClick}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              initial="initial"
+              whileHover="hover"
+              whileTap="tap"
+            >
+              <IconComponent />
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  });

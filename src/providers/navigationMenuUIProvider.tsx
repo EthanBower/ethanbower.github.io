@@ -8,6 +8,7 @@ export type NavItem = {
     label: string;
     icon: React.ComponentType<any>;
     isPersistent: boolean;
+    addSeparator: boolean;
     selectQuery: () => boolean;
     onClick: () => void;
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import PlanetIcon from "@/src/components/icons/planet";
-import NavigationMenu from "../../components/ui/navigationMenu";
 import HomeIcon from "@/src/components/icons/home";
 import Gear from "@/src/components/icons/gear";
 import Settings from "../settings/settings";
@@ -9,6 +8,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useNavigation } from "@/src/providers/navigationProvider";
 import { NavItem, useNavigationMenuUI } from "@/src/providers/navigationMenuUIProvider";
+import Navbar from "../../components/ui/navbar";
 
 export default function DynamicNavigationMenu() {
     const pathname = usePathname();
@@ -23,6 +23,7 @@ export default function DynamicNavigationMenu() {
                 label: "Settings",
                 icon: Gear,
                 isPersistent: true,
+                addSeparator: false,
                 selectQuery: () => false,
                 onClick: () => {
                     setMenuOpen(false);
@@ -34,6 +35,7 @@ export default function DynamicNavigationMenu() {
                 label: "Home",
                 icon: HomeIcon,
                 isPersistent: true,
+                addSeparator: false,
                 selectQuery: () => pathname === "/home",
                 onClick: () => navigate("/home")
             },
@@ -42,6 +44,7 @@ export default function DynamicNavigationMenu() {
                 label: "Moon",
                 icon: PlanetIcon,
                 isPersistent: true,
+                addSeparator: false,
                 selectQuery: () => pathname === "/about",
                 onClick: () => navigate("/about")
             },
@@ -60,7 +63,7 @@ export default function DynamicNavigationMenu() {
 
     return (
         <>
-            <NavigationMenu />
+            <Navbar />
             <Settings enable={settingsDisplay} onClose={() => {
                 setSettingsDisplayEnabled(false);
                 setMenuOpen(true);

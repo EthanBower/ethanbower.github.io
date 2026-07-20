@@ -2,14 +2,12 @@
 
 import { useRef } from "react";
 import { motion, useDragControls, AnimatePresence, } from "framer-motion";
-import DashedSeparator from "./dashedSeperator";
 import Typewriter from "./typewriter";
-import ExitIcon from "../icons/exit";
-import { buttonStyles } from "@/src/styles/buttonStyles";
 import { popupWindow } from "@/src/styles/windows";
 import { transparentNoGlass } from "@/src/styles/surfaces";
 import { animationVariants } from "../utils/globals";
 import CloseButton from "./closeButton";
+import DashedSeparator from "./dashedSeparator";
 
 type PopupWindowProps = Readonly<{
   windowTitle: string;

@@ -1,33 +1,35 @@
 "use client";
 
 import ExitIcon from "@/src/components/icons/exit";
-import { animationVariants } from "@/src/components/utils/globals";
 import { useNavigationMenuUI } from "@/src/providers/navigationMenuUIProvider";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import { ReactNode, useEffect } from "react";
 
 const FullWindowVariants: Variants = {
     initial: {
-        y: "100%"
+        opacity: 0,
+        y: "4%",
+        scale: 0.95
     },
     enter: {
+        opacity: 1,
         y: 0,
+        scale: 1,
         transition: {
-            type: "spring",
-            stiffness: 250,
-            damping: 14,
-            delay: .3
+            duration: 0.5,
+            ease: [0.16, 1, 0.3, 1]
         }
     },
     exit: {
-        y: "100%",
+        opacity: 0,
+        y: "4%",
+        scale: 1.05,
         transition: {
-            type: "spring",
-            stiffness: 250,
-            damping: 14,
+            duration: 0.4,
+            ease: [0.7, 0, 0.84, 0]
         }
     }
-}
+};
 
 type FullWindowMenuProps = {
     enable: boolean;
@@ -45,8 +47,9 @@ export default function FullWindowMenu({ enable, onCloseComplete, onCloseClickEv
         setNavigationItems(prev => [...prev, {
             id: crypto.randomUUID(),
             label: "Close Window",
-            icon: ExitMenuIcon,
+            icon: ExitIcon,
             isPersistent: false,
+            addSeparator: true,
             selectQuery: () => false,
             onClick: () => {
                 onCloseClickEvent();
@@ -65,35 +68,28 @@ export default function FullWindowMenu({ enable, onCloseComplete, onCloseClickEv
                     initial="initial"
                     animate="enter"
                     exit="exit"
-                    className={`
-                        fixed
-                        inset-0
-                        w-screen
-                        h-screen
-                        z-1
-                        bg-[radial-gradient(circle_at_30%_30%,rgba(79,70,229,.55)_0%,transparent_45%),radial-gradient(circle_at_80%_60%,rgba(147,51,234,.5)_0%,transparent_50%),radial-gradient(circle_at_20%_100%,rgba(242,169,0,.42)_0%,transparent_50%),linear-gradient(180deg,rgba(10,12,20,.96),rgba(3,5,10,.98))]
-                        dark:bg-[radial-gradient(circle_at_30%_30%,rgba(79,70,229,.28)_0%,transparent_45%),radial-gradient(circle_at_80%_60%,rgba(147,51,234,.24)_0%,transparent_50%),radial-gradient(circle_at_20%_100%,rgba(242,169,0,.18)_0%,transparent_50%),linear-gradient(180deg,rgba(10,12,20,.96),rgba(3,5,10,.98))]
-                    `}>
+                    className="
+                        fixed 
+                        inset-0 
+                        w-screen 
+                        h-screen 
+                        z-1 
+                        bg-[radial-gradient(circle_at_15%_15%,rgba(165,180,252,.35),transparent_40%),radial-gradient(circle_at_80%_25%,rgba(34,211,238,.18),transparent_35%),radial-gradient(circle_at_85%_80%,rgba(251,113,133,.22),transparent_45%),linear-gradient(180deg,#5B5B66,#3F3F46)]
+                        dark:bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.15)_0%,transparent_50%),radial-gradient(circle_at_80%_70%,rgba(168,85,247,0.12)_0%,transparent_60%),linear-gradient(180deg,#121214_0%,#0F0F11_100%)]
+                    ">
+                    <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                            backgroundImage: "url('/textures/noisy-background.png')",
+                            backgroundRepeat: "repeat",
+                            opacity: 0.4
+                        }}
+                    />
                     <div className="relative h-full w-full">
-                        <div className="absolute h-full w-full overflow-y-auto z-0">
-                            {children}
-                        </div>
+                        {children}
                     </div>
                 </motion.div>
             )}
         </AnimatePresence>
-    );
-}
-
-// todo - move this
-function ExitMenuIcon() {
-    return (
-        <motion.div
-            variants={animationVariants.buttonVariant}
-            whileHover="hover"
-            whileTap={["hover", "tap"]}
-            className={`text-red-500`} >
-            <ExitIcon />
-        </motion.div>
     );
 }
