@@ -10,7 +10,7 @@ type ExitIconProps = {
   className?: string;
 }
 
-export default function ExitIcon({ width = 32, height = 32, viewBox = "0 0 24 24", strokeWidth = 1.8, className = "text-red-500" }: ExitIconProps) {
+export default function ExitIcon({ width = 26, height = 26, viewBox = "2.5 2.5 19 19", strokeWidth = 1.8, className = "text-red-500" }: ExitIconProps) {
   return (
     <svg
       width={String(width)}

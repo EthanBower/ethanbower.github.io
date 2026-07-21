@@ -8,27 +8,30 @@ import { ReactNode, useEffect } from "react";
 const FullWindowVariants: Variants = {
     initial: {
         opacity: 0,
-        y: "4%",
-        scale: 0.95
+        y: "8%",
+        scale: 0.985,
+        filter: "blur(8px)",
     },
     enter: {
         opacity: 1,
         y: 0,
         scale: 1,
+        filter: "blur(0px)",
         transition: {
-            duration: 0.5,
-            ease: [0.16, 1, 0.3, 1]
-        }
+            duration: 0.55,
+            ease: [0.22, 1, 0.36, 1],
+        },
     },
     exit: {
         opacity: 0,
-        y: "4%",
-        scale: 1.05,
+        y: "5%",
+        scale: 0.99,
+        filter: "blur(6px)",
         transition: {
-            duration: 0.4,
-            ease: [0.7, 0, 0.84, 0]
-        }
-    }
+            duration: 0.28,
+            ease: [0.4, 0, 1, 1],
+        },
+    },
 };
 
 type FullWindowMenuProps = {
@@ -50,7 +53,8 @@ export default function FullWindowMenu({ enable, onCloseComplete, onCloseClickEv
             icon: ExitIcon,
             isPersistent: false,
             addSeparator: true,
-            selectQuery: () => false,
+            selectQuery: () => true,
+            selectedClassName: "outline outline-1 outline-black/30 dark:outline-white/30 bg-red-900/40 dark:bg-red-500/30 rounded-full",
             onClick: () => {
                 onCloseClickEvent();
                 setNavigationItems(prev => prev.filter(item => item.isPersistent));

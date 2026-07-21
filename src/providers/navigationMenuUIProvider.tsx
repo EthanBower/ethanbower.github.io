@@ -10,6 +10,7 @@ export type NavItem = {
     isPersistent: boolean;
     addSeparator: boolean;
     selectQuery: () => boolean;
+    selectedClassName?: string;
     onClick: () => void;
 }
 

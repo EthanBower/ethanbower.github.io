@@ -6,6 +6,8 @@ import { AnimatePresence, motion, Variants } from "framer-motion";
 import React from "react";
 import { useState } from "react";
 
+const SELECTED_ICON_DEFAULT = "outline outline-1 outline-black/30 dark:outline-white/30 bg-slate-700/30 dark:bg-slate-300/20 rounded-full";
+
 const navbarVariants: Variants = {
   initial: (position) => ({
     y: position === "Top" ? -120 : 120,
@@ -131,6 +133,7 @@ export default function Navbar() {
                         position={menuPosition}
                         onClick={item.onClick}
                         selectQueryActive={item.selectQuery()}
+                        selectedClassName={item.selectedClassName}
                         addSeparator={item.addSeparator}
                       />
                     </motion.div>
@@ -146,7 +149,7 @@ export default function Navbar() {
 }
 
 const NavbarItem = React.memo(
-  function NavbarItem({ label, icon, position, onClick, selectQueryActive, addSeparator }: NavbarItemProp) {
+  function NavbarItem({ label, icon, position, onClick, selectQueryActive, selectedClassName = SELECTED_ICON_DEFAULT, addSeparator }: NavbarItemProp) {
     const [isHovered, setIsHovered] = useState(false);
     const IconComponent = icon;
 
@@ -175,8 +178,8 @@ const NavbarItem = React.memo(
           >
             <motion.div
               className={`flex flex-col items-center cursor-pointer px-3.5 py-2
-            ${selectQueryActive ? "outline outline-1 outline-black/30 dark:outline-white/30 bg-slate-700/30 dark:bg-slate-300/20 rounded-full" : "bg-none"}
-          `}
+                ${selectQueryActive ? selectedClassName : "bg-none"}
+              `}
               onClick={onClick}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
