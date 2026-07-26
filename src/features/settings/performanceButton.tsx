@@ -3,7 +3,7 @@ import { useSettings } from "../../providers/settingsProvider";
 import { buttonStyles } from "@/src/styles/buttonStyles";
 import StatefulButton from "@/src/components/ui/statefulButton";
 import LoadingSpinner from "@/src/components/ui/loadingSpinner";
-import CheckMark from "@/src/components/icons/checkMark";
+import CheckMark from "@/src/components/icons/general/checkMark";
 
 const BUTTON_FLEX = "flex flex-col gap-1 items-center justify-center";
 

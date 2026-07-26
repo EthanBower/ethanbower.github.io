@@ -14,7 +14,7 @@ type BottomTabProps = {
     children: ReactNode;
 }
 
-export default function BottomTab2({ enable, tabCloseTitle, onCloseComplete, onTabOpen, onTabClose, children }: BottomTabProps) {
+export default function BottomTab({ enable, tabCloseTitle, onCloseComplete, onTabOpen, onTabClose, children }: BottomTabProps) {
     const [open, setOpen] = useState(false);
     const { setMenuPosition } = useNavigationMenuUI();
 

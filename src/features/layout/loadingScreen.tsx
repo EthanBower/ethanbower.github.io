@@ -122,7 +122,7 @@ export default function LoadingScreen({ enable, onCloseAnimationDone }: LoadingS
                                 className="w-[30%] min-w-[150px] max-w-[230px]"
                             >
                                 <Image
-                                    src="./holly-face.svg"
+                                    src="./layout/holly-face.svg"
                                     width="20"
                                     height="20"
                                     alt=""

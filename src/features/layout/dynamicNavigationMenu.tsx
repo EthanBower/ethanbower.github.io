@@ -1,8 +1,8 @@
 "use client";
 
-import PlanetIcon from "@/src/components/icons/planet";
-import HomeIcon from "@/src/components/icons/home";
-import Gear from "@/src/components/icons/gear";
+import PlanetIcon from "@/src/components/icons/navbar/planet";
+import HomeIcon from "@/src/components/icons/navbar/home";
+import Gear from "@/src/components/icons/general/gear";
 import Settings from "../settings/settings";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";

@@ -3,6 +3,22 @@
 import { motion, Variants } from "framer-motion";
 import { ReactNode } from "react";
 
+const DEFAULT_CLASS = `
+    rounded-2xl
+    shadow-2xl 
+    shadow-black/40
+    group
+    relative
+    border 
+    border-white/15
+    p-6
+    transition-all 
+    duration-300
+    hover:border-cyan-400/40
+    hover:bg-white/10
+    hover:shadow-[0_0_40px_rgba(34,211,238,0.15)]
+    bg-white/10
+    dark:bg-white/5`;
 const CardLayoutVariants: Variants = {
     initial: {
         opacity: 0,
@@ -27,17 +43,18 @@ const CardLayoutVariants: Variants = {
 
 type CardLayoutProps = {
     children: ReactNode;
+    className?: string;
 }
 
-export default function CardLayout({ children }: CardLayoutProps) {
+export default function CardLayout({ children, className = DEFAULT_CLASS }: CardLayoutProps) {
     return (
         <motion.div
             whileHover={{
-                scale: 1.05,
+                scale: 1.03,
                 transition: {
                     type: "spring",
                     stiffness: 180,
-                    damping: 6,
+                    damping: 11,
                     mass: 0.7
                 }
             }}>
@@ -48,25 +65,7 @@ export default function CardLayout({ children }: CardLayoutProps) {
                 viewport={{ once: true, amount: 0.2 }}
                 className="rounded-2xl"
             >
-                <div
-                    className="
-                        rounded-2xl
-                        shadow-2xl 
-                        shadow-black/40
-                        group
-                        relative
-                        w-80
-                        border 
-                        border-white/15
-                        bg-white/8
-                        p-6
-                        transition-all 
-                        duration-300
-                        hover:border-cyan-400/40
-                        hover:bg-white/10
-                        hover:shadow-[0_0_40px_rgba(34,211,238,0.15)]
-                        dark:bg-white/5
-                    ">
+                <div className={className}>
                     {children}
                 </div>
             </motion.div>

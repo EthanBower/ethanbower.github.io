@@ -75,6 +75,7 @@ export default function TabMenu({ enable, onCloseComplete, onTabClickEvent, tabC
                         shadow-[0_0_30px_rgba(255,255,255,0.1)]! 
                         cursor-pointer 
                         rounded-t-3xl 
+                        w-[600px]
                         max-w-[90%] 
                         ${glass}
                     `}>

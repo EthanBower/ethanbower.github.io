@@ -1,7 +1,7 @@
 import { AnimatePresence, motion, useDragControls } from "framer-motion";
-import ExitIcon from "../icons/exit";
+import ExitIcon from "../icons/general/exit";
 import { useEffect, useRef } from "react";
-import WarningIcon from "../icons/warning";
+import WarningIcon from "../icons/general/warning";
 import { buttonStyles } from "@/src/styles/buttonStyles";
 import WarningBackground from "./warningBackground";
 import { yellowWindowGlow } from "@/src/styles/windows";

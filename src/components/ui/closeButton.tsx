@@ -2,7 +2,7 @@
 
 import { buttonStyles } from "@/src/styles/buttonStyles";
 import { motion } from "framer-motion";
-import ExitIcon from "../icons/exit";
+import ExitIcon from "../icons/general/exit";
 import { ReactNode } from "react";
 import { animationVariants } from "../utils/globals";
 

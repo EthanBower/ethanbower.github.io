@@ -1,4 +1,4 @@
-import CheckMark from "@/src/components/icons/checkMark";
+import CheckMark from "@/src/components/icons/general/checkMark";
 import { animationVariants } from "@/src/components/utils/globals";
 import { motion } from "framer-motion";
 

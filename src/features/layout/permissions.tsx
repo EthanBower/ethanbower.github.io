@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import PopupWindow from "../../components/ui/popupWindow";
 import { useSettings } from "../../providers/settingsProvider";
 import ButtonToggle from "../../components/ui/buttonToggle";
-import ChevronIcon from "../../components/icons/chevron";
+import ChevronIcon from "../../components/icons/general/chevron";
 import { AppPermissions } from "@/src/components/utils/appPermissions";
 import WarningWindow from "@/src/components/ui/warningWindow";
 import PopupItem from "@/src/components/ui/popupItem";

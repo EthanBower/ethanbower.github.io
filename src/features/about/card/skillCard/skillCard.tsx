@@ -1,20 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { ComponentType, ReactNode, useState } from "react";
 import CardLayout from "../cardLayout";
 import LevelDisplay from "./levelDisplay";
 import SkillPill from "./skillPill";
+import { IconPropsType } from "@/src/components/icons/about/iconPropsType";
 
 type SkillCardProps = {
     name: string;
+    icon: ComponentType<IconPropsType>;
     skillLevel: number;
     maxLevelNumber?: number;
-    pillActiveColor?: string;
-    pillAtLevelColor?: string;
-    pillInactiveColor?: string;
 };
 
-export default function SkillCard({ name, skillLevel, maxLevelNumber = 10, pillActiveColor = "bg-cyan-500", pillAtLevelColor = "bg-white", pillInactiveColor = "bg-white/15" }: SkillCardProps) {
+export default function SkillCard({ name, icon: Icon, skillLevel, maxLevelNumber = 10 }: SkillCardProps) {
     const [levelDisplayTick, setLevelDisplayTick] = useState(false);
 
     if (skillLevel < 0) {
@@ -27,16 +26,26 @@ export default function SkillCard({ name, skillLevel, maxLevelNumber = 10, pillA
 
     return (
         <CardLayout>
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">
-                    {name}
-                </h3>
-                <LevelDisplay level={skillLevel} maxLevel={maxLevelNumber} startTicking={levelDisplayTick} />
-            </div>
-            <div className="mt-5 flex gap-1.5">
-                {Array.from({ length: maxLevelNumber }).map((_, i) => (
-                    <SkillPill key={i} index={i} skillLevel={skillLevel} onAnimationStart={() => setLevelDisplayTick(true)} />
-                ))}
+            <div className="flex flex-col items-center justify-center">
+                <div className="
+                    lg:flex lg:items-center lg:gap-4 lg:justify-between 
+                    w-full text-center
+                ">
+                    <div className="w-10 h-10 mx-auto lg:mx-0 mb-3 lg:mb-0">
+                        <Icon className="rounded-md" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white">
+                        {name}
+                    </h3>
+                </div>
+                <div className="flex gap-1.5 w-full mt-5">
+                    {Array.from({ length: maxLevelNumber }).map((_, i) => (
+                        <SkillPill key={i} index={i} skillLevel={skillLevel} onAnimationStart={() => setLevelDisplayTick(true)} />
+                    ))}
+                </div>
+                <div className="mt-5">
+                    <LevelDisplay level={skillLevel} maxLevel={maxLevelNumber} startTicking={levelDisplayTick} />
+                </div>
             </div>
         </CardLayout>
     );
