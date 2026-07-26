@@ -1,9 +1,14 @@
 "use client";
 
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { motion, useMotionValue, useSpring, Variants } from "framer-motion";
 import { useEffect } from "react";
 
 const BUTTON_KNOB_TRAVEL_DISTANCE = 24;
+const KnobVariants: Variants = {
+  tap: {
+    scale: 0.85
+  }
+}
 
 type ButtonToggleProps = Readonly<{
   enabled: boolean;
@@ -12,7 +17,6 @@ type ButtonToggleProps = Readonly<{
 
 export default function ButtonToggle({ enabled, onChange }: ButtonToggleProps) {
   const x = useMotionValue(0);
-
   const springX = useSpring(x, {
     stiffness: 500,
     damping: 18,
@@ -36,6 +40,7 @@ export default function ButtonToggle({ enabled, onChange }: ButtonToggleProps) {
       onClick={() => onChange(!enabled)}
       onHoverStart={handleHoverStart}
       onHoverEnd={handleHoverEnd}
+      whileTap="tap"
       aria-pressed={enabled}
       animate={{
         backgroundColor: enabled
@@ -45,9 +50,12 @@ export default function ButtonToggle({ enabled, onChange }: ButtonToggleProps) {
       className="relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full p-0.5"
     >
       <motion.span
+        variants={KnobVariants}
         style={{ x: springX }}
-        className={`pointer-events-none inline-block h-7 w-7 rounded-full shadow-md 
-          ${enabled ? "bg-white drop-shadow-[0_0_4px_rgba(255,255,255,0.9)]" : "bg-white/40 drop-shadow-[0_0_4px_rgba(255,255,255,0.0)]"}`}
+        className={`block
+           inline-block h-7 w-7 rounded-full shadow-md 
+          ${enabled ? "bg-white drop-shadow-[0_0_4px_rgba(255,255,255,0.9)]" : "bg-white/40 drop-shadow-[0_0_4px_rgba(255,255,255,0.0)]"}
+        `}
       />
     </motion.button>
   );

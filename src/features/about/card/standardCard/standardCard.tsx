@@ -2,6 +2,7 @@
 
 import { ReactNode } from "react";
 import CardLayout from "../cardLayout";
+import DashedSeparator from "@/src/components/ui/dashedSeparator";
 
 type StandardCardLayout = {
     icon?: string;
@@ -21,6 +22,7 @@ export default function StandardCard({ icon, title, children }: StandardCardLayo
                 <h3 className="text-xl font-semibold text-white text-center">
                     {title}
                 </h3>
+                <DashedSeparator />
                 <div>
                     {children}
                 </div>

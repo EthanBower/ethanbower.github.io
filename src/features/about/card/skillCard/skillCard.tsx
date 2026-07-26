@@ -1,6 +1,6 @@
 "use client";
 
-import { ComponentType, ReactNode, useState } from "react";
+import { ComponentType, useState } from "react";
 import CardLayout from "../cardLayout";
 import LevelDisplay from "./levelDisplay";
 import SkillPill from "./skillPill";
@@ -25,7 +25,7 @@ export default function SkillCard({ name, icon: Icon, skillLevel, maxLevelNumber
     }
 
     return (
-        <CardLayout>
+        <CardLayout >
             <div className="flex flex-col items-center justify-center">
                 <div className="
                     lg:flex lg:items-center lg:gap-4 lg:justify-between 

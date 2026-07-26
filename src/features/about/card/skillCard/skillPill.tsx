@@ -15,7 +15,7 @@ const SkillCardPillVariants: Variants = {
             stiffness: 500,
             damping: 20,
             mass: 0.6,
-            delay: i * 0.1
+            delay: i * 0.2
         }
     })
 };

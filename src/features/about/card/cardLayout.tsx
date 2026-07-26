@@ -20,15 +20,15 @@ const DEFAULT_CLASS = `
     bg-white/10
     dark:bg-white/5`;
 const CardLayoutVariants: Variants = {
-    initial: {
+    initial: (saturate: boolean) => ({
         opacity: 0,
         scale: 0.75,
-        backdropFilter: "saturate(0%) blur(0px)",
-    },
-    whenVisible: {
+        backdropFilter: saturate ? "saturate(0%) blur(0px)" : undefined,
+    }),
+    whenVisible: (saturate: boolean) => ({
         opacity: 1,
         scale: 1,
-        backdropFilter: "saturate(450%) blur(0px)",
+        backdropFilter: saturate ? "saturate(450%) blur(0px)" : undefined,
         transition: {
             type: "spring",
             stiffness: 180,
@@ -38,19 +38,20 @@ const CardLayoutVariants: Variants = {
             when: "beforeChildren",
             delayChildren: 0.2,
         },
-    }
+    })
 };
 
 type CardLayoutProps = {
     children: ReactNode;
+    saturateBackground?: boolean;
     className?: string;
 }
 
-export default function CardLayout({ children, className = DEFAULT_CLASS }: CardLayoutProps) {
+export default function CardLayout({ children, saturateBackground = true, className = DEFAULT_CLASS }: CardLayoutProps) {
     return (
         <motion.div
             whileHover={{
-                scale: 1.03,
+                scale: 1.02,
                 transition: {
                     type: "spring",
                     stiffness: 180,
@@ -60,6 +61,7 @@ export default function CardLayout({ children, className = DEFAULT_CLASS }: Card
             }}>
             <motion.div
                 variants={CardLayoutVariants}
+                custom={saturateBackground}
                 initial="initial"
                 whileInView="whenVisible"
                 viewport={{ once: true, amount: 0.2 }}

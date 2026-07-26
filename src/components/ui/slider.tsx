@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   motion,
   useMotionValue,
@@ -18,7 +18,7 @@ const fillVariants: Variants = {
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     boxShadow:
       "0 0 3px rgba(255, 255, 255, 0.9), 0 0 5px rgba(255, 255, 255, 0.5)",
-  },
+  }
 } as const;
 
 const thumbVariants: Variants = {
@@ -31,6 +31,9 @@ const thumbVariants: Variants = {
     boxShadow:
       "0 0 1px rgba(255, 255, 255, 1), 0 0 10px rgba(255, 255, 255, 0.6)",
   },
+  tap: {
+    scale: 1
+  }
 } as const;
 
 type SliderControlProps = {
@@ -88,6 +91,7 @@ export default function Slider({
   return (
     <motion.div
       whileHover="hover"
+      whileTap="tap"
       initial="initial"
       className="relative w-full h-10 flex items-center"
     >

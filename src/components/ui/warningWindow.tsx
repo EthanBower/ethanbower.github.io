@@ -98,7 +98,7 @@ export default function WarningWindow({ error, enable, consoleLogError = true, o
                                             <motion.button
                                                 className={`${buttonStyles.red} flex items-center justify-center gap-2`} onClick={() => onClose?.()}
                                                 whileHover="hover"
-                                                whileTap="hover"
+                                                whileTap={{ scale: 0.95 }}
                                             >
                                                 <ExitIcon />
                                                 <span>Exit</span>
