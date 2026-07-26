@@ -20,7 +20,7 @@ export default function LevelDisplay({ level, maxLevel, startTicking }: LevelDis
                 setDisplayLevel(1);
             }
         }
-    }, [startTicking, level]);
+    }, [startTicking, level, setDisplayLevel]);
 
     return (
         <motion.span

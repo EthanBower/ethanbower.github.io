@@ -1,12 +1,12 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { ComponentType, createContext, useContext, useMemo, useState } from "react";
 
 export type MenuPosition = "Top" | "Bottom";
 export type NavItem = {
     id: string;
     label: string;
-    icon: React.ComponentType<any>;
+    icon: ComponentType;
     isPersistent: boolean;
     addSeparator: boolean;
     selectQuery: () => boolean;

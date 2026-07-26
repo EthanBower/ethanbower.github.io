@@ -29,10 +29,12 @@ export default function AboutMeTab({ enable, onCloseComplete }: AboutMeTabProps)
                     <div className="col-span-2">
                         <StandardCard icon="" title="About Me">
                             <p className="mt-2 text-sm leading-6 text-slate-300">
-                                I am someone who enjoys learning new things and challenging myself to grow.
-                                I like spending time doing things I'm passionate about, whether that's exploring my interests, being creative, or connecting with the people around me.
-                                I try to stay positive, work hard, and improve a little every day.
-                                My experiences have helped shape who I am, and I'm always looking forward to new opportunities and challenges that help me become a better version of myself.
+                                {`
+                                    I am someone who enjoys learning new things and challenging myself to grow.
+                                    I like spending time doing things I'm passionate about, whether that's exploring my interests, being creative, or connecting with the people around me.
+                                    I try to stay positive, work hard, and improve a little every day.
+                                    My experiences have helped shape who I am, and I'm always looking forward to new opportunities and challenges that help me become a better version of myself.
+                                `}
                             </p>
                         </StandardCard>
                     </div>
