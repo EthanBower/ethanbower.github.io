@@ -69,6 +69,7 @@ export default function TabMenu({ enable, onCloseComplete, onTabClickEvent, tabC
                         left-1/2
                         -translate-x-1/2
                         overflow-visible
+                        select-none
                         z-1
                         border-t 
                         border-t-white/30 

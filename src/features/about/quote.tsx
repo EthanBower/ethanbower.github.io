@@ -24,16 +24,17 @@ export default function Quote({ enable }: QuoteProps) {
 function QuoteContent() {
     const [showAuthor, setShowAuthor] = useState(false);
 
-    return (<motion.div
-        exit={{ opacity: 0, scale: 1.2, filter: "blur(8px)" }}
-        className="pointer-events-auto max-w-3xl px-8 text-center">
-        <Typewriter
-            text={`"Don't tell me the sky's the limit when there are footprints on the moon." `}
-            minSpeed={35}
-            maxSpeed={55}
-            typoChance={.02}
-            onDone={() => setShowAuthor(true)}
-            className="
+    return (
+        <motion.div
+            exit={{ opacity: 0, scale: 1.2, filter: "blur(8px)" }}
+            className="pointer-events-auto max-w-3xl px-8 text-center select-none">
+            <Typewriter
+                text={`"Don't tell me the sky's the limit when there are footprints on the moon." `}
+                minSpeed={35}
+                maxSpeed={55}
+                typoChance={.02}
+                onDone={() => setShowAuthor(true)}
+                className="
                 text-3xl md:text-5xl
                 italic
                 font-light
@@ -41,12 +42,12 @@ function QuoteContent() {
                 tracking-wide
                 drop-shadow-[0_0_20px_rgba(255,255,255,0.35)]
             "/>
-        <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={showAuthor ? { opacity: 1, y: 0 } : {}}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 1 }}
-            className={`
+            <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={showAuthor ? { opacity: 1, y: 0 } : {}}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 1 }}
+                className={`
                 inline-block
                 mt-8
                 p-3
@@ -59,7 +60,8 @@ function QuoteContent() {
                 rounded-xl
                 ${glass}
             `}>
-            <>Paul Brandt</>
-        </motion.p>
-    </motion.div>);
+                <>Paul Brandt</>
+            </motion.p>
+        </motion.div>
+    );
 }

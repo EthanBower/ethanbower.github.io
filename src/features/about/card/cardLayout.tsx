@@ -63,7 +63,7 @@ export default function CardLayout({ children, className = DEFAULT_CLASS }: Card
                 initial="initial"
                 whileInView="whenVisible"
                 viewport={{ once: true, amount: 0.2 }}
-                className="rounded-2xl"
+                className="rounded-2xl select-none"
             >
                 <div className={className}>
                     {children}
