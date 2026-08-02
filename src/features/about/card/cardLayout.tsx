@@ -3,7 +3,7 @@
 import { motion, Variants } from "framer-motion";
 import { ReactNode } from "react";
 
-const DEFAULT_CLASS = `
+export const DEFAULT_CLASS = `
     rounded-2xl
     shadow-2xl 
     shadow-black/40
@@ -11,7 +11,7 @@ const DEFAULT_CLASS = `
     relative
     border 
     border-white/15
-    p-6
+    p-5
     transition-all 
     duration-300
     hover:border-cyan-400/40

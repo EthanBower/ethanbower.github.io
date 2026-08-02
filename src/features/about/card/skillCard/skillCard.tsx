@@ -1,7 +1,7 @@
 "use client";
 
 import { ComponentType, useState } from "react";
-import CardLayout from "../cardLayout";
+import CardLayout, { DEFAULT_CLASS } from "../cardLayout";
 import LevelDisplay from "./levelDisplay";
 import SkillPill from "./skillPill";
 import { IconPropsType } from "@/src/components/icons/about/iconPropsType";
@@ -25,13 +25,10 @@ export default function SkillCard({ name, icon: Icon, skillLevel, maxLevelNumber
     }
 
     return (
-        <CardLayout >
+        <CardLayout className={`${DEFAULT_CLASS} shadow-none!`}>
             <div className="flex flex-col items-center justify-center">
-                <div className="
-                    lg:flex lg:items-center lg:gap-4 lg:justify-between 
-                    w-full text-center
-                ">
-                    <div className="w-10 h-10 mx-auto lg:mx-0 mb-3 lg:mb-0">
+                <div className="lg:flex lg:items-center lg:gap-4 lg:justify-between w-full text-center">
+                    <div className="w-10 h-10 mx-auto lg:mx-0 mb-3 lg:mb-0 bg-white/90 p-[1px] rounded-md">
                         <Icon className="rounded-md" />
                     </div>
                     <h3 className="text-lg font-semibold text-white">

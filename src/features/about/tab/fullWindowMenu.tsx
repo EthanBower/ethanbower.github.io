@@ -86,9 +86,7 @@ export default function FullWindowMenu({ enable, onCloseComplete, onCloseClickEv
                             }}
                         />
                         <div className="relative overflow-y-auto w-full h-full">
-                            <div className="relative">
-                                {children}
-                            </div>
+                            {children}
                         </div>
                     </motion.div>
                 </>
